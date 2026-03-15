@@ -1,0 +1,73 @@
+.exercise-card {
+    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  
+  .exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .exercise-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--tg-theme-text-color, #000000);
+  }
+  
+  .muscle-badge {
+    background: var(--tg-theme-button-color, #2481cc);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+  
+  .exercise-media {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .media-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--tg-theme-hint-color, #999999);
+    font-size: 12px;
+  }
+  
+  .exercise-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  
+  .exercise-actions button {
+    border: none;
+    background: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .edit-btn {
+    color: var(--tg-theme-button-color, #2481cc);
+  }
+  
+  .edit-btn:hover {
+    background: rgba(36, 129, 204, 0.1);
+  }
+  
+  .delete-btn {
+    color: #ff4444;
+  }
+  
+  .delete-btn:hover {
+    background: rgba(255, 68, 68, 0.1);
+  }

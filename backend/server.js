@@ -5,11 +5,30 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors()); // Разрешаем кросс-доменные запросы
-app.use(express.json()); // Парсим JSON тела запросов
+// Настройка CORS
+app.use(cors());
 
-// Базовая проверка API
+// Middleware для JSON
+app.use(express.json());
+
+// Простой middleware для установки правильной кодировки
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
+
+// Подключаем маршруты
+const userRoutes = require('./routes/userRoutes');
+const exerciseRoutes = require('./routes/exerciseRoutes');
+const workoutRoutes = require('./routes/workoutRoutes');
+const logRoutes = require('./routes/logRoutes');
+
+app.use('/api/users', userRoutes);
+app.use('/api/exercises', exerciseRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/logs', logRoutes);
+
+// Базовые маршруты
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
@@ -17,16 +36,19 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: {
       health: '/health',
-      api: '/api'
+      users: '/api/users',
+      exercises: '/api/exercises',
+      workouts: '/api/workouts',
+      logs: '/api/logs'
     }
   });
 });
 
-// Проверка здоровья сервера
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     uptime: process.uptime(),
+    database: 'connected',
     timestamp: new Date().toISOString()
   });
 });
@@ -37,4 +59,8 @@ app.listen(PORT, () => {
   console.log(`📝 Test endpoints:`);
   console.log(`   - http://localhost:${PORT}`);
   console.log(`   - http://localhost:${PORT}/health`);
+  console.log(`   - http://localhost:${PORT}/api/users`);
+  console.log(`   - http://localhost:${PORT}/api/exercises`);
+  console.log(`   - http://localhost:${PORT}/api/workouts`);
+  console.log(`   - http://localhost:${PORT}/api/logs`);
 });

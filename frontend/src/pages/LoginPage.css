@@ -1,0 +1,69 @@
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--tg-theme-bg-color, #ffffff);
+  }
+  
+  .login-card {
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .login-card h2 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    color: var(--tg-theme-text-color, #000000);
+  }
+  
+  .login-card p {
+    font-size: 16px;
+    color: var(--tg-theme-hint-color, #999999);
+    margin-bottom: 32px;
+  }
+  
+  .role-button {
+    width: 100%;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: none;
+    border-radius: 16px;
+    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, background-color 0.2s;
+  }
+  
+  .role-button:hover {
+    transform: translateY(-2px);
+  }
+  
+  .role-button.coach:hover {
+    background: #e3f2fd;
+  }
+  
+  .role-button.athlete:hover {
+    background: #e8f5e8;
+  }
+  
+  .emoji {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+  
+  .title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--tg-theme-text-color, #000000);
+  }
+  
+  .description {
+    font-size: 14px;
+    color: var(--tg-theme-hint-color, #999999);
+  }
