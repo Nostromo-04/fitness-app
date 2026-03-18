@@ -6,32 +6,48 @@ const logController = {
   // === УПРАВЛЕНИЕ ТРЕНИРОВОЧНЫМИ СЕССИЯМИ ===
   
   // Начало тренировки (спортсмен)
-  async startWorkout(req, res) {
-    try {
-      const { athlete_id, plan_id, day_id } = req.body;
+async startWorkout(req, res) {
+  try {
+    const { athlete_id, plan_id, day_id } = req.body;
+    
+    console.log('Получен запрос на старт тренировки:', { athlete_id, plan_id, day_id });
+    
+    // Проверяем, есть ли активная тренировка
+    const activeSession = await WorkoutSession.getActiveSession(athlete_id);
+    
+    if (activeSession) {
+      console.log('Найдена активная тренировка:', activeSession);
       
-      // Проверяем, нет ли уже активной тренировки
-      const activeSession = await WorkoutSession.getActiveSession(athlete_id);
-      if (activeSession) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'У спортсмена уже есть незавершенная тренировка'
+      // Если это тот же день - возвращаем существующую сессию
+      if (activeSession.plan_id === plan_id && activeSession.day_id === day_id) {
+        console.log('Возвращаем существующую сессию');
+        return res.status(200).json({
+          status: 'success',
+          data: activeSession,
+          message: 'Продолжаем существующую тренировку'
         });
       }
-
-      const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });
-      res.status(201).json({
-        status: 'success',
-        data: session
-      });
-    } catch (error) {
-      console.error('Ошибка при начале тренировки:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Ошибка сервера'
-      });
+      
+      // Если другой день - завершаем старую и создаем новую
+      console.log('Завершаем старую тренировку и создаем новую');
+      await WorkoutSession.complete(activeSession.id, null);
     }
-  },
+
+    const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });
+    console.log('Создана новая сессия:', session);
+    
+    res.status(201).json({
+      status: 'success',
+      data: session
+    });
+  } catch (error) {
+    console.error('Ошибка при начале тренировки:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Ошибка сервера'
+    });
+  }
+},
 
   // Завершение тренировки (спортсмен) - ВРЕМЕННАЯ ВЕРСИЯ
 async completeWorkout(req, res) {

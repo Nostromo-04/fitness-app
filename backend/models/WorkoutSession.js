@@ -34,19 +34,19 @@ class WorkoutSession {
     return result.rows[0];
   }
 
-  // Завершение тренировки (с фидбеком)
-  static async complete(sessionId, feedbackEmoji) {
-    const query = `
-      UPDATE workout_sessions 
-      SET completed_at = CURRENT_TIMESTAMP,
-          feedback_emoji = $2
-      WHERE id = $1
-      RETURNING id, athlete_id, plan_id, day_id, workout_date, feedback_emoji, completed_at
-    `;
-    
-    const result = await db.query(query, [sessionId, feedbackEmoji]);
-    return result.rows[0];
-  }
+  // Завершение тренировки (принудительное)
+static async complete(sessionId, feedbackEmoji = null) {
+  const query = `
+    UPDATE workout_sessions 
+    SET completed_at = CURRENT_TIMESTAMP,
+        feedback_emoji = COALESCE($2, feedback_emoji)
+    WHERE id = $1
+    RETURNING id, athlete_id, plan_id, day_id, workout_date, feedback_emoji, completed_at
+  `;
+  
+  const result = await db.query(query, [sessionId, feedbackEmoji]);
+  return result.rows[0];
+}
 
   // Получение всех тренировок спортсмена за период (для календаря)
   static async getAthleteSessions(athleteId, startDate, endDate) {

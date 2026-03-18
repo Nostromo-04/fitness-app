@@ -1,6 +1,5 @@
 const { Pool } = require('pg');
 require('dotenv').config();
-const iconv = require('iconv-lite');
 
 const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -22,12 +21,17 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000
 });
 
-// Переопределяем query для автоматической конвертации
+// Устанавливаем кодировку при каждом подключении
+pool.on('connect', (client) => {
+  client.query("SET client_encoding = 'UTF8'");
+});
+
+// Переопределяем query для гарантии правильной кодировки
 const originalQuery = pool.query.bind(pool);
 pool.query = async (text, params) => {
   const client = await pool.connect();
   try {
-    // ВАЖНО: Для вставки данных используем UTF8
+    // Устанавливаем UTF8 перед каждым запросом
     await client.query("SET client_encoding = 'UTF8'");
     const result = await client.query(text, params);
     return result;

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Dumbbell, TrendingUp, Clock } from 'lucide-react';
-import api from '../services/api';
+import athleteService from '../services/athleteService';
 import './AthleteDashboard.css';
 
 interface WorkoutPlan {
   id: number;
   name: string;
   days_count: string;
+  athletes_count: string;
 }
 
 export const AthleteDashboard: React.FC = () => {
@@ -16,14 +17,14 @@ export const AthleteDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPlans();
+    loadPlans();
   }, []);
 
-  const fetchPlans = async () => {
+  const loadPlans = async () => {
     try {
-      // Временно используем ID спортсмена = 2
-      const response = await api.get('/workouts/plans/coach/1');
-      setPlans(response.data.data);
+      // TODO: заменить 2 на реальный ID спортсмена
+      const response = await athleteService.getMyPlans(2);
+      setPlans(response.data || []);
     } catch (error) {
       console.error('Ошибка загрузки планов:', error);
     } finally {
@@ -67,7 +68,7 @@ export const AthleteDashboard: React.FC = () => {
       <div className="section">
         <h2>Доступные планы</h2>
         {loading ? (
-          <p>Загрузка...</p>
+          <p className="loading">Загрузка...</p>
         ) : plans.length > 0 ? (
           <div className="plans-list">
             {plans.map((plan) => (
@@ -81,14 +82,17 @@ export const AthleteDashboard: React.FC = () => {
                 </div>
                 <div className="plan-info">
                   <h3>{plan.name}</h3>
-                  <p>{plan.days_count} тренировок</p>
+                  <p>{plan.days_count || '0'} тренировок</p>
                 </div>
                 <div className="plan-arrow">→</div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="empty-state">У вас пока нет планов тренировок</p>
+          <p className="empty-state">
+            У вас пока нет планов тренировок<br />
+            Обратитесь к тренеру
+          </p>
         )}
       </div>
 

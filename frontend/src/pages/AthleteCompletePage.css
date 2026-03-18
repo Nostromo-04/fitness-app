@@ -1,0 +1,177 @@
+.athlete-complete-page {
+  padding: 20px;
+  background: var(--tg-theme-bg-color, #ffffff);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.complete-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.complete-header h1 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.congrats-message {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.trophy-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.congrats-message h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.plan-name {
+  margin: 0;
+  font-size: 16px;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-card svg {
+  color: var(--tg-theme-button-color, #2481cc);
+  margin-bottom: 8px;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.feedback-section {
+  flex: 1;
+  text-align: center;
+}
+
+.feedback-section h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.emoji-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.emoji-btn {
+  flex: 1;
+  max-width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  color: var(--tg-theme-text-color, #000000);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.emoji-btn svg {
+  transition: transform 0.2s;
+}
+
+.emoji-btn:hover {
+  transform: translateY(-2px);
+}
+
+.emoji-btn.selected {
+  border-color: var(--tg-theme-button-color, #2481cc);
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+}
+
+.emoji-btn.selected svg {
+  transform: scale(1.1);
+}
+
+.emoji-btn span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.complete-actions {
+  margin-top: 24px;
+}
+
+.complete-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.complete-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.complete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

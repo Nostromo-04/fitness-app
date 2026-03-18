@@ -1,0 +1,140 @@
+.athlete-plan-page {
+  padding: 20px;
+  background: var(--tg-theme-bg-color, #ffffff);
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.plan-info {
+  margin-bottom: 24px;
+}
+
+.plan-description {
+  color: var(--tg-theme-hint-color, #999999);
+  font-size: 14px;
+  margin: 0;
+}
+
+.days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-card {
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: 2px solid transparent;
+}
+
+.day-card:hover {
+  transform: translateY(-2px);
+}
+
+.day-card.completed {
+  opacity: 0.8;
+  border-color: var(--tg-theme-button-color, #2481cc);
+}
+
+.day-number {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000000);
+  margin-bottom: 12px;
+}
+
+.day-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.exercises-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--tg-theme-hint-color, #999999);
+  font-size: 14px;
+}
+
+.exercises-count svg {
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.completed-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--tg-theme-button-color, #2481cc);
+  font-size: 14px;
+}
+
+.start-day-btn {
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.start-day-btn:hover {
+  opacity: 0.9;
+}
+
+.exercises-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.exercise-tag {
+  background: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.exercise-tag.more {
+  background: var(--tg-theme-hint-color, #999999);
+  color: white;
+}
+
+.loading {
+  text-align: center;
+  color: var(--tg-theme-hint-color, #999999);
+  padding: 40px;
+}

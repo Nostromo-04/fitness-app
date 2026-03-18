@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const iconv = require('iconv-lite');
 
 const userController = {
   // Регистрация нового пользователя (при первом входе)
@@ -42,6 +43,16 @@ const userController = {
         });
       }
 
+      // Конвертируем имена если они есть
+      if (user.first_name) {
+        const firstNameBuffer = Buffer.from(user.first_name, 'binary');
+        user.first_name = iconv.decode(firstNameBuffer, 'win1251');
+      }
+      if (user.last_name) {
+        const lastNameBuffer = Buffer.from(user.last_name, 'binary');
+        user.last_name = iconv.decode(lastNameBuffer, 'win1251');
+      }
+
       res.json({
         status: 'success',
         data: user
@@ -56,23 +67,25 @@ const userController = {
   },
 
   // Получение всех спортсменов тренера
-  async getAthletes(req, res) {
-    try {
-      const { coachId } = req.params;
-      const athletes = await User.getAthletesByCoach(coachId);
-      
-      res.json({
-        status: 'success',
-        data: athletes
-      });
-    } catch (error) {
-      console.error('Ошибка при получении спортсменов:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Ошибка сервера'
-      });
-    }
-  },
+async getAthletes(req, res) {
+  try {
+    const { coachId } = req.params;
+    const athletes = await User.getAthletesByCoach(coachId);
+    
+    console.log('Данные из БД:', athletes);
+    
+    res.json({
+      status: 'success',
+      data: athletes
+    });
+  } catch (error) {
+    console.error('Ошибка при получении спортсменов:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Ошибка сервера'
+    });
+  }
+},
 
   // Обновление данных пользователя
   async update(req, res) {
@@ -85,6 +98,16 @@ const userController = {
           status: 'error',
           message: 'Пользователь не найден'
         });
+      }
+
+      // Конвертируем имена если они есть
+      if (user.first_name) {
+        const firstNameBuffer = Buffer.from(user.first_name, 'binary');
+        user.first_name = iconv.decode(firstNameBuffer, 'win1251');
+      }
+      if (user.last_name) {
+        const lastNameBuffer = Buffer.from(user.last_name, 'binary');
+        user.last_name = iconv.decode(lastNameBuffer, 'win1251');
       }
 
       res.json({
