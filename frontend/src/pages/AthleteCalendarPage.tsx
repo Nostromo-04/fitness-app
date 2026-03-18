@@ -52,28 +52,40 @@ export const AthleteCalendarPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await athleteService.getWorkoutCalendar(2, year, month);
+      console.log('📅 Calendar data from API:', response.data);
+      console.log('📅 Calendar entries:', response.data.calendar);
       setCalendar(response.data.calendar || {});
     } catch (error) {
-      console.error('Ошибка загрузки календаря:', error);
+      console.error('❌ Ошибка загрузки календаря:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDayClick = async (day: number) => {
-    setSelectedDay(day);
-    setDetailsLoading(true);
-    try {
-      const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const response = await athleteService.getWorkoutByDate(2, dateStr);
-      setWorkoutDetails(response.data);
-    } catch (error) {
-      console.error('Ошибка загрузки тренировки:', error);
-      setWorkoutDetails(null);
-    } finally {
-      setDetailsLoading(false);
-    }
-  };
+  // Если кликнули на тот же день, который уже выделен
+  if (selectedDay === day) {
+    setSelectedDay(null); // снимаем выделение
+    setWorkoutDetails(null); // убираем описание
+    return;
+  }
+
+  // Если кликнули на другой день
+  setSelectedDay(day);
+  setDetailsLoading(true);
+  try {
+    const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    console.log('📅 Загрузка деталей для даты:', dateStr);
+    const response = await athleteService.getWorkoutByDate(2, dateStr);
+    console.log('📅 Workout details:', response.data);
+    setWorkoutDetails(response.data);
+  } catch (error) {
+    console.error('❌ Ошибка загрузки тренировки:', error);
+    setWorkoutDetails(null);
+  } finally {
+    setDetailsLoading(false);
+  }
+};
 
   const getDaysInMonth = () => {
     return new Date(year, month, 0).getDate();
@@ -121,9 +133,13 @@ export const AthleteCalendarPage: React.FC = () => {
         <span className="day-number">{day}</span>
         {dayData && (
           <div className="workout-indicator">
-            {dayData.emoji === '👍' && <ThumbsUp size={16} className="emoji good" />}
-            {dayData.emoji === '👎' && <ThumbsDown size={16} className="emoji bad" />}
-            <span className="workout-count">{dayData.sessions.length}</span>
+            {dayData.emoji === '👍' ? (
+              <span className="dot good" title="Легко">●</span>
+            ) : dayData.emoji === '👎' ? (
+              <span className="dot bad" title="Тяжело">●</span>
+            ) : (
+              <span className="dot neutral" title="Нет оценки">●</span>
+            )}
           </div>
         )}
       </div>
