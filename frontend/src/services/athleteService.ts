@@ -39,21 +39,21 @@ class AthleteService {
   }
 
   // Начало тренировки
-async startWorkout(athleteId: number, planId: number, dayId: number) {
-  try {
-    console.log('Начало тренировки:', { athleteId, planId, dayId });
-    const response = await api.post('/logs/sessions/start', {
-      athlete_id: athleteId,
-      plan_id: planId,
-      day_id: dayId
-    });
-    console.log('Ответ сервера:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Ошибка при старте тренировки:', error);
-    throw error;
+  async startWorkout(athleteId: number, planId: number, dayId: number) {
+    try {
+      console.log('Начало тренировки:', { athleteId, planId, dayId });
+      const response = await api.post('/logs/sessions/start', {
+        athlete_id: athleteId,
+        plan_id: planId,
+        day_id: dayId
+      });
+      console.log('Ответ сервера:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при старте тренировки:', error);
+      throw error;
+    }
   }
-}
 
   // Получение активной тренировки
   async getActiveWorkout(athleteId: number) {
@@ -87,17 +87,29 @@ async startWorkout(athleteId: number, planId: number, dayId: number) {
     return response.data;
   }
 
-  /// Получение календаря тренировок
-async getWorkoutCalendar(athleteId: number, year: number, month: number) {
-  const response = await api.get(`/logs/calendar/${athleteId}?year=${year}&month=${month}`);
-  return response.data;
-}
+  // Получение календаря тренировок
+  async getWorkoutCalendar(athleteId: number, year: number, month: number) {
+    const response = await api.get(`/logs/calendar/${athleteId}?year=${year}&month=${month}`);
+    return response.data;
+  }
 
-// Получение деталей тренировки по дате
-async getWorkoutByDate(athleteId: number, date: string) {
-  const response = await api.get(`/logs/calendar/${athleteId}/date/${date}`);
-  return response.data;
-}
+  // Получение деталей тренировки по дате
+  async getWorkoutByDate(athleteId: number, date: string) {
+    const response = await api.get(`/logs/calendar/${athleteId}/date/${date}`);
+    return response.data;
+  }
+
+  // Получение прогресса по упражнению
+  async getExerciseProgress(athleteId: number, exerciseId: number, limit: number = 10) {
+    const response = await api.get(`/logs/progress/${athleteId}/exercise/${exerciseId}?limit=${limit}`);
+    return response.data;
+  }
+
+  // Получение сводки по спортсмену
+  async getAthleteSummary(athleteId: number) {
+    const response = await api.get(`/logs/summary/${athleteId}`);
+    return response.data;
+  }
 }
 
 export default new AthleteService();

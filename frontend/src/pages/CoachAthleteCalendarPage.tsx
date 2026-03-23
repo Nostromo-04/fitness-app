@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown, Dumbbell } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import athleteService from '../services/athleteService';
-import './AthleteCalendarPage.css';
+import './CoachAthleteCalendarPage.css';
 
 interface CalendarDay {
   emoji?: '👍' | '👎';
@@ -32,8 +32,9 @@ interface WorkoutDetails {
   }>;
 }
 
-export const AthleteCalendarPage: React.FC = () => {
+export const CoachAthleteCalendarPage: React.FC = () => {
   const navigate = useNavigate();
+  const { athleteId } = useParams<{ athleteId: string }>();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendar, setCalendar] = useState<Record<number, CalendarDay>>({});
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -45,20 +46,18 @@ export const AthleteCalendarPage: React.FC = () => {
   const month = currentDate.getMonth() + 1;
 
   useEffect(() => {
-    loadCalendar();
-  }, [year, month]);
+    if (athleteId) {
+      loadCalendar();
+    }
+  }, [athleteId, year, month]);
 
   const loadCalendar = async () => {
     setLoading(true);
     try {
-      const athleteId = localStorage.getItem('selectedAthleteId');
-      if (!athleteId) {
-        console.error('Не выбран спортсмен');
-        return;
-      }
-      const response = await athleteService.getWorkoutCalendar(parseInt(athleteId), year, month);
-      console.log('📅 Calendar data from API:', response.data);
-      console.log('📅 Calendar entries:', response.data.calendar);
+      console.log('Загрузка календаря для спортсмена ID:', athleteId);
+      const response = await athleteService.getWorkoutCalendar(Number(athleteId), year, month);
+      console.log('Ответ от сервера:', response.data);
+      console.log('Календарные данные:', response.data.calendar);
       setCalendar(response.data.calendar || {});
     } catch (error) {
       console.error('❌ Ошибка загрузки календаря:', error);
@@ -77,15 +76,8 @@ export const AthleteCalendarPage: React.FC = () => {
     setSelectedDay(day);
     setDetailsLoading(true);
     try {
-      const athleteId = localStorage.getItem('selectedAthleteId');
-      if (!athleteId) {
-        console.error('Не выбран спортсмен');
-        return;
-      }
       const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      console.log('📅 Загрузка деталей для даты:', dateStr);
-      const response = await athleteService.getWorkoutByDate(parseInt(athleteId), dateStr);
-      console.log('📅 Workout details:', response.data);
+      const response = await athleteService.getWorkoutByDate(Number(athleteId), dateStr);
       setWorkoutDetails(response.data);
     } catch (error) {
       console.error('❌ Ошибка загрузки тренировки:', error);
@@ -124,10 +116,12 @@ export const AthleteCalendarPage: React.FC = () => {
   const firstDay = getFirstDayOfMonth();
   const days = [];
 
+  // Пустые ячейки для первых дней месяца
   for (let i = 0; i < firstDay; i++) {
     days.push(<div key={`empty-${i}`} className="calendar-day empty" />);
   }
 
+  // Ячейки для дней месяца
   for (let day = 1; day <= daysInMonth; day++) {
     const dayData = calendar[day];
     days.push(
@@ -153,12 +147,12 @@ export const AthleteCalendarPage: React.FC = () => {
   }
 
   return (
-    <div className="athlete-calendar-page">
+    <div className="coach-calendar-page">
       <div className="calendar-header">
-        <button className="back-btn" onClick={() => navigate('/athlete/dashboard')}>
+        <button className="back-btn" onClick={() => navigate('/coach/dashboard')}>
           <ArrowLeft size={20} />
         </button>
-        <h1>Календарь тренировок</h1>
+        <h1>Календарь спортсмена</h1>
       </div>
 
       <div className="calendar-navigation">
@@ -181,13 +175,13 @@ export const AthleteCalendarPage: React.FC = () => {
 
       {loading && <div className="loading">Загрузка...</div>}
 
-      {selectedDay && (
+      {selectedDay && workoutDetails && (
         <div className="workout-details">
           <h3>Тренировка {selectedDay} {monthNames[month - 1]}</h3>
           
           {detailsLoading ? (
             <div className="loading">Загрузка...</div>
-          ) : workoutDetails ? (
+          ) : (
             <div className="workout-info">
               <div className="workout-meta">
                 <span className="plan-name">{workoutDetails.plan_name} (День {workoutDetails.day_number})</span>
@@ -220,8 +214,6 @@ export const AthleteCalendarPage: React.FC = () => {
                 ))}
               </div>
             </div>
-          ) : (
-            <p className="no-data">Нет данных о тренировке</p>
           )}
         </div>
       )}

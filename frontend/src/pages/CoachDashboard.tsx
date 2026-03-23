@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Dumbbell, Calendar, PlusCircle, BarChart } from 'lucide-react';
+import { Users, Dumbbell, Calendar, PlusCircle, BarChart, CalendarDays, TrendingUp } from 'lucide-react';
 import api from '../services/api';
+import workoutService from '../services/workoutService';
 import './CoachDashboard.css';
+import athleteService from '../services/athleteService';
 
 interface Athlete {
   id: number;
@@ -14,21 +16,71 @@ interface Athlete {
 export const CoachDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [plansCount, setPlansCount] = useState(0);
+  const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAthletes();
+    const coachId = localStorage.getItem('selectedCoachId');
+    if (coachId) {
+      loadCoachInfo(parseInt(coachId));
+      fetchAthletes(parseInt(coachId));
+      fetchPlansCount(parseInt(coachId));
+      fetchTotalWorkouts(parseInt(coachId));
+    } else {
+      navigate('/select-user');
+    }
   }, []);
 
-  const fetchAthletes = async () => {
+  const loadCoachInfo = async (coachId: number) => {
     try {
-      // Временно используем ID тренера = 1
-      const response = await api.get('/users/coach/1/athletes');
+      const response = await api.get(`/users/${coachId}`);
+      const coach = response.data.data;
+    } catch (error) {
+      console.error('Ошибка загрузки информации о тренере:', error);
+    }
+  };
+
+  const fetchAthletes = async (coachId: number) => {
+    try {
+      const response = await api.get(`/users/coach/${coachId}/athletes`);
       setAthletes(response.data.data);
     } catch (error) {
       console.error('Ошибка загрузки спортсменов:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPlansCount = async (coachId: number) => {
+    try {
+      const response = await workoutService.getCoachPlans(coachId);
+      setPlansCount(response.data.length);
+    } catch (error) {
+      console.error('Ошибка загрузки количества планов:', error);
+    }
+  };
+
+  const fetchTotalWorkouts = async (coachId: number) => {
+    try {
+      // Получаем всех спортсменов тренера
+      const athletesResponse = await api.get(`/users/coach/${coachId}/athletes`);
+      const athletes = athletesResponse.data.data || [];
+      
+      let total = 0;
+      // Для каждого спортсмена получаем количество тренировок
+      for (const athlete of athletes) {
+        try {
+          const summaryResponse = await athleteService.getAthleteSummary(athlete.id);
+          const workoutsCount = parseInt(summaryResponse.data.summary.total_workouts) || 0;
+          total += workoutsCount;
+        } catch (error) {
+          console.error(`Ошибка загрузки тренировок для спортсмена ${athlete.id}:`, error);
+        }
+      }
+      setTotalWorkouts(total);
+    } catch (error) {
+      console.error('Ошибка загрузки общего количества тренировок:', error);
     }
   };
 
@@ -44,23 +96,23 @@ export const CoachDashboard: React.FC = () => {
           <Users size={24} />
           <div className="stat-info">
             <span className="stat-value">{athletes.length}</span>
-            <span className="stat-label">Спортсменов</span>
+            <span className="stat-label">Всего Спортсменов</span>
           </div>
         </div>
 
         <div className="stat-card">
           <Dumbbell size={24} />
           <div className="stat-info">
-            <span className="stat-value">0</span>
-            <span className="stat-label">Планов</span>
+            <span className="stat-value">{plansCount}</span>
+            <span className="stat-label">Всего Планов</span>
           </div>
         </div>
 
         <div className="stat-card">
           <Calendar size={24} />
           <div className="stat-info">
-            <span className="stat-value">0</span>
-            <span className="stat-label">Тренировок</span>
+            <span className="stat-value">{totalWorkouts}</span>
+            <span className="stat-label">Всего Тренировок</span>
           </div>
         </div>
       </div>
@@ -84,11 +136,7 @@ export const CoachDashboard: React.FC = () => {
         ) : athletes.length > 0 ? (
           <div className="athletes-list">
             {athletes.map((athlete) => (
-              <div 
-                key={athlete.id} 
-                className="athlete-card"
-                onClick={() => navigate(`/coach/athlete/${athlete.id}`)}
-              >
+              <div key={athlete.id} className="athlete-card">
                 <div className="athlete-avatar">
                   {athlete.first_name[0]}
                   {athlete.last_name?.[0]}
@@ -97,7 +145,22 @@ export const CoachDashboard: React.FC = () => {
                   <h3>{athlete.first_name} {athlete.last_name}</h3>
                   <p>{athlete.phone || 'Нет телефона'}</p>
                 </div>
-                <BarChart size={20} className="athlete-icon" />
+                <div className="athlete-actions">
+                  <button 
+                    className="athlete-action-btn calendar"
+                    onClick={() => navigate(`/coach/athlete/${athlete.id}/calendar`)}
+                    title="Календарь тренировок"
+                  >
+                    <CalendarDays size={18} />
+                  </button>
+                  <button 
+                    className="athlete-action-btn progress"
+                    onClick={() => navigate(`/coach/athlete/${athlete.id}/progress`)}
+                    title="Прогресс спортсмена"
+                  >
+                    <TrendingUp size={18} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

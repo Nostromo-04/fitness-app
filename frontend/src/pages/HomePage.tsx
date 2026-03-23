@@ -17,7 +17,7 @@ export const HomePage: React.FC<HomePageProps> = ({ user }) => {
           <Dumbbell size={48} className="logo-icon" />
           <h1>Fitness App</h1>
           <p>Тренируйся эффективно с персональным тренером</p>
-          <button className="primary-button" onClick={() => navigate('/login')}>
+          <button className="primary-button" onClick={() => navigate('/select-user')}>
             Начать
           </button>
         </div>

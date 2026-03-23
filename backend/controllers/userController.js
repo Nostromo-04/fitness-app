@@ -1,5 +1,6 @@
 const User = require('../models/User');
-const iconv = require('iconv-lite');
+const db = require('../config/database'); // Добавляем
+const iconv = require('iconv-lite'); // Добавляем если используется
 
 const userController = {
   // Регистрация нового пользователя (при первом входе)
@@ -29,6 +30,52 @@ const userController = {
       });
     }
   },
+
+  // Получение всех пользователей
+  async getAllUsers(req, res) {
+    try {
+      const query = 'SELECT id, telegram_id, role, coach_id, first_name, last_name, phone, created_at FROM users ORDER BY role, first_name';
+      const result = await db.query(query);
+      
+      res.json({
+        status: 'success',
+        data: result.rows
+      });
+    } catch (error) {
+      console.error('Ошибка при получении пользователей:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Ошибка сервера'
+      });
+    }
+  },
+
+// Получение пользователя по ID
+async getUserById(req, res) {
+  try {
+    const { id } = req.params;
+    const query = 'SELECT id, telegram_id, role, coach_id, first_name, last_name, phone, created_at FROM users WHERE id = $1';
+    const result = await db.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Пользователь не найден'
+      });
+    }
+    
+    res.json({
+      status: 'success',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Ошибка сервера'
+    });
+  }
+},
 
   // Получение информации о пользователе по telegram_id
   async getByTelegramId(req, res) {
@@ -67,25 +114,23 @@ const userController = {
   },
 
   // Получение всех спортсменов тренера
-async getAthletes(req, res) {
-  try {
-    const { coachId } = req.params;
-    const athletes = await User.getAthletesByCoach(coachId);
-    
-    console.log('Данные из БД:', athletes);
-    
-    res.json({
-      status: 'success',
-      data: athletes
-    });
-  } catch (error) {
-    console.error('Ошибка при получении спортсменов:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Ошибка сервера'
-    });
-  }
-},
+  async getAthletes(req, res) {
+    try {
+      const { coachId } = req.params;
+      const athletes = await User.getAthletesByCoach(coachId);
+      
+      res.json({
+        status: 'success',
+        data: athletes
+      });
+    } catch (error) {
+      console.error('Ошибка при получении спортсменов:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Ошибка сервера'
+      });
+    }
+  },
 
   // Обновление данных пользователя
   async update(req, res) {

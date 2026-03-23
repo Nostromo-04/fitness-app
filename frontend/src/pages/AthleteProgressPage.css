@@ -1,0 +1,235 @@
+.athlete-progress-page {
+  padding: 20px;
+  background: var(--tg-theme-bg-color, #ffffff);
+  min-height: 100vh;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.progress-header h1 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-card svg {
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.summary-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.exercise-selector-section {
+  margin-bottom: 24px;
+}
+
+.exercise-selector-section label {
+  display: block;
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #999999);
+  margin-bottom: 8px;
+}
+
+.exercise-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-radius: 8px;
+  background: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
+  font-size: 16px;
+}
+
+.personal-best {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  color: #2c3e50;
+}
+
+.personal-best h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.record-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.record-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.record-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.record-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.record-date {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.progress-chart {
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.progress-chart h3 {
+  margin: 0 0 20px;
+  font-size: 16px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.chart-container {
+  overflow-x: auto;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-bottom: 8px;
+  min-width: 300px;
+}
+
+.chart-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.chart-bar {
+  width: 30px;
+  background: var(--tg-theme-button-color, #2481cc);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s;
+  cursor: pointer;
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+}
+
+.chart-label {
+  font-size: 10px;
+  color: var(--tg-theme-hint-color, #999999);
+  margin-top: 4px;
+  text-align: center;
+}
+
+.chart-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.history-table {
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.history-table h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.5fr;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.5fr;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #ffffff);
+  font-size: 14px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.weight-value {
+  font-weight: 600;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.plan-name {
+  color: var(--tg-theme-hint-color, #999999);
+  font-size: 12px;
+}
+
+.loading, .empty-state {
+  text-align: center;
+  color: var(--tg-theme-hint-color, #999999);
+  padding: 40px;
+}

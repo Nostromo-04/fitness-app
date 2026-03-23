@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 
+// Получение всех пользователей
+router.get('/', userController.getAllUsers);
+
+// Получение пользователя по ID (добавляем)
+router.get('/:id', userController.getUserById);
+
 // Регистрация нового пользователя
 router.post('/register', userController.register);
 

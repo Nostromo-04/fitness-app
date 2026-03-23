@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams }  from 'react-router-dom';
 import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus } from 'lucide-react';
 import athleteService from '../services/athleteService';
 import './AthleteWorkoutPage.css';
@@ -73,7 +73,15 @@ export const AthleteWorkoutPage: React.FC = () => {
         });
         setSets(initialSets);
         
-        const sessionResponse = await athleteService.startWorkout(2, Number(planId), Number(dayId));
+        // Получаем ID спортсмена из localStorage
+        const athleteId = localStorage.getItem('selectedAthleteId');
+        if (!athleteId) {
+          console.error('Не выбран спортсмен');
+          return;
+        }
+        
+        // Используем реальный ID спортсмена
+        const sessionResponse = await athleteService.startWorkout(parseInt(athleteId), Number(planId), Number(dayId));
         setSessionId(sessionResponse.data.id);
       }
     } catch (error) {
@@ -321,7 +329,7 @@ export const AthleteWorkoutPage: React.FC = () => {
 
       <div className="timer-section">
         <div className="timer-display">
-            <span className="timer-value">{formatTime(timerValue)}</span>
+          <span className="timer-value">{formatTime(timerValue)}</span>
         </div>
         
         <div className="timer-controls">
