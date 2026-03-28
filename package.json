@@ -1,0 +1,12 @@
+{
+  "name": "fitness-app",
+  "version": "1.0.0",
+  "description": "Fitness App for Telegram Mini App",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "postinstall": "cd backend && npm install"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
