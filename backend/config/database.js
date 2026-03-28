@@ -1,52 +1,61 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+// Определяем, запущено ли приложение на Railway
+const isRailway = !!process.env.RAILWAY_ENVIRONMENT;
 
-if (missingVars.length > 0) {
-  console.error('❌ Отсутствуют переменные окружения:', missingVars.join(', '));
-  console.error('Проверьте файл .env');
-  process.exit(1);
+// Настройки подключения
+let poolConfig;
+
+if (isRailway && process.env.DATABASE_URL) {
+  // Railway - используем DATABASE_URL
+  console.log('🔧 Running on Railway, using DATABASE_URL');
+  poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000,
+  };
+} else {
+  // Локальная разработка
+  console.log('🔧 Running locally');
+  poolConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'fitness_app',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  };
 }
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000
+console.log('📊 Connection config:', {
+  isRailway,
+  hasDatabaseUrl: !!process.env.DATABASE_URL,
+  host: poolConfig.host || 'using DATABASE_URL',
 });
+
+const pool = new Pool(poolConfig);
 
 // Устанавливаем кодировку при каждом подключении
 pool.on('connect', (client) => {
   client.query("SET client_encoding = 'UTF8'");
 });
 
-// Переопределяем query для гарантии правильной кодировки
-const originalQuery = pool.query.bind(pool);
-pool.query = async (text, params) => {
-  const client = await pool.connect();
-  try {
-    // Устанавливаем UTF8 перед каждым запросом
-    await client.query("SET client_encoding = 'UTF8'");
-    const result = await client.query(text, params);
-    return result;
-  } finally {
-    client.release();
-  }
-};
-
-// Функция для проверки подключения
+// Асинхронная функция для проверки подключения
 async function testConnection() {
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     console.log('✅ Успешно подключено к PostgreSQL');
-    console.log(`   База данных: ${process.env.DB_NAME}`);
-    console.log(`   Хост: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+    
+    if (isRailway) {
+      console.log(`   База данных: Railway PostgreSQL`);
+    } else {
+      console.log(`   База данных: ${poolConfig.database}`);
+      console.log(`   Хост: ${poolConfig.host}:${poolConfig.port}`);
+    }
     
     await client.query("SET client_encoding = 'UTF8'");
     
@@ -55,11 +64,13 @@ async function testConnection() {
     
   } catch (err) {
     console.error('❌ Ошибка при проверке подключения:', err.message);
+    console.error('   Убедитесь, что база данных создана и переменные окружения настроены');
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 
+// Запускаем проверку подключения, но не блокируем запуск сервера
 testConnection().catch(console.error);
 
 module.exports = {
