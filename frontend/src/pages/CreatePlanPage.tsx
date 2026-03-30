@@ -22,22 +22,35 @@ export const CreatePlanPage: React.FC = () => {
   const [showAthleteSelector, setShowAthleteSelector] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Получаем ID тренера из localStorage
+  const getCoachId = (): number | null => {
+    const coachId = localStorage.getItem('selectedCoachId');
+    if (!coachId) {
+      console.error('Не выбран тренер');
+      return null;
+    }
+    return parseInt(coachId);
+  };
+
   // Загружаем спортсменов тренера
   useEffect(() => {
     loadAthletes();
   }, []);
 
   const loadAthletes = async () => {
-  try {
-    const response = await api.get('/users/coach/1/athletes');
-    const data = response.data;
-    
-    console.log('Данные спортсменов:', data.data);
-    setAthletes(data.data || []);
-  } catch (error) {
-    console.error('Ошибка загрузки спортсменов:', error);
-  }
-};
+    try {
+      const coachId = getCoachId();
+      if (!coachId) return;
+
+      const response = await api.get(`/users/coach/${coachId}/athletes`);
+      const data = response.data;
+      
+      console.log('Данные спортсменов:', data.data);
+      setAthletes(data.data || []);
+    } catch (error) {
+      console.error('Ошибка загрузки спортсменов:', error);
+    }
+  };
 
   // Создание нового плана
   const handleCreatePlan = async () => {
@@ -46,11 +59,17 @@ export const CreatePlanPage: React.FC = () => {
       return;
     }
 
+    const coachId = getCoachId();
+    if (!coachId) {
+      alert('Не выбран тренер');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await workoutService.createPlan({
         name: planName,
-        coach_id: 1
+        coach_id: coachId
       });
       setPlanId(response.data.id);
       
