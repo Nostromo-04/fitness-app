@@ -5,6 +5,7 @@ import type { WorkoutDay, DayExercise } from '../types/workout';
 import workoutService from '../services/workoutService';
 import type { Exercise } from '../services/exerciseService';
 import exerciseService from '../services/exerciseService';
+import api from '../services/api';
 import { ExerciseSelector } from '../components/ExerciseSelector';
 import { PlanExerciseItem } from '../components/PlanExerciseItem';
 import './CreatePlanPage.css';
@@ -27,18 +28,16 @@ export const CreatePlanPage: React.FC = () => {
   }, []);
 
   const loadAthletes = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/users/coach/4/athletes');
-      const data = await response.json();
-      
-      console.log('Данные спортсменов:', data.data);
-      
-      // БЕЗ КОНВЕРТАЦИИ - данные должны приходить в UTF-8
-      setAthletes(data.data || []);
-    } catch (error) {
-      console.error('Ошибка загрузки спортсменов:', error);
-    }
-  };
+  try {
+    const response = await api.get('/users/coach/4/athletes');
+    const data = response.data;
+    
+    console.log('Данные спортсменов:', data.data);
+    setAthletes(data.data || []);
+  } catch (error) {
+    console.error('Ошибка загрузки спортсменов:', error);
+  }
+};
 
   // Создание нового плана
   const handleCreatePlan = async () => {
