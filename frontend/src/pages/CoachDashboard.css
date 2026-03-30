@@ -244,3 +244,13 @@
   background: #4caf50;
   color: white;
 }
+
+.athlete-action-btn.plans {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.athlete-action-btn.plans:hover {
+  background: #3498db;
+  color: white;
+}

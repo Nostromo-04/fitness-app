@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Dumbbell, Calendar, PlusCircle, BarChart, CalendarDays, TrendingUp } from 'lucide-react';
+//import { Users, Dumbbell, Calendar, PlusCircle, CalendarDays, TrendingUp } from 'lucide-react';
 import api from '../services/api';
 import workoutService from '../services/workoutService';
 import './CoachDashboard.css';
@@ -146,6 +147,13 @@ export const CoachDashboard: React.FC = () => {
                   <p>{athlete.phone || 'Нет телефона'}</p>
                 </div>
                 <div className="athlete-actions">
+                  <button 
+    className="athlete-action-btn plans"
+    onClick={() => navigate(`/coach/athlete/${athlete.id}/plans`)}
+    title="Планы спортсмена"
+  >
+    <Dumbbell size={18} />
+  </button>
                   <button 
                     className="athlete-action-btn calendar"
                     onClick={() => navigate(`/coach/athlete/${athlete.id}/calendar`)}

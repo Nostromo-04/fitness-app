@@ -1,0 +1,148 @@
+.coach-plans-page {
+  padding: 20px;
+  background: var(--tg-theme-bg-color, #ffffff);
+  min-height: 100vh;
+}
+
+.plans-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.plans-header h1 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.athlete-info-card {
+  background: linear-gradient(135deg, var(--tg-theme-button-color, #2481cc) 0%, #1a5a8c 100%);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: white;
+}
+
+.athlete-info-card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.plans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.plan-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 12px;
+  transition: transform 0.2s;
+}
+
+.plan-card:hover {
+  transform: translateY(-2px);
+}
+
+.plan-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plan-info {
+  flex: 1;
+}
+
+.plan-info h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: var(--tg-theme-text-color, #000000);
+}
+
+.plan-info p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #999999);
+}
+
+.plan-date {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-plan-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(36, 129, 204, 0.1);
+  color: var(--tg-theme-button-color, #2481cc);
+  transition: all 0.2s;
+}
+
+.edit-plan-btn:hover {
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+}
+
+.create-plan-action {
+  margin-top: 24px;
+}
+
+.create-plan-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--tg-theme-button-color, #2481cc);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.create-plan-btn:hover {
+  opacity: 0.9;
+}
+
+.loading, .empty-state {
+  text-align: center;
+  color: var(--tg-theme-hint-color, #999999);
+  padding: 40px;
+}

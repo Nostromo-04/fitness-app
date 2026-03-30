@@ -16,6 +16,7 @@ import { AthleteProgressPage } from './pages/AthleteProgressPage';
 import { CoachAthleteCalendarPage } from './pages/CoachAthleteCalendarPage';
 import { CoachAthleteProgressPage } from './pages/CoachAthleteProgressPage';
 import { UserSelectionPage } from './pages/UserSelectionPage';
+import { CoachAthletePlansPage } from './pages/CoachAthletePlansPage';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import './App.css';
@@ -119,7 +120,10 @@ function App() {
               <AthleteProgressPage />
             </ProtectedRoute>
           } />
-          
+          <Route path="/coach/athlete/:athleteId/plans" element={
+            <CoachAthletePlansPage />
+          } />
+
           {/* Перенаправление для старых маршрутов */}
           <Route path="/login" element={<Navigate to="/select-user" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
