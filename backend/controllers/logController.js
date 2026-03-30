@@ -49,28 +49,22 @@ async startWorkout(req, res) {
   }
 },
 
-  // Завершение тренировки (спортсмен) - ВРЕМЕННАЯ ВЕРСИЯ
+  // Завершение тренировки (спортсмен)
 async completeWorkout(req, res) {
   try {
     const { sessionId } = req.params;
     const { feedback_emoji } = req.body;
     
-    // Временное решение - принимаем и текстовые значения
-    let emoji = feedback_emoji;
-    if (feedback_emoji === 'up' || feedback_emoji === 'good') {
-      emoji = '👍';
-    } else if (feedback_emoji === 'down' || feedback_emoji === 'bad') {
-      emoji = '👎';
-    }
-    
-    if (!['👍', '👎'].includes(emoji)) {
+    // Проверяем, что эмодзи передан
+    if (!feedback_emoji || !['👍', '👎'].includes(feedback_emoji)) {
       return res.status(400).json({
         status: 'error',
-        message: 'Недопустимый эмодзи. Используйте 👍 или 👎'
+        message: 'Необходимо выбрать эмодзи'
       });
     }
 
-    const session = await WorkoutSession.complete(sessionId, emoji);
+    const session = await WorkoutSession.complete(sessionId, feedback_emoji);
+    
     res.json({
       status: 'success',
       data: session
