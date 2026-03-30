@@ -29,7 +29,7 @@ export const CreatePlanPage: React.FC = () => {
 
   const loadAthletes = async () => {
   try {
-    const response = await api.get('/users/coach/4/athletes');
+    const response = await api.get('/users/coach/1/athletes');
     const data = response.data;
     
     console.log('Данные спортсменов:', data.data);
