@@ -74,17 +74,18 @@
 }
 
 .calendar-day {
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--tg-theme-secondary-bg-color, #f0f0f0);
   border-radius: 8px;
-  padding: 4px;
+  padding: 8px;
   cursor: default;
   transition: all 0.2s;
-  position: relative;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .calendar-day.empty {
@@ -96,7 +97,6 @@
   background: var(--tg-theme-secondary-bg-color, #f0f0f0);
   color: var(--tg-theme-text-color, #000000);
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .calendar-day.has-workout:hover {
@@ -105,20 +105,10 @@
   color: white;
 }
 
-.calendar-day.has-workout:hover .workout-indicator .dot {
-  /* При наведении точка сохраняет цвет, но становится ярче */
-  filter: brightness(1.2);
-}
-
 .calendar-day.selected {
   transform: scale(1.05);
   background: var(--tg-theme-button-color, #2481cc) !important;
   color: white !important;
-}
-
-.calendar-day.selected .workout-indicator .dot {
-  /* Точка сохраняет свой цвет на синем фоне */
-  filter: brightness(1.2);
 }
 
 .day-number {
@@ -139,149 +129,20 @@
   display: inline-block;
 }
 
-/* Цвета точек для обычного состояния */
 .dot.good {
-  color: #4caf50; /* Зеленый - легко */
-}
-
-.dot.bad {
-  color: #f44336; /* Красный - тяжело */
-}
-
-.dot.neutral {
-  color: #9e9e9e; /* Серый - нет оценки */
-}
-
-/* При наведении на день */
-.calendar-day.has-workout:hover .dot.good {
   color: #4caf50;
 }
 
-.calendar-day.has-workout:hover .dot.bad {
+.dot.bad {
   color: #f44336;
 }
 
-.calendar-day.has-workout:hover .dot.neutral {
+.dot.neutral {
   color: #9e9e9e;
 }
 
-/* При выделении дня */
-.calendar-day.selected .dot.good {
-  color: #4caf50 !important;
-}
-
-.calendar-day.selected .dot.bad {
-  color: #f44336 !important;
-}
-
+.calendar-day.selected .dot.good,
+.calendar-day.selected .dot.bad,
 .calendar-day.selected .dot.neutral {
-  color: #9e9e9e !important;
-}
-
-/* Стили для деталей тренировки */
-.workout-details {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
-}
-
-.workout-details h3 {
-  margin: 0 0 12px;
-  font-size: 16px;
-  color: var(--tg-theme-text-color, #000000);
-}
-
-.workout-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-}
-
-.plan-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #000000);
-}
-
-.feedback-badge {
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.feedback-badge.good {
-  background: #4caf50;
-  color: white;
-}
-
-.feedback-badge.bad {
-  background: #f44336;
-  color: white;
-}
-
-.exercises-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.exercise-card {
-  background: var(--tg-theme-bg-color, #ffffff);
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.exercise-card h4 {
-  margin: 0 0 4px;
-  font-size: 14px;
-  color: var(--tg-theme-text-color, #000000);
-}
-
-.muscle-group {
-  margin: 0 0 12px;
-  font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
-}
-
-.sets-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sets-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--tg-theme-hint-color, #999999);
-  padding: 4px 0;
-  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-}
-
-.set-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--tg-theme-text-color, #000000);
-  padding: 4px 0;
-}
-
-.loading {
-  text-align: center;
-  color: var(--tg-theme-hint-color, #999999);
-  padding: 20px;
-}
-
-.no-data {
-  text-align: center;
-  color: var(--tg-theme-hint-color, #999999);
-  padding: 20px;
+  color: white !important;
 }
