@@ -50,7 +50,7 @@ export const CreatePlanPage: React.FC = () => {
     try {
       const response = await workoutService.createPlan({
         name: planName,
-        coach_id: 4
+        coach_id: 1
       });
       setPlanId(response.data.id);
       
