@@ -99,12 +99,14 @@ export const CoachAthleteCalendarPage: React.FC = () => {
     setCurrentDate(new Date(year, month - 2, 1));
     setSelectedDay(null);
     setWorkoutDetails(null);
+    setCalendar({}); // Очищаем календарь
   };
 
   const handleNextMonth = () => {
     setCurrentDate(new Date(year, month, 1));
     setSelectedDay(null);
     setWorkoutDetails(null);
+    setCalendar({}); // Очищаем календарь
   };
 
   const monthNames = [
