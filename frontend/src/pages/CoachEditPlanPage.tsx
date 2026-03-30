@@ -98,11 +98,32 @@ export const CoachEditPlanPage: React.FC = () => {
   };
 
   const handleAddExercise = async (exercise: Exercise) => {
+    if (!planId) {
+      console.error('planId не определен');
+      return;
+    }
+
     try {
       const currentDayData = days.find(d => d.number === currentDay);
-      if (!currentDayData) return;
+      if (!currentDayData) {
+        console.error('День не найден');
+        return;
+      }
 
-      await workoutService.addExerciseToDay(currentDayData.exercises[0]?.day_id, {
+      let dayId = currentDayData.exercises[0]?.day_id;
+      
+      if (!dayId) {
+        const daysResponse = await workoutService.getPlanDays(Number(planId));
+        const dayFromApi = daysResponse.data.find((d: any) => d.day_number === currentDay);
+        if (dayFromApi) {
+          dayId = dayFromApi.id;
+        } else {
+          console.error('Не удалось получить ID дня');
+          return;
+        }
+      }
+
+      await workoutService.addExerciseToDay(dayId, {
         exercise_id: exercise.id,
         sets_count: 3,
         default_reps: 10,
@@ -110,7 +131,6 @@ export const CoachEditPlanPage: React.FC = () => {
         order_index: currentDayData.exercises.length
       });
 
-      // Обновляем список упражнений
       const response = await workoutService.getPlanById(Number(planId));
       const updatedDays = response.data.days || [];
       setDays(updatedDays.map((day: WorkoutDay) => ({
@@ -124,6 +144,7 @@ export const CoachEditPlanPage: React.FC = () => {
       setShowExerciseSelector(false);
     } catch (error) {
       console.error('Ошибка добавления упражнения:', error);
+      alert('Не удалось добавить упражнение');
     }
   };
 
