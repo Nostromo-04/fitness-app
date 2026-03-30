@@ -55,8 +55,8 @@ export const CoachAthletePlansPage: React.FC = () => {
   };
 
   const handleEditPlan = (planId: number) => {
-    navigate(`/coach/create-plan?edit=${planId}`);
-  };
+  navigate(`/coach/edit-plan/${planId}`);
+};
 
   return (
     <div className="coach-plans-page">

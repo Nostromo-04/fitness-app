@@ -17,6 +17,7 @@ import { CoachAthleteCalendarPage } from './pages/CoachAthleteCalendarPage';
 import { CoachAthleteProgressPage } from './pages/CoachAthleteProgressPage';
 import { UserSelectionPage } from './pages/UserSelectionPage';
 import { CoachAthletePlansPage } from './pages/CoachAthletePlansPage';
+import { CoachEditPlanPage } from './pages/CoachEditPlanPage';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import './App.css';
@@ -122,6 +123,9 @@ function App() {
           } />
           <Route path="/coach/athlete/:athleteId/plans" element={
             <CoachAthletePlansPage />
+          } />
+          <Route path="/coach/edit-plan/:planId" element={
+            <CoachEditPlanPage />
           } />
 
           {/* Перенаправление для старых маршрутов */}
