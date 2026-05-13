@@ -76,9 +76,14 @@ class WorkoutService {
 
   // Добавление упражнения в день
   async addExerciseToDay(dayId: number, data: AddExerciseData) {
-    const response = await api.post(`/workouts/days/${dayId}/exercises`, data);
-    return response.data;
-  }
+  // Преобразуем null в undefined для отправки на сервер
+  const preparedData = {
+    ...data,
+    default_weight: data.default_weight === null ? undefined : data.default_weight
+  };
+  const response = await api.post(`/workouts/days/${dayId}/exercises`, preparedData);
+  return response.data;
+}
 
   // Получение упражнений дня
   async getDayExercises(dayId: number) {
@@ -88,9 +93,13 @@ class WorkoutService {
 
   // Обновление упражнения в дне
   async updateDayExercise(id: number, data: Partial<AddExerciseData>) {
-    const response = await api.put(`/workouts/day-exercises/${id}`, data);
-    return response.data;
-  }
+  const preparedData = {
+    ...data,
+    default_weight: data.default_weight === null ? undefined : data.default_weight
+  };
+  const response = await api.put(`/workouts/day-exercises/${id}`, preparedData);
+  return response.data;
+}
 
   // Удаление упражнения из дня
   async deleteDayExercise(id: number) {

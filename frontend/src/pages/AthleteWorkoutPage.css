@@ -277,3 +277,62 @@
   color: var(--tg-theme-hint-color, #999999);
   padding: 40px;
 }
+
+.progress-chart-mini {
+  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.progress-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #999999);
+  margin-bottom: 12px;
+}
+
+.progress-chart-loading {
+  font-size: 10px;
+}
+
+.progress-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 8px;
+  height: 60px;
+}
+
+.progress-chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress-chart-bar {
+  width: 100%;
+  max-width: 30px;
+  background: var(--tg-theme-button-color, #2481cc);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s;
+  min-height: 2px;
+}
+
+.progress-chart-label {
+  font-size: 9px;
+  color: var(--tg-theme-hint-color, #999999);
+  text-align: center;
+}
+
+.progress-chart-empty {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #999999);
+  padding: 8px;
+}

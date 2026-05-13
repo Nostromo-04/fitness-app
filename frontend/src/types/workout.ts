@@ -22,7 +22,7 @@ export interface DayExercise {
   muscle_group: string;
   sets_count: number;
   default_reps: number;
-  default_weight: number;
+  default_weight: number | null;  // ← разрешаем null
   order_index: number;
   image_url?: string;
   video_url?: string;
@@ -41,6 +41,6 @@ export interface AddExerciseData {
   exercise_id: number;
   sets_count: number;
   default_reps: number;
-  default_weight: number;
+  default_weight: number | null;  // ← разрешаем null
   order_index: number;
 }

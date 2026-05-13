@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams }  from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Volume2, VolumeX } from 'lucide-react';
 import athleteService from '../services/athleteService';
 import './AthleteWorkoutPage.css';
 
@@ -20,8 +20,13 @@ interface Exercise {
 interface Set {
   set_number: number;
   reps: number;
-  weight: number;
+  weight: number | null;
   completed: boolean;
+}
+
+interface ProgressPoint {
+  weight: number;
+  date: string;
 }
 
 export const AthleteWorkoutPage: React.FC = () => {
@@ -38,6 +43,8 @@ export const AthleteWorkoutPage: React.FC = () => {
   const [timerSound, setTimerSound] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [progressData, setProgressData] = useState<ProgressPoint[]>([]);
+  const [progressLoading, setProgressLoading] = useState(false);
 
   const currentExercise = exercises[currentExerciseIndex];
   const currentSets = sets[currentExercise?.id] || [];
@@ -50,8 +57,36 @@ export const AthleteWorkoutPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (currentExercise) {
+      loadProgress(currentExercise.exercise_id);
+    }
+  }, [currentExercise]);
+
   const initAudio = () => {
-    audioRef.current = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+    audioRef.current = new Audio('https://actions.google.com/sound/1331136');
+  };
+
+  const loadProgress = async (exerciseId: number) => {
+    const athleteId = localStorage.getItem('selectedAthleteId');
+    if (!athleteId) return;
+    
+    setProgressLoading(true);
+    try {
+      const response = await athleteService.getExerciseProgress(parseInt(athleteId), exerciseId, 5);
+      const progress = response.data.progress || [];
+      
+      const chartData = progress.map((p: any) => ({
+        weight: parseFloat(p.weight_done),
+        date: new Date(p.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
+      })).reverse();
+      
+      setProgressData(chartData);
+    } catch (error) {
+      console.error('Ошибка загрузки прогресса:', error);
+    } finally {
+      setProgressLoading(false);
+    }
   };
 
   const loadWorkoutData = async () => {
@@ -67,20 +102,18 @@ export const AthleteWorkoutPage: React.FC = () => {
           initialSets[ex.id] = Array.from({ length: ex.sets_count }, (_, i) => ({
             set_number: i + 1,
             reps: ex.default_reps,
-            weight: ex.default_weight,
+            weight: ex.default_weight === 0 ? null : ex.default_weight,
             completed: false
           }));
         });
         setSets(initialSets);
         
-        // Получаем ID спортсмена из localStorage
         const athleteId = localStorage.getItem('selectedAthleteId');
         if (!athleteId) {
           console.error('Не выбран спортсмен');
           return;
         }
         
-        // Используем реальный ID спортсмена
         const sessionResponse = await athleteService.startWorkout(parseInt(athleteId), Number(planId), Number(dayId));
         setSessionId(sessionResponse.data.id);
       }
@@ -120,14 +153,14 @@ export const AthleteWorkoutPage: React.FC = () => {
     }
   };
 
-  const handleSetChange = (exerciseId: number, setNumber: number, field: 'reps' | 'weight', value: number) => {
+  const handleSetChange = (exerciseId: number, setNumber: number, field: 'reps' | 'weight', value: number | null) => {
     const updatedSets = { ...sets };
     const setIndex = updatedSets[exerciseId].findIndex(s => s.set_number === setNumber);
     
     if (setIndex !== -1) {
       updatedSets[exerciseId][setIndex][field] = value;
       
-      if (setIndex < updatedSets[exerciseId].length - 1) {
+      if (field === 'weight' && setIndex < updatedSets[exerciseId].length - 1) {
         for (let i = setIndex + 1; i < updatedSets[exerciseId].length; i++) {
           updatedSets[exerciseId][i][field] = value;
         }
@@ -152,7 +185,7 @@ export const AthleteWorkoutPage: React.FC = () => {
     const newSet: Set = {
       set_number: newSetNumber,
       reps: lastSet ? lastSet.reps : exercise.default_reps,
-      weight: lastSet ? lastSet.weight : exercise.default_weight,
+      weight: lastSet ? (lastSet.weight !== null ? lastSet.weight : null) : (exercise.default_weight === 0 ? null : exercise.default_weight),
       completed: false
     };
 
@@ -184,7 +217,9 @@ export const AthleteWorkoutPage: React.FC = () => {
           if (timerSound && audioRef.current) {
             audioRef.current.play().catch(e => console.log('Ошибка воспроизведения звука:', e));
           }
-          return 0;
+          
+          setTimerValue(timerDefault);
+          return timerDefault;
         }
         return prev - 1;
       });
@@ -231,6 +266,8 @@ export const AthleteWorkoutPage: React.FC = () => {
     });
   };
 
+  const maxWeight = progressData.length > 0 ? Math.max(...progressData.map(p => p.weight)) : 1;
+
   if (loading) {
     return <div className="loading">Загрузка тренировки...</div>;
   }
@@ -259,6 +296,29 @@ export const AthleteWorkoutPage: React.FC = () => {
           <h2>{currentExercise.exercise_name}</h2>
           <p className="muscle-group">{currentExercise.muscle_group}</p>
           
+          <div className="progress-chart-mini">
+            <div className="progress-chart-header">
+              <span>Прогресс по весу</span>
+              {progressLoading && <span className="progress-chart-loading">...</span>}
+            </div>
+            <div className="progress-chart-bars">
+              {progressData.length > 0 ? (
+                progressData.map((point, idx) => (
+                  <div key={idx} className="progress-chart-bar-wrapper">
+                    <div 
+                      className="progress-chart-bar" 
+                      style={{ height: `${(point.weight / maxWeight) * 40}px` }}
+                      title={`${point.date}: ${point.weight} кг`}
+                    />
+                    <span className="progress-chart-label">{point.date}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="progress-chart-empty">Нет данных</div>
+              )}
+            </div>
+          </div>
+
           {(currentExercise.image_url || currentExercise.video_url) && (
             <div className="exercise-media">
               {currentExercise.image_url && (
@@ -301,10 +361,14 @@ export const AthleteWorkoutPage: React.FC = () => {
               type="number"
               min="0"
               step="2.5"
-              value={set.weight}
-              onChange={(e) => handleSetChange(currentExercise.id, set.set_number, 'weight', parseFloat(e.target.value) || 0)}
+              value={set.weight === null ? '' : set.weight}
+              onChange={(e) => {
+                const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                handleSetChange(currentExercise.id, set.set_number, 'weight', value);
+              }}
               disabled={set.completed}
               className="set-input"
+              placeholder="вес"
             />
             
             <button
@@ -338,7 +402,7 @@ export const AthleteWorkoutPage: React.FC = () => {
             onClick={() => setTimerSound(!timerSound)}
             title={timerSound ? 'Звук вкл' : 'Звук выкл'}
           >
-            🔔
+            {timerSound ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
           
           <button 

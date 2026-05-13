@@ -108,7 +108,7 @@ export const CreatePlanPage: React.FC = () => {
         exercise_id: exercise.id,
         sets_count: 3,
         default_reps: 10,
-        default_weight: 0,
+        default_weight: null,  // ← меняем 0 на null
         order_index: days[currentDay-1]?.exercises.length || 0
       });
 

@@ -23,18 +23,13 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [setsCount, setSetsCount] = useState(exercise.sets_count);
   const [reps, setReps] = useState(exercise.default_reps);
-  const [weight, setWeight] = useState(exercise.default_weight);
+  const [weight, setWeight] = useState<number | null>(exercise.default_weight === 0 ? null : exercise.default_weight);
 
   const handleSave = () => {
-    console.log('💾 Сохранение упражнения:', exercise.id, {
-      sets_count: setsCount,
-      default_reps: reps,
-      default_weight: weight
-    });
     onUpdate(exercise.id, {
       sets_count: setsCount,
       default_reps: reps,
-      default_weight: weight
+      default_weight: weight === null ? 0 : weight
     });
     setIsEditing(false);
   };
@@ -140,8 +135,11 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
                 type="number"
                 min="0"
                 step="2.5"
-                value={weight}
-                onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
+                value={weight === null ? '' : weight}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                  setWeight(val);
+                }}
               />
             </div>
           </div>
@@ -166,7 +164,7 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
           </div>
           <div className="details-row">
             <span className="detail-label">Вес:</span>
-            <span className="detail-value">{exercise.default_weight} кг</span>
+            <span className="detail-value">{exercise.default_weight === 0 ? '-' : `${exercise.default_weight} кг`}</span>
           </div>
         </div>
       )}
