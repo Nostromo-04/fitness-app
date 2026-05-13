@@ -64,7 +64,7 @@ export const AthleteWorkoutPage: React.FC = () => {
   }, [currentExercise]);
 
   const initAudio = () => {
-    audioRef.current = new Audio('https://actions.google.com/sound/1331136');
+    audioRef.current = new Audio('/sounds/beep.mp3');
   };
 
   const loadProgress = async (exerciseId: number) => {
@@ -310,7 +310,7 @@ export const AthleteWorkoutPage: React.FC = () => {
                       style={{ height: `${(point.weight / maxWeight) * 40}px` }}
                       title={`${point.date}: ${point.weight} кг`}
                     />
-                    <span className="progress-chart-label">{point.date}</span>
+                    <span className="progress-chart-label">{point.weight} кг</span>
                   </div>
                 ))
               ) : (
