@@ -130,68 +130,73 @@ export const AthleteWorkoutPage: React.FC = () => {
     const exercise = exercises.find(e => e.id === exerciseId);
     if (!exercise) return;
 
-    const updatedSets = { ...sets };
-    const setIndex = updatedSets[exerciseId].findIndex(s => s.set_number === setNumber);
-    
-    if (setIndex !== -1) {
-      updatedSets[exerciseId][setIndex].completed = completed;
-      setSets(updatedSets);
-
-      try {
-        await athleteService.logSet(sessionId, {
+    setSets(prevSets => {
+      const updatedSets = { ...prevSets };
+      const setIndex = updatedSets[exerciseId]?.findIndex(s => s.set_number === setNumber);
+      
+      if (setIndex !== -1 && setIndex !== undefined) {
+        updatedSets[exerciseId][setIndex].completed = completed;
+        
+        // Сохраняем на сервер
+        athleteService.logSet(sessionId, {
           exercise_id: exercise.exercise_id,
           set_number: setNumber,
           reps_done: updatedSets[exerciseId][setIndex].reps,
           weight_done: updatedSets[exerciseId][setIndex].weight,
           is_completed: completed
+        }).catch(error => {
+          console.error('Ошибка сохранения подхода:', error);
+          // Откат при ошибке
+          updatedSets[exerciseId][setIndex].completed = !completed;
         });
-      } catch (error) {
-        console.error('Ошибка сохранения подхода:', error);
-        updatedSets[exerciseId][setIndex].completed = !completed;
-        setSets(updatedSets);
       }
-    }
+      return updatedSets;
+    });
   };
 
   const handleSetChange = (exerciseId: number, setNumber: number, field: 'reps' | 'weight', value: number | null) => {
-    const updatedSets = { ...sets };
-    const setIndex = updatedSets[exerciseId].findIndex(s => s.set_number === setNumber);
-    
-    if (setIndex !== -1) {
-      updatedSets[exerciseId][setIndex][field] = value;
+    setSets(prevSets => {
+      const updatedSets = { ...prevSets };
+      const setIndex = updatedSets[exerciseId]?.findIndex(s => s.set_number === setNumber);
       
-      if (field === 'weight' && setIndex < updatedSets[exerciseId].length - 1) {
-        for (let i = setIndex + 1; i < updatedSets[exerciseId].length; i++) {
-          updatedSets[exerciseId][i][field] = value;
+      if (setIndex !== -1 && setIndex !== undefined) {
+        updatedSets[exerciseId][setIndex][field] = value;
+        
+        if (field === 'weight' && setIndex < updatedSets[exerciseId].length - 1) {
+          for (let i = setIndex + 1; i < updatedSets[exerciseId].length; i++) {
+            updatedSets[exerciseId][i][field] = value;
+          }
         }
       }
-      
-      setSets(updatedSets);
-    }
+      return updatedSets;
+    });
   };
 
   const handleAddSet = async (exerciseId: number) => {
     const exercise = exercises.find(e => e.id === exerciseId);
     if (!exercise) return;
 
-    const currentExerciseSets = sets[exerciseId] || [];
-    if (currentExerciseSets.length >= 10) {
-      alert('Максимальное количество подходов - 10');
-      return;
-    }
+    setSets(prevSets => {
+      const currentExerciseSets = prevSets[exerciseId] || [];
+      if (currentExerciseSets.length >= 10) {
+        alert('Максимальное количество подходов - 10');
+        return prevSets;
+      }
 
-    const lastSet = currentExerciseSets[currentExerciseSets.length - 1];
-    const newSetNumber = currentExerciseSets.length + 1;
-    const newSet: Set = {
-      set_number: newSetNumber,
-      reps: lastSet ? lastSet.reps : exercise.default_reps,
-      weight: lastSet ? (lastSet.weight !== null ? lastSet.weight : null) : (exercise.default_weight === 0 ? null : exercise.default_weight),
-      completed: false
-    };
+      const lastSet = currentExerciseSets[currentExerciseSets.length - 1];
+      const newSetNumber = currentExerciseSets.length + 1;
+      const newSet: Set = {
+        set_number: newSetNumber,
+        reps: lastSet ? lastSet.reps : exercise.default_reps,
+        weight: lastSet ? (lastSet.weight !== null ? lastSet.weight : null) : (exercise.default_weight === 0 ? null : exercise.default_weight),
+        completed: false
+      };
 
-    const updatedSets = { ...sets };
-    updatedSets[exerciseId] = [...currentExerciseSets, newSet];
-    setSets(updatedSets);
+      return {
+        ...prevSets,
+        [exerciseId]: [...currentExerciseSets, newSet]
+      };
+    });
   };
 
   const isExerciseCompleted = (exerciseId: number) => {
@@ -200,7 +205,7 @@ export const AthleteWorkoutPage: React.FC = () => {
   };
 
   const allExercisesCompleted = () => {
-    return exercises.every(ex => isExerciseCompleted(ex.id));
+    return exercises.length > 0 && exercises.every(ex => isExerciseCompleted(ex.id));
   };
 
   const startTimer = () => {
