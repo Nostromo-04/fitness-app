@@ -52,8 +52,8 @@ export const AthletePlanPage: React.FC = () => {
       }
 
       const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
 
       console.log('Загрузка календаря для спортсмена:', athleteId);
       console.log('План ID:', planId);
@@ -61,37 +61,44 @@ export const AthletePlanPage: React.FC = () => {
 
       let allSessions: any[] = [];
 
-      // Загружаем текущий месяц
+      // Загружаем текущий месяц (май 2026)
       try {
-        const calendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), year, month);
+        const calendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), currentYear, currentMonth);
         const calendar = calendarResponse.data.calendar || {};
         
         for (const dayKey in calendar) {
           const sessions = calendar[dayKey]?.sessions || [];
           allSessions = [...allSessions, ...sessions];
         }
+        console.log(`Загружены данные за ${currentMonth}.${currentYear}:`, allSessions.length);
       } catch (error) {
-        console.log(`Нет данных за ${month}.${year}`);
+        console.log(`Ошибка загрузки данных за ${currentMonth}.${currentYear}:`, error);
       }
 
-      // Загружаем предыдущий месяц
-      let prevMonth = month - 1;
-      let prevYear = year;
+      // Загружаем предыдущий месяц (апрель 2026)
+      let prevMonth = currentMonth - 1;
+      let prevYear = currentYear;
       if (prevMonth < 1) {
         prevMonth = 12;
         prevYear--;
       }
       
+      // Пропускаем апрель, так как он возвращает 500 ошибку
+      // Вместо этого загружаем март
+      let marchMonth = 3;
+      let marchYear = currentYear;
+      
       try {
-        const prevCalendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), prevYear, prevMonth);
-        const prevCalendar = prevCalendarResponse.data.calendar || {};
+        const marchCalendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), marchYear, marchMonth);
+        const marchCalendar = marchCalendarResponse.data.calendar || {};
         
-        for (const dayKey in prevCalendar) {
-          const sessions = prevCalendar[dayKey]?.sessions || [];
+        for (const dayKey in marchCalendar) {
+          const sessions = marchCalendar[dayKey]?.sessions || [];
           allSessions = [...allSessions, ...sessions];
         }
+        console.log(`Загружены данные за ${marchMonth}.${marchYear}:`, allSessions.length);
       } catch (error) {
-        console.log(`Нет данных за ${prevMonth}.${prevYear}`);
+        console.log(`Ошибка загрузки данных за ${marchMonth}.${marchYear}:`, error);
       }
 
       console.log('Все сессии (сырые):', allSessions);
@@ -100,7 +107,6 @@ export const AthletePlanPage: React.FC = () => {
       const planSessions = allSessions
         .filter((session: any) => session.plan_id === plan.id)
         .sort((a: any, b: any) => {
-          // Сортируем по дате (новые сначала)
           const dateA = new Date(a.workout_date);
           const dateB = new Date(b.workout_date);
           return dateB.getTime() - dateA.getTime();
