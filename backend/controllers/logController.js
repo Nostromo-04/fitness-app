@@ -1,82 +1,83 @@
 const WorkoutSession = require('../models/WorkoutSession');
 const SetLog = require('../models/SetLog');
-const db = require('../config/database'); // Этого импорта не хватало!
+const db = require('../config/database');
 
 const logController = {
   // === УПРАВЛЕНИЕ ТРЕНИРОВОЧНЫМИ СЕССИЯМИ ===
   
   // Начало тренировки (спортсмен)
-async startWorkout(req, res) {
-  try {
-    const { athlete_id, plan_id, day_id } = req.body;
-    
-    console.log('Получен запрос на старт тренировки:', { athlete_id, plan_id, day_id });
-    
-    // Проверяем, есть ли активная тренировка
-    const activeSession = await WorkoutSession.getActiveSession(athlete_id);
-    
-    if (activeSession) {
-      console.log('Найдена активная тренировка:', activeSession);
+  async startWorkout(req, res) {
+    try {
+      const { athlete_id, plan_id, day_id } = req.body;
       
-      // Если это тот же день - возвращаем существующую сессию
-      if (activeSession.plan_id === plan_id && activeSession.day_id === day_id) {
-        console.log('Возвращаем существующую сессию');
-        return res.status(200).json({
-          status: 'success',
-          data: activeSession,
-          message: 'Продолжаем существующую тренировку'
-        });
+      console.log('Получен запрос на старт тренировки:', { athlete_id, plan_id, day_id });
+      
+      // Проверяем, есть ли активная тренировка
+      const activeSession = await WorkoutSession.getActiveSession(athlete_id);
+      
+      if (activeSession) {
+        console.log('Найдена активная тренировка:', activeSession);
+        
+        // Если это тот же день - возвращаем существующую сессию
+        if (activeSession.plan_id === plan_id && activeSession.day_id === day_id) {
+          console.log('Возвращаем существующую сессию');
+          return res.status(200).json({
+            status: 'success',
+            data: activeSession,
+            message: 'Продолжаем существующую тренировку'
+          });
+        }
+        
+        // Если другой день - завершаем старую и создаем новую
+        console.log('Завершаем старую тренировку и создаем новую');
+        await WorkoutSession.complete(activeSession.id, null);
       }
+
+      const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });
+      console.log('Создана новая сессия:', session);
       
-      // Если другой день - завершаем старую и создаем новую
-      console.log('Завершаем старую тренировку и создаем новую');
-      await WorkoutSession.complete(activeSession.id, null);
-    }
-
-    const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });
-    console.log('Создана новая сессия:', session);
-    
-    res.status(201).json({
-      status: 'success',
-      data: session
-    });
-  } catch (error) {
-    console.error('Ошибка при начале тренировки:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Ошибка сервера'
-    });
-  }
-},
-
-  // Завершение тренировки (спортсмен)
-async completeWorkout(req, res) {
-  try {
-    const { sessionId } = req.params;
-    const { feedback_emoji } = req.body;
-    
-    // Проверяем, что эмодзи передан
-    if (!feedback_emoji || !['👍', '👎'].includes(feedback_emoji)) {
-      return res.status(400).json({
+      res.status(201).json({
+        status: 'success',
+        data: session
+      });
+    } catch (error) {
+      console.error('Ошибка при начале тренировки:', error);
+      res.status(500).json({
         status: 'error',
-        message: 'Необходимо выбрать эмодзи'
+        message: 'Ошибка сервера'
       });
     }
+  },
 
-    const session = await WorkoutSession.complete(sessionId, feedback_emoji);
-    
-    res.json({
-      status: 'success',
-      data: session
-    });
-  } catch (error) {
-    console.error('Ошибка при завершении тренировки:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Ошибка сервера'
-    });
-  }
-},
+  // Завершение тренировки (спортсмен)
+  async completeWorkout(req, res) {
+    try {
+      const { sessionId } = req.params;
+      const { feedback_emoji } = req.body;
+      
+      // Проверяем, что эмодзи передан
+      if (!feedback_emoji || !['👍', '👎'].includes(feedback_emoji)) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Необходимо выбрать эмодзи'
+        });
+      }
+
+      const session = await WorkoutSession.complete(sessionId, feedback_emoji);
+      
+      res.json({
+        status: 'success',
+        data: session
+      });
+    } catch (error) {
+      console.error('Ошибка при завершении тренировки:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Ошибка сервера'
+      });
+    }
+  },
+  
   // Получение активной тренировки
   async getActiveWorkout(req, res) {
     try {
@@ -105,7 +106,7 @@ async completeWorkout(req, res) {
       const setData = req.body;
       
       const log = await SetLog.logSet({
-        session_id: parseInt(sessionId), // Добавил parseInt
+        session_id: parseInt(sessionId),
         ...setData
       });
       
@@ -126,7 +127,7 @@ async completeWorkout(req, res) {
   async getSessionSets(req, res) {
     try {
       const { sessionId } = req.params;
-      const sets = await SetLog.getSessionSets(parseInt(sessionId)); // Добавил parseInt
+      const sets = await SetLog.getSessionSets(parseInt(sessionId));
       
       res.json({
         status: 'success',
@@ -167,7 +168,7 @@ async completeWorkout(req, res) {
   async deleteSet(req, res) {
     try {
       const { setId } = req.params;
-      const result = await SetLog.deleteSet(parseInt(setId)); // Добавил parseInt
+      const result = await SetLog.deleteSet(parseInt(setId));
       
       if (!result) {
         return res.status(404).json({
@@ -204,21 +205,31 @@ async completeWorkout(req, res) {
         });
       }
 
+      const monthNum = parseInt(month);
+      if (monthNum < 1 || monthNum > 12) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Некорректный месяц'
+        });
+      }
+
       const sessions = await WorkoutSession.getAthleteSessionsForCoach(
-        parseInt(athleteId), // Добавил parseInt
-        parseInt(year), 
-        parseInt(month)
+        parseInt(athleteId),
+        parseInt(year),
+        monthNum
       );
       
       // Форматируем для календаря
       const calendar = {};
-      sessions.forEach(s => {
-        const day = new Date(s.workout_date).getDate();
-        calendar[day] = {
-          emoji: s.feedback_emoji,
-          sessions: s.sessions
-        };
-      });
+      if (sessions && sessions.length > 0) {
+        sessions.forEach(s => {
+          const day = new Date(s.workout_date).getDate();
+          calendar[day] = {
+            emoji: s.feedback_emoji,
+            sessions: s.sessions
+          };
+        });
+      }
 
       res.json({
         status: 'success',
@@ -238,98 +249,99 @@ async completeWorkout(req, res) {
   },
 
   // Получение деталей тренировки по дате (упрощенная версия)
-async getWorkoutByDate(req, res) {
-  try {
-    const { athleteId, date } = req.params;
-    
-    // Сначала найдем сессию за эту дату
-    const sessionQuery = `
-      SELECT 
-        ws.id,
-        ws.plan_id,
-        ws.day_id,
-        ws.feedback_emoji,
-        ws.completed_at,
-        wp.name as plan_name,
-        wd.day_number
-      FROM workout_sessions ws
-      JOIN workout_plans wp ON ws.plan_id = wp.id
-      JOIN workout_days wd ON ws.day_id = wd.id
-      WHERE ws.athlete_id = $1 
-        AND DATE(ws.workout_date) = $2
-        AND ws.completed_at IS NOT NULL
-      LIMIT 1
-    `;
-    
-    const sessionResult = await db.query(sessionQuery, [parseInt(athleteId), date]);
-    
-    if (sessionResult.rows.length === 0) {
-      return res.status(404).json({
+  async getWorkoutByDate(req, res) {
+    try {
+      const { athleteId, date } = req.params;
+      
+      // Сначала найдем сессию за эту дату
+      const sessionQuery = `
+        SELECT 
+          ws.id,
+          ws.plan_id,
+          ws.day_id,
+          ws.feedback_emoji,
+          ws.completed_at,
+          wp.name as plan_name,
+          wd.day_number
+        FROM workout_sessions ws
+        JOIN workout_plans wp ON ws.plan_id = wp.id
+        JOIN workout_days wd ON ws.day_id = wd.id
+        WHERE ws.athlete_id = $1 
+          AND DATE(ws.workout_date) = $2
+          AND ws.completed_at IS NOT NULL
+        LIMIT 1
+      `;
+      
+      const sessionResult = await db.query(sessionQuery, [parseInt(athleteId), date]);
+      
+      if (sessionResult.rows.length === 0) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'Тренировка не найдена'
+        });
+      }
+      
+      const session = sessionResult.rows[0];
+      
+      // Теперь получим все подходы для этой сессии
+      const setsQuery = `
+        SELECT 
+          sl.exercise_id,
+          e.name as exercise_name,
+          e.muscle_group,
+          sl.set_number,
+          sl.reps_done,
+          sl.weight_done,
+          sl.is_completed
+        FROM set_logs sl
+        JOIN exercises e ON sl.exercise_id = e.id
+        WHERE sl.session_id = $1
+        ORDER BY e.name, sl.set_number
+      `;
+      
+      const setsResult = await db.query(setsQuery, [session.id]);
+      
+      // Группируем подходы по упражнениям
+      const exercises = {};
+      setsResult.rows.forEach(set => {
+        if (!exercises[set.exercise_id]) {
+          exercises[set.exercise_id] = {
+            exercise_id: set.exercise_id,
+            exercise_name: set.exercise_name,
+            muscle_group: set.muscle_group,
+            sets: []
+          };
+        }
+        exercises[set.exercise_id].sets.push({
+          set_number: set.set_number,
+          reps_done: set.reps_done,
+          weight_done: set.weight_done,
+          is_completed: set.is_completed
+        });
+      });
+
+      res.json({
+        status: 'success',
+        data: {
+          ...session,
+          exercises: Object.values(exercises)
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при получении тренировки по дате:', error);
+      console.error(error.stack);
+      res.status(500).json({
         status: 'error',
-        message: 'Тренировка не найдена'
+        message: 'Ошибка сервера'
       });
     }
-    
-    const session = sessionResult.rows[0];
-    
-    // Теперь получим все подходы для этой сессии
-    const setsQuery = `
-      SELECT 
-        sl.exercise_id,
-        e.name as exercise_name,
-        e.muscle_group,
-        sl.set_number,
-        sl.reps_done,
-        sl.weight_done,
-        sl.is_completed
-      FROM set_logs sl
-      JOIN exercises e ON sl.exercise_id = e.id
-      WHERE sl.session_id = $1
-      ORDER BY e.name, sl.set_number
-    `;
-    
-    const setsResult = await db.query(setsQuery, [session.id]);
-    
-    // Группируем подходы по упражнениям
-    const exercises = {};
-    setsResult.rows.forEach(set => {
-      if (!exercises[set.exercise_id]) {
-        exercises[set.exercise_id] = {
-          exercise_id: set.exercise_id,
-          exercise_name: set.exercise_name,
-          muscle_group: set.muscle_group,
-          sets: []
-        };
-      }
-      exercises[set.exercise_id].sets.push({
-        set_number: set.set_number,
-        reps_done: set.reps_done,
-        weight_done: set.weight_done,
-        is_completed: set.is_completed
-      });
-    });
+  },
 
-    res.json({
-      status: 'success',
-      data: {
-        ...session,
-        exercises: Object.values(exercises)
-      }
-    });
-  } catch (error) {
-    console.error('Ошибка при получении тренировки по дате:', error);
-    console.error(error.stack);
-    res.status(500).json({
-      status: 'error',
-      message: 'Ошибка сервера'
-    });
-  }
-},
   // Получение деталей тренировки по ID
   async getWorkoutDetails(req, res) {
     try {
       const { sessionId } = req.params;
-      const details = await WorkoutSession.getSessionDetails(parseInt(sessionId)); // Добавил parseInt
+      const details = await WorkoutSession.getSessionDetails(parseInt(sessionId));
       
       if (!details) {
         return res.status(404).json({
@@ -440,7 +452,7 @@ async getWorkoutByDate(req, res) {
       });
     } catch (error) {
       console.error('Ошибка при получении сводки:', error);
-      console.error(error.stack); // Добавил стек ошибки для отладки
+      console.error(error.stack);
       res.status(500).json({
         status: 'error',
         message: 'Ошибка сервера'

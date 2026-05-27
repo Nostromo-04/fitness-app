@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Dumbbell, CheckCircle, Circle, Target } from 'lucide-react';
+import { ArrowLeft, Dumbbell, CheckCircle } from 'lucide-react';
 import athleteService from '../services/athleteService';
 import './AthletePlanPage.css';
 
@@ -8,11 +8,6 @@ interface WorkoutDay {
   id: number;
   day_number: number;
   exercises: any[];
-}
-
-interface CalendarDay {
-  day_number: number;
-  date: string;
 }
 
 export const AthletePlanPage: React.FC = () => {
@@ -65,22 +60,30 @@ export const AthletePlanPage: React.FC = () => {
       console.log('План ID:', planId);
       console.log('Название плана:', plan?.name);
 
-      // Получаем календарь за текущий месяц
-      const calendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), year, month);
-      const calendar = calendarResponse.data.calendar || {};
+      let allCalendar = {};
 
-      // Получаем календарь за следующий месяц (на случай, если тренировка была в конце месяца)
-      let nextMonth = month + 1;
-      let nextYear = year;
-      if (nextMonth > 12) {
-        nextMonth = 1;
-        nextYear++;
+      // Загружаем текущий месяц
+      try {
+        const calendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), year, month);
+        allCalendar = { ...calendarResponse.data.calendar };
+      } catch (error) {
+        console.log(`Нет данных за ${month}.${year}`);
       }
-      const nextCalendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), nextYear, nextMonth);
-      const nextCalendar = nextCalendarResponse.data.calendar || {};
 
-      // Объединяем календари
-      const allCalendar = { ...calendar, ...nextCalendar };
+      // Загружаем предыдущий месяц (на случай, если тренировка была в прошлом месяце)
+      let prevMonth = month - 1;
+      let prevYear = year;
+      if (prevMonth < 1) {
+        prevMonth = 12;
+        prevYear--;
+      }
+      
+      try {
+        const prevCalendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), prevYear, prevMonth);
+        allCalendar = { ...prevCalendarResponse.data.calendar, ...allCalendar };
+      } catch (error) {
+        console.log(`Нет данных за ${prevMonth}.${prevYear}`);
+      }
 
       console.log('Календарь:', allCalendar);
 
