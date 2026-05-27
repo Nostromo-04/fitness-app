@@ -94,31 +94,31 @@ export const AthletePlanPage: React.FC = () => {
         console.log(`Нет данных за ${prevMonth}.${prevYear}`);
       }
 
-      console.log('Все сессии:', allSessions);
+      console.log('Все сессии (сырые):', allSessions);
 
-      // Находим последнюю выполненную тренировку для этого плана
+      // Фильтруем сессии для этого плана и сортируем по дате
       const planSessions = allSessions
         .filter((session: any) => session.plan_id === plan.id)
         .sort((a: any, b: any) => {
-          // Сортируем по дате (более новые сначала)
-          // Нужно добавить поле date к сессиям или использовать существующее
-          return 0; // TODO: сортировка по дате
+          // Сортируем по дате (новые сначала)
+          const dateA = new Date(a.workout_date);
+          const dateB = new Date(b.workout_date);
+          return dateB.getTime() - dateA.getTime();
         });
 
-      console.log('Сессии плана:', planSessions);
+      console.log('Сессии плана (отсортированы по дате):', planSessions);
 
-      // Находим последний выполненный день
+      // Находим последнюю выполненную тренировку (первая в отсортированном списке)
       let lastCompletedDay = null;
+      let lastSessionDate = null;
       
-      // Проходим по всем дням в поисках самого большого номера выполненного дня
-      for (const session of planSessions) {
-        const dayNumber = session.day_number;
-        if (lastCompletedDay === null || dayNumber > lastCompletedDay) {
-          lastCompletedDay = dayNumber;
-        }
+      if (planSessions.length > 0) {
+        const lastSession = planSessions[0];
+        lastCompletedDay = lastSession.day_number;
+        lastSessionDate = lastSession.workout_date;
       }
 
-      console.log('Последний выполненный день:', lastCompletedDay);
+      console.log('Последний выполненный день:', lastCompletedDay, 'дата:', lastSessionDate);
 
       // Определяем следующий день (циклично)
       const allDayNumbers = days.map(d => d.day_number).sort((a, b) => a - b);
