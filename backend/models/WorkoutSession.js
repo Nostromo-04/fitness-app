@@ -34,19 +34,19 @@ class WorkoutSession {
     return result.rows[0];
   }
 
-  /// Завершение тренировки
-static async complete(sessionId, feedbackEmoji) {
-  const query = `
-    UPDATE workout_sessions 
-    SET completed_at = CURRENT_TIMESTAMP,
-        feedback_emoji = $2
-    WHERE id = $1
-    RETURNING id, athlete_id, plan_id, day_id, workout_date, feedback_emoji, completed_at, created_at
-  `;
-  
-  const result = await db.query(query, [sessionId, feedbackEmoji]);
-  return result.rows[0];
-}
+  // Завершение тренировки
+  static async complete(sessionId, feedbackEmoji) {
+    const query = `
+      UPDATE workout_sessions 
+      SET completed_at = CURRENT_TIMESTAMP,
+          feedback_emoji = $2
+      WHERE id = $1
+      RETURNING id, athlete_id, plan_id, day_id, workout_date, feedback_emoji, completed_at, created_at
+    `;
+    
+    const result = await db.query(query, [sessionId, feedbackEmoji]);
+    return result.rows[0];
+  }
   
   // Получение всех тренировок спортсмена за период (для календаря)
   static async getAthleteSessions(athleteId, startDate, endDate) {
@@ -111,29 +111,26 @@ static async complete(sessionId, feedbackEmoji) {
     return result.rows[0];
   }
 
-  // Получение всех тренировок спортсмена для календаря тренера
+  // Получение всех тренировок спортсмена для календаря тренера (ИСПРАВЛЕНА)
   static async getAthleteSessionsForCoach(athleteId, year, month) {
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
     const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
     
     const query = `
       SELECT 
-        workout_date,
-        feedback_emoji,
-        COUNT(*) as sessions_count,
-        json_agg(
-          json_build_object(
-            'id', id,
-            'plan_name', (SELECT name FROM workout_plans WHERE id = ws.plan_id),
-            'day_number', (SELECT day_number FROM workout_days WHERE id = ws.day_id)
-          )
-        ) as sessions
+        ws.id,
+        ws.plan_id,
+        ws.workout_date,
+        ws.feedback_emoji,
+        wp.name as plan_name,
+        wd.day_number
       FROM workout_sessions ws
-      WHERE athlete_id = $1 
-        AND workout_date BETWEEN $2 AND $3
-        AND completed_at IS NOT NULL
-      GROUP BY workout_date, feedback_emoji
-      ORDER BY workout_date
+      JOIN workout_plans wp ON ws.plan_id = wp.id
+      JOIN workout_days wd ON ws.day_id = wd.id
+      WHERE ws.athlete_id = $1 
+        AND ws.workout_date BETWEEN $2 AND $3
+        AND ws.completed_at IS NOT NULL
+      ORDER BY ws.workout_date
     `;
     
     const result = await db.query(query, [athleteId, startDate, endDate]);
