@@ -214,22 +214,34 @@ const logController = {
       }
 
       const sessions = await WorkoutSession.getAthleteSessionsForCoach(
-        parseInt(athleteId),
-        parseInt(year),
-        monthNum
-      );
-      
-      // Форматируем для календаря
-      const calendar = {};
-      if (sessions && sessions.length > 0) {
-        sessions.forEach(s => {
-          const day = new Date(s.workout_date).getDate();
-          calendar[day] = {
-            emoji: s.feedback_emoji,
-            sessions: s.sessions
-          };
-        });
-      }
+  parseInt(athleteId),
+  parseInt(year),
+  monthNum
+);
+
+// Форматируем для календаря
+const calendar = {};
+if (sessions && sessions.length > 0) {
+  sessions.forEach(s => {
+    const day = new Date(s.workout_date).getDate();
+    if (!calendar[day]) {
+      calendar[day] = {
+        emoji: s.feedback_emoji,
+        sessions: []
+      };
+    }
+    // Добавляем workout_date в каждую сессию
+    calendar[day].sessions.push({
+      id: s.id,
+      plan_id: s.plan_id,
+      plan_name: s.plan_name,
+      day_number: s.day_number,
+      workout_date: s.workout_date  // ← добавляем дату
+    });
+  });
+}
+
+
 
       res.json({
         status: 'success',

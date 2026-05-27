@@ -15,7 +15,6 @@ export const AthletePlanPage: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();
   const [plan, setPlan] = useState<any>(null);
   const [days, setDays] = useState<WorkoutDay[]>([]);
-  const [completedDays, setCompletedDays] = useState<number[]>([]);
   const [nextDayNumber, setNextDayNumber] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,10 +24,10 @@ export const AthletePlanPage: React.FC = () => {
     }
   }, [planId]);
 
-  // Загружаем выполненные дни после того, как план загружен (чтобы знать plan_id)
+  // Загружаем выполненные дни после того, как план загружен
   useEffect(() => {
     if (plan && planId) {
-      loadCompletedDays();
+      loadLastCompletedDay();
     }
   }, [plan, planId]);
 
@@ -44,7 +43,7 @@ export const AthletePlanPage: React.FC = () => {
     }
   };
 
-  const loadCompletedDays = async () => {
+  const loadLastCompletedDay = async () => {
     try {
       const athleteId = localStorage.getItem('selectedAthleteId');
       if (!athleteId) {
@@ -60,17 +59,22 @@ export const AthletePlanPage: React.FC = () => {
       console.log('План ID:', planId);
       console.log('Название плана:', plan?.name);
 
-      let allCalendar = {};
+      let allSessions: any[] = [];
 
       // Загружаем текущий месяц
       try {
         const calendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), year, month);
-        allCalendar = { ...calendarResponse.data.calendar };
+        const calendar = calendarResponse.data.calendar || {};
+        
+        for (const dayKey in calendar) {
+          const sessions = calendar[dayKey]?.sessions || [];
+          allSessions = [...allSessions, ...sessions];
+        }
       } catch (error) {
         console.log(`Нет данных за ${month}.${year}`);
       }
 
-      // Загружаем предыдущий месяц (на случай, если тренировка была в прошлом месяце)
+      // Загружаем предыдущий месяц
       let prevMonth = month - 1;
       let prevYear = year;
       if (prevMonth < 1) {
@@ -80,62 +84,70 @@ export const AthletePlanPage: React.FC = () => {
       
       try {
         const prevCalendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), prevYear, prevMonth);
-        allCalendar = { ...prevCalendarResponse.data.calendar, ...allCalendar };
+        const prevCalendar = prevCalendarResponse.data.calendar || {};
+        
+        for (const dayKey in prevCalendar) {
+          const sessions = prevCalendar[dayKey]?.sessions || [];
+          allSessions = [...allSessions, ...sessions];
+        }
       } catch (error) {
         console.log(`Нет данных за ${prevMonth}.${prevYear}`);
       }
 
-      console.log('Календарь:', allCalendar);
+      console.log('Все сессии:', allSessions);
 
-      // Собираем все выполненные дни для этого плана
-      const completed: number[] = [];
-
-      for (const dayKey in allCalendar) {
-        const sessions = allCalendar[dayKey]?.sessions || [];
-        sessions.forEach((session: any) => {
-          console.log(`Сессия: plan_id=${session.plan_id}, plan_name=${session.plan_name}, day=${session.day_number}`);
-          // Сравниваем по plan_id (более надежно)
-          if (session.plan_id === plan.id) {
-            const dayNumber = session.day_number;
-            if (!completed.includes(dayNumber)) {
-              completed.push(dayNumber);
-              console.log(`Добавлен выполненный день: ${dayNumber}`);
-            }
-          }
+      // Находим последнюю выполненную тренировку для этого плана
+      const planSessions = allSessions
+        .filter((session: any) => session.plan_id === plan.id)
+        .sort((a: any, b: any) => {
+          // Сортируем по дате (более новые сначала)
+          // Нужно добавить поле date к сессиям или использовать существующее
+          return 0; // TODO: сортировка по дате
         });
-      }
 
-      setCompletedDays(completed);
-      console.log('Выполненные дни:', completed);
+      console.log('Сессии плана:', planSessions);
 
-      // Определяем следующий день
-      const allDayNumbers = days.map(d => d.day_number).sort((a, b) => a - b);
-      console.log('Все дни плана:', allDayNumbers);
+      // Находим последний выполненный день
+      let lastCompletedDay = null;
       
-      let nextDay = null;
-
-      for (const dayNum of allDayNumbers) {
-        if (!completed.includes(dayNum)) {
-          nextDay = dayNum;
-          break;
+      // Проходим по всем дням в поисках самого большого номера выполненного дня
+      for (const session of planSessions) {
+        const dayNumber = session.day_number;
+        if (lastCompletedDay === null || dayNumber > lastCompletedDay) {
+          lastCompletedDay = dayNumber;
         }
       }
 
-      // Если все дни выполнены, начинаем цикл с первого дня
-      if (nextDay === null && allDayNumbers.length > 0) {
+      console.log('Последний выполненный день:', lastCompletedDay);
+
+      // Определяем следующий день (циклично)
+      const allDayNumbers = days.map(d => d.day_number).sort((a, b) => a - b);
+      let nextDay = null;
+
+      if (lastCompletedDay !== null) {
+        // Ищем следующий день после последнего выполненного
+        for (const dayNum of allDayNumbers) {
+          if (dayNum > lastCompletedDay) {
+            nextDay = dayNum;
+            break;
+          }
+        }
+        // Если не нашли (последний день был максимальным), берем первый день
+        if (nextDay === null && allDayNumbers.length > 0) {
+          nextDay = allDayNumbers[0];
+          console.log('Цикл: начинаем с первого дня');
+        }
+      } else {
+        // Если нет выполненных тренировок, начинаем с первого дня
         nextDay = allDayNumbers[0];
-        console.log('Все дни выполнены, начинаем цикл с дня:', nextDay);
+        console.log('Нет выполненных тренировок, начинаем с первого дня');
       }
 
-      console.log('Следующий день:', nextDay);
+      console.log('Следующий день для выделения:', nextDay);
       setNextDayNumber(nextDay);
     } catch (error) {
       console.error('Ошибка загрузки выполненных дней:', error);
     }
-  };
-
-  const isDayCompleted = (dayNumber: number) => {
-    return completedDays.includes(dayNumber);
   };
 
   const isNextDay = (dayNumber: number) => {
@@ -169,7 +181,7 @@ export const AthletePlanPage: React.FC = () => {
         {days.map((day) => (
           <div 
             key={day.id} 
-            className={`day-card ${isDayCompleted(day.day_number) ? 'completed' : ''} ${isNextDay(day.day_number) ? 'next-day' : ''}`}
+            className={`day-card ${isNextDay(day.day_number) ? 'next-day' : ''}`}
             onClick={() => handleStartDay(day)}
           >
             <div className="day-number">
@@ -185,19 +197,12 @@ export const AthletePlanPage: React.FC = () => {
                 <span>{day.exercises?.length || 0} упражнений</span>
               </div>
               
-              {isDayCompleted(day.day_number) ? (
-                <div className="completed-badge">
-                  <CheckCircle size={20} />
-                  <span>Выполнено</span>
-                </div>
-              ) : (
-                <button className="start-day-btn">
-                  Начать
-                </button>
-              )}
+              <button className="start-day-btn">
+                Начать
+              </button>
             </div>
 
-            {!isDayCompleted(day.day_number) && day.exercises && (
+            {day.exercises && (
               <div className="exercises-preview">
                 {day.exercises.slice(0, 3).map((ex: any, idx: number) => (
                   <span key={idx} className="exercise-tag">
