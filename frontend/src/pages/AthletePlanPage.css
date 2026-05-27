@@ -138,3 +138,46 @@
   color: var(--tg-theme-hint-color, #999999);
   padding: 40px;
 }
+
+/* Стиль для следующего дня */
+.day-card.next-day {
+  background: var(--tg-theme-button-color, #2481cc);
+  border: 2px solid var(--tg-theme-button-color, #2481cc);
+  color: white;
+}
+
+.day-card.next-day .day-number {
+  color: white;
+}
+
+.day-card.next-day .exercises-count {
+  color: white;
+}
+
+.day-card.next-day .exercises-count svg {
+  color: white;
+}
+
+.day-card.next-day .start-day-btn {
+  background: white;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.day-card.next-day .exercise-tag {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.day-card.next-day .exercise-tag.more {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.next-badge {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: normal;
+  margin-left: 10px;
+}
