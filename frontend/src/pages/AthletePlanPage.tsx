@@ -58,6 +58,7 @@ export const AthletePlanPage: React.FC = () => {
       console.log('Загрузка календаря для спортсмена:', athleteId);
       console.log('План ID:', planId);
       console.log('Название плана:', plan?.name);
+      console.log('ID текущего плана для фильтрации:', plan.id);
 
       let allSessions: any[] = [];
 
@@ -75,16 +76,7 @@ export const AthletePlanPage: React.FC = () => {
         console.log(`Ошибка загрузки данных за ${currentMonth}.${currentYear}:`, error);
       }
 
-      // Загружаем предыдущий месяц (апрель 2026)
-      let prevMonth = currentMonth - 1;
-      let prevYear = currentYear;
-      if (prevMonth < 1) {
-        prevMonth = 12;
-        prevYear--;
-      }
-      
-      // Пропускаем апрель, так как он возвращает 500 ошибку
-      // Вместо этого загружаем март
+      // Загружаем март 2026 (вместо апреля, который возвращает 500)
       let marchMonth = 3;
       let marchYear = currentYear;
       
@@ -102,6 +94,12 @@ export const AthletePlanPage: React.FC = () => {
       }
 
       console.log('Все сессии (сырые):', allSessions);
+      console.log('ID текущего плана для фильтрации:', plan.id);
+
+      // Выводим plan_id каждой сессии для отладки
+      allSessions.forEach((session: any, idx: number) => {
+        console.log(`Сессия ${idx + 1}: plan_id=${session.plan_id}, plan_name=${session.plan_name}, day=${session.day_number}, workout_date=${session.workout_date}`);
+      });
 
       // Фильтруем сессии для этого плана и сортируем по дате
       const planSessions = allSessions
@@ -114,7 +112,7 @@ export const AthletePlanPage: React.FC = () => {
 
       console.log('Сессии плана (отсортированы по дате):', planSessions);
 
-      // Находим последнюю выполненную тренировку (первая в отсортированном списке)
+      // Находим последнюю выполненную тренировку
       let lastCompletedDay = null;
       let lastSessionDate = null;
       
@@ -131,20 +129,17 @@ export const AthletePlanPage: React.FC = () => {
       let nextDay = null;
 
       if (lastCompletedDay !== null) {
-        // Ищем следующий день после последнего выполненного
         for (const dayNum of allDayNumbers) {
           if (dayNum > lastCompletedDay) {
             nextDay = dayNum;
             break;
           }
         }
-        // Если не нашли (последний день был максимальным), берем первый день
         if (nextDay === null && allDayNumbers.length > 0) {
           nextDay = allDayNumbers[0];
           console.log('Цикл: начинаем с первого дня');
         }
       } else {
-        // Если нет выполненных тренировок, начинаем с первого дня
         nextDay = allDayNumbers[0];
         console.log('Нет выполненных тренировок, начинаем с первого дня');
       }
