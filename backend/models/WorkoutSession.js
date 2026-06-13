@@ -113,8 +113,12 @@ class WorkoutSession {
 
   // Получение всех тренировок спортсмена для календаря тренера (ИСПРАВЛЕНА)
   static async getAthleteSessionsForCoach(athleteId, year, month) {
+    // Правильно вычисляем последний день месяца
+    const lastDayOfMonth = new Date(year, month, 0).getDate();
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+    const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}`;
+    
+    console.log(`📅 Запрос календаря: athleteId=${athleteId}, месяц=${year}-${month}, диапазон: ${startDate} - ${endDate}`);
     
     const query = `
       SELECT 
@@ -134,6 +138,10 @@ class WorkoutSession {
     `;
     
     const result = await db.query(query, [athleteId, startDate, endDate]);
+    console.log(`📅 Найдено сессий: ${result.rows.length}`);
+    if (result.rows.length > 0) {
+      console.log(`📅 Первая сессия: ${result.rows[0].workout_date}, последняя: ${result.rows[result.rows.length-1].workout_date}`);
+    }
     return result.rows;
   }
 

@@ -192,11 +192,13 @@ const logController = {
 
   // === КАЛЕНДАРЬ И СТАТИСТИКА ===
   
-  // Получение календаря тренировок спортсмена
+  // Получение календаря тренировок спортсмена (ИСПРАВЛЕН)
   async getWorkoutCalendar(req, res) {
     try {
       const { athleteId } = req.params;
       const { year, month } = req.query;
+      
+      console.log(`🔍 getWorkoutCalendar вызван: athleteId=${athleteId}, year=${year}, month=${month}`);
       
       if (!year || !month) {
         return res.status(400).json({
@@ -219,13 +221,20 @@ const logController = {
         monthNum
       );
 
-      console.log('getWorkoutCalendar - получены сессии:', sessions);
+      console.log('getWorkoutCalendar - получено сессий:', sessions.length);
+      if (sessions.length > 0) {
+        console.log('getWorkoutCalendar - первая сессия:', JSON.stringify(sessions[0], null, 2));
+      }
 
       // Форматируем для календаря
       const calendar = {};
       if (sessions && sessions.length > 0) {
         sessions.forEach(s => {
-          const day = new Date(s.workout_date).getDate();
+          // Используем UTC чтобы избежать проблем с часовым поясом
+          const workoutDate = new Date(s.workout_date);
+          const day = workoutDate.getUTCDate();
+          console.log(`📅 Обработка сессии: дата=${s.workout_date}, day=${day}, emoji=${s.feedback_emoji}`);
+          
           if (!calendar[day]) {
             calendar[day] = {
               emoji: s.feedback_emoji,
@@ -241,6 +250,8 @@ const logController = {
           });
         });
       }
+
+      console.log(`📅 Итоговый календарь:`, JSON.stringify(calendar, null, 2));
 
       res.json({
         status: 'success',
