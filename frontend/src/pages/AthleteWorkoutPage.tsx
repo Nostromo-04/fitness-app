@@ -362,6 +362,23 @@ export const AthleteWorkoutPage: React.FC = () => {
 
   const previousData = getPreviousWorkoutData();
 
+  // Функция для форматирования даты
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Дата не указана';
+      }
+      return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Дата не указана';
+    }
+  };
+
   if (loading) {
     return <div className="loading">Загрузка тренировки...</div>;
   }
@@ -390,37 +407,27 @@ export const AthleteWorkoutPage: React.FC = () => {
           <h2>{currentExercise.exercise_name}</h2>
           <p className="muscle-group">{currentExercise.muscle_group}</p>
           
-          {/* НОВЫЙ БЛОК: Прогресс по весу с повторами */}
+          {/* НОВЫЙ БЛОК: Предыдущая тренировка */}
           <div className="progress-chart-mini">
             <div className="progress-chart-header">
-              <span>Предыдущая тренировка</span>
+              <span className="progress-chart-title">
+                Предыдущая тренировка
+                {previousData && (
+                  <span className="progress-chart-date">
+                    {formatDate(previousWorkout!.workout_date)}
+                  </span>
+                )}
+              </span>
               {progressLoading && <span className="progress-chart-loading">Загрузка...</span>}
             </div>
             
             {previousData ? (
-              <div className="previous-workout-info">
-                <div className="previous-workout-meta">
-                  <span className="previous-workout-date">
-                    {new Date(previousWorkout!.workout_date).toLocaleDateString('ru-RU', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })}
+              <div className="previous-sets-row">
+                {previousData.sets.map((set, idx) => (
+                  <span key={idx} className="previous-set-chip">
+                    {set.reps_done} × {set.weight_done.toFixed(2)} кг
                   </span>
-                  <span className="previous-workout-plan">
-                    {previousWorkout!.plan_name} (День {previousWorkout!.day_number})
-                  </span>
-                </div>
-                <div className="previous-sets-list">
-                  {previousData.sets.map((set, idx) => (
-                    <div key={idx} className="previous-set-item">
-                      <span className="previous-set-number">Подход {set.set_number}:</span>
-                      <span className="previous-set-details">
-                        {set.reps_done} × {set.weight_done} кг
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             ) : (
               <div className="progress-chart-empty">
