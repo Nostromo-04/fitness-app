@@ -379,6 +379,14 @@ export const AthleteWorkoutPage: React.FC = () => {
     }
   };
 
+  // Функция для форматирования веса с 2 десятичными знаками
+  const formatWeight = (weight: number): string => {
+    if (weight === undefined || weight === null) return '0';
+    const numWeight = typeof weight === 'string' ? parseFloat(weight) : weight;
+    if (isNaN(numWeight)) return '0';
+    return numWeight.toFixed(2);
+  };
+
   if (loading) {
     return <div className="loading">Загрузка тренировки...</div>;
   }
@@ -425,7 +433,7 @@ export const AthleteWorkoutPage: React.FC = () => {
               <div className="previous-sets-row">
                 {previousData.sets.map((set, idx) => (
                   <span key={idx} className="previous-set-chip">
-                    {set.reps_done} × {set.weight_done.toFixed(2)} кг
+                    {set.reps_done} × {formatWeight(set.weight_done)} кг
                   </span>
                 ))}
               </div>
