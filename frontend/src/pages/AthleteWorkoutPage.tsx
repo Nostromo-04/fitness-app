@@ -24,9 +24,24 @@ interface Set {
   completed: boolean;
 }
 
-interface ProgressPoint {
-  weight: number;
-  date: string;
+// Новый тип для предыдущей тренировки
+interface PreviousWorkoutSet {
+  set_number: number;
+  reps_done: number;
+  weight_done: number;
+  is_completed: boolean;
+}
+
+interface PreviousWorkout {
+  id: number;
+  workout_date: string;
+  plan_name: string;
+  day_number: number;
+  exercises: {
+    exercise_id: number;
+    exercise_name: string;
+    sets: PreviousWorkoutSet[];
+  }[];
 }
 
 export const AthleteWorkoutPage: React.FC = () => {
@@ -43,7 +58,7 @@ export const AthleteWorkoutPage: React.FC = () => {
   const [timerSound, setTimerSound] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [progressData, setProgressData] = useState<ProgressPoint[]>([]);
+  const [previousWorkout, setPreviousWorkout] = useState<PreviousWorkout | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
 
   const currentExercise = exercises[currentExerciseIndex];
@@ -59,7 +74,7 @@ export const AthleteWorkoutPage: React.FC = () => {
 
   useEffect(() => {
     if (currentExercise) {
-      loadProgress(currentExercise.exercise_id);
+      loadPreviousWorkout(currentExercise.exercise_id);
     }
   }, [currentExercise]);
 
@@ -67,23 +82,89 @@ export const AthleteWorkoutPage: React.FC = () => {
     audioRef.current = new Audio('/sounds/beep.mp3');
   };
 
-  const loadProgress = async (exerciseId: number) => {
+  // Новая функция: загрузка предыдущей тренировки с этим упражнением
+  const loadPreviousWorkout = async (exerciseId: number) => {
     const athleteId = localStorage.getItem('selectedAthleteId');
     if (!athleteId) return;
     
     setProgressLoading(true);
     try {
-      const response = await athleteService.getExerciseProgress(parseInt(athleteId), exerciseId, 5);
-      const progress = response.data.progress || [];
+      // Получаем календарь за текущий месяц
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
       
-      const chartData = progress.map((p: any) => ({
-        weight: parseFloat(p.weight_done),
-        date: new Date(p.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
-      })).reverse();
+      const calendarResponse = await athleteService.getWorkoutCalendar(
+        parseInt(athleteId), 
+        currentYear, 
+        currentMonth
+      );
       
-      setProgressData(chartData);
+      const calendar = calendarResponse.data.calendar || {};
+      let allSessions: any[] = [];
+      
+      // Собираем все сессии из календаря
+      for (const dayKey in calendar) {
+        const sessions = calendar[dayKey]?.sessions || [];
+        allSessions = [...allSessions, ...sessions];
+      }
+      
+      // Сортируем по дате (от новых к старым)
+      allSessions.sort((a, b) => {
+        const dateA = new Date(a.workout_date);
+        const dateB = new Date(b.workout_date);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      // Ищем сессию, которая не является текущей и содержит это упражнение
+      let foundWorkout: PreviousWorkout | null = null;
+      
+      for (const session of allSessions) {
+        // Пропускаем текущую сессию
+        if (session.id === sessionId) continue;
+        
+        try {
+          // Получаем детали тренировки
+          const detailsResponse = await athleteService.getWorkoutByDate(
+            parseInt(athleteId),
+            session.workout_date.split('T')[0]
+          );
+          
+          const workoutData = detailsResponse.data;
+          
+          // Проверяем, есть ли в этой тренировке нужное упражнение
+          const exerciseData = workoutData.exercises?.find(
+            (ex: any) => ex.exercise_id === exerciseId
+          );
+          
+          if (exerciseData && exerciseData.sets && exerciseData.sets.length > 0) {
+            foundWorkout = {
+              id: workoutData.id,
+              workout_date: workoutData.workout_date,
+              plan_name: workoutData.plan_name,
+              day_number: workoutData.day_number,
+              exercises: [{
+                exercise_id: exerciseId,
+                exercise_name: exerciseData.exercise_name,
+                sets: exerciseData.sets.map((set: any) => ({
+                  set_number: set.set_number,
+                  reps_done: set.reps_done,
+                  weight_done: set.weight_done,
+                  is_completed: set.is_completed
+                }))
+              }]
+            };
+            break;
+          }
+        } catch (error) {
+          console.log('Ошибка загрузки деталей тренировки:', error);
+          continue;
+        }
+      }
+      
+      setPreviousWorkout(foundWorkout);
     } catch (error) {
-      console.error('Ошибка загрузки прогресса:', error);
+      console.error('Ошибка загрузки предыдущей тренировки:', error);
     } finally {
       setProgressLoading(false);
     }
@@ -271,7 +352,15 @@ export const AthleteWorkoutPage: React.FC = () => {
     });
   };
 
-  const maxWeight = progressData.length > 0 ? Math.max(...progressData.map(p => p.weight)) : 1;
+  // Получаем данные для отображения предыдущей тренировки
+  const getPreviousWorkoutData = () => {
+    if (!previousWorkout || previousWorkout.exercises.length === 0) return null;
+    const exerciseData = previousWorkout.exercises[0];
+    if (!exerciseData || exerciseData.sets.length === 0) return null;
+    return exerciseData;
+  };
+
+  const previousData = getPreviousWorkoutData();
 
   if (loading) {
     return <div className="loading">Загрузка тренировки...</div>;
@@ -301,27 +390,43 @@ export const AthleteWorkoutPage: React.FC = () => {
           <h2>{currentExercise.exercise_name}</h2>
           <p className="muscle-group">{currentExercise.muscle_group}</p>
           
+          {/* НОВЫЙ БЛОК: Прогресс по весу с повторами */}
           <div className="progress-chart-mini">
             <div className="progress-chart-header">
-              <span>Прогресс по весу</span>
-              {progressLoading && <span className="progress-chart-loading">...</span>}
+              <span>Предыдущая тренировка</span>
+              {progressLoading && <span className="progress-chart-loading">Загрузка...</span>}
             </div>
-            <div className="progress-chart-bars">
-              {progressData.length > 0 ? (
-                progressData.map((point, idx) => (
-                  <div key={idx} className="progress-chart-bar-wrapper">
-                    <div 
-                      className="progress-chart-bar" 
-                      style={{ height: `${(point.weight / maxWeight) * 40}px` }}
-                      title={`${point.date}: ${point.weight} кг`}
-                    />
-                    <span className="progress-chart-label">{point.weight} кг</span>
-                  </div>
-                ))
-              ) : (
-                <div className="progress-chart-empty">Нет данных</div>
-              )}
-            </div>
+            
+            {previousData ? (
+              <div className="previous-workout-info">
+                <div className="previous-workout-meta">
+                  <span className="previous-workout-date">
+                    {new Date(previousWorkout!.workout_date).toLocaleDateString('ru-RU', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <span className="previous-workout-plan">
+                    {previousWorkout!.plan_name} (День {previousWorkout!.day_number})
+                  </span>
+                </div>
+                <div className="previous-sets-list">
+                  {previousData.sets.map((set, idx) => (
+                    <div key={idx} className="previous-set-item">
+                      <span className="previous-set-number">Подход {set.set_number}:</span>
+                      <span className="previous-set-details">
+                        {set.reps_done} × {set.weight_done} кг
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="progress-chart-empty">
+                {progressLoading ? 'Поиск предыдущей тренировки...' : 'Нет предыдущих тренировок'}
+              </div>
+            )}
           </div>
 
           {(currentExercise.image_url || currentExercise.video_url) && (

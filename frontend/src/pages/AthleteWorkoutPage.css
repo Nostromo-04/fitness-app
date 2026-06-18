@@ -336,3 +336,55 @@
   color: var(--tg-theme-hint-color, #999999);
   padding: 8px;
 }
+
+/* Новые стили для блока предыдущей тренировки */
+.previous-workout-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.previous-workout-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #999999);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.previous-workout-date {
+  font-weight: 500;
+}
+
+.previous-workout-plan {
+  font-size: 11px;
+}
+
+.previous-sets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.previous-set-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--tg-theme-bg-color, #ffffff);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.previous-set-number {
+  color: var(--tg-theme-hint-color, #999999);
+  font-size: 12px;
+}
+
+.previous-set-details {
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #000000);
+}
