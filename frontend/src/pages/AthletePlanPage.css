@@ -195,6 +195,7 @@
   border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
 }
 
+/* Стили для элементов упражнений внутри карточки дня */
 .exercise-item {
   display: flex;
   align-items: center;
@@ -245,10 +246,42 @@
   margin-top: 2px;
 }
 
-.next-day .exercise-name {
-  color: white;
+/* === ИСПРАВЛЕНИЕ: Для выделенного (следующего) дня делаем текст черным === */
+/* Убираем белый цвет для названий упражнений в выделенном дне */
+.day-card.next-day .exercise-name {
+  color: #000000; /* Черный цвет для лучшей читаемости на светлом фоне */
 }
 
-.next-day .exercise-muscle {
-  color: rgba(255, 255, 255, 0.8);
+/* Для группы мышц тоже делаем черным, но чуть светлее для иерархии */
+.day-card.next-day .exercise-muscle {
+  color: #333333; /* Темно-серый, почти черный */
+}
+
+/* Если фон внутри упражнения становится светлым, делаем текст черным */
+.day-card.next-day .exercise-item {
+  /* Можно добавить фон для упражнений в выделенном дне, чтобы они были читаемы */
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.day-card.next-day .exercise-image {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.day-card.next-day .exercise-img-placeholder {
+  color: #555555;
+}
+
+/* Разделитель упражнений в выделенном дне */
+.day-card.next-day .exercises-full-list {
+  border-top-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Кнопка "Начать" в выделенном дне */
+.day-card.next-day .start-day-btn {
+  background: white;
+  color: var(--tg-theme-button-color, #2481cc);
+}
+
+.day-card.next-day .start-day-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
 }
