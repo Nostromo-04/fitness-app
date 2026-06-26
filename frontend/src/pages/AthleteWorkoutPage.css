@@ -1,6 +1,6 @@
 .athlete-workout-page {
-  padding: 20px;
-  background: var(--tg-theme-bg-color, #ffffff);
+  padding: 16px 20px 100px;
+  background: var(--fit-bg, #0a0a0c);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -9,281 +9,77 @@
 .workout-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  color: var(--tg-theme-button-color, #2481cc);
+  color: var(--fit-text, #f4f4f5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.workout-progress {
-  flex: 1;
-}
+.back-btn:hover { border-color: var(--fit-accent, #a3e635); }
+
+.workout-progress { flex: 1; }
 
 .progress-text {
-  font-size: 14px;
-  color: var(--tg-theme-hint-color, #999999);
-  margin-bottom: 4px;
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+  margin-bottom: 6px;
 }
 
 .progress-bar {
-  height: 4px;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  height: 3px;
+  background: var(--fit-card, #18181b);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--tg-theme-button-color, #2481cc);
-  transition: width 0.3s;
+  background: var(--fit-accent, #a3e635);
+  border-radius: 2px;
+  transition: width 0.4s ease;
 }
 
-.current-exercise {
-  margin-bottom: 24px;
-}
+.current-exercise { margin-bottom: 20px; }
 
 .current-exercise h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
   margin: 0 0 4px;
-  font-size: 24px;
-  color: var(--tg-theme-text-color, #000000);
 }
 
 .muscle-group {
-  margin: 0 0 8px;
-  font-size: 14px;
-  color: var(--tg-theme-hint-color, #999999);
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0 0 10px;
 }
 
-.exercise-media {
-  display: flex;
-  gap: 12px;
-}
+.exercise-media { display: flex; gap: 14px; }
 
 .exercise-media a {
-  color: var(--tg-theme-button-color, #2481cc);
+  color: var(--fit-accent, #a3e635);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
 }
 
-.workout-sets-list {
-  flex: 1;
-  margin-bottom: 20px;
-}
-
-.workout-sets-header {
-  display: grid;
-  grid-template-columns: 60px 1fr 1fr 60px;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-  font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
-  text-align: center;
-}
-
-.workout-set-row {
-  display: grid;
-  grid-template-columns: 60px 1fr 1fr 60px;
-  gap: 8px;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f0f0f0);
-}
-
-.set-number {
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #000000);
-}
-
-.set-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-  border-radius: 6px;
-  background: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
-  font-size: 14px;
-}
-
-.set-input:disabled {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  color: var(--tg-theme-hint-color, #999999);
-}
-
-.set-checkbox {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--tg-theme-hint-color, #999999);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.set-checkbox.completed {
-  color: var(--tg-theme-button-color, #2481cc);
-}
-
-.add-set-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px;
-  margin-top: 12px;
-  border: 2px dashed var(--tg-theme-hint-color, #e0e0e0);
-  border-radius: 8px;
-  background: none;
-  color: var(--tg-theme-hint-color, #999999);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.add-set-btn:hover {
-  border-color: var(--tg-theme-button-color, #2481cc);
-  color: var(--tg-theme-button-color, #2481cc);
-}
-
-.timer-section {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 12px;
-  padding: 20px 16px;
-  margin-bottom: 20px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.timer-display {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 16px;
-  width: 100%;
-}
-
-.timer-label {
-  font-size: 14px;
-  color: var(--tg-theme-hint-color, #999999);
-}
-
-.timer-value {
-  font-size: 32px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #000000);
-}
-
-.timer-controls {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  width: 100%;
-  color: var(--tg-theme-text-color, #000000);
-}
-
-.timer-btn {
-  flex: 1;
-  min-width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 8px;
-  background: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.timer-btn:hover:not(:disabled) {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-}
-
-.timer-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.timer-btn.active {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-}
-
-.workout-footer {
-  margin-top: auto;
-}
-
-.exercise-nav {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.nav-btn {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  color: var(--tg-theme-text-color, #000000);
-  font-size: 14px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.nav-btn:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.complete-workout-btn {
-  width: 100%;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.complete-workout-btn:hover {
-  opacity: 0.9;
-}
-
-.loading {
-  text-align: center;
-  color: var(--tg-theme-hint-color, #999999);
-  padding: 40px;
-}
-
-/* === НОВЫЕ СТИЛИ ДЛЯ БЛОКА ПРЕДЫДУЩЕЙ ТРЕНИРОВКИ === */
+/* Previous workout mini card */
 .progress-chart-mini {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin: 12px 0;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
 }
 
 .progress-chart-header {
@@ -296,65 +92,267 @@
 .progress-chart-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #000000);
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fit-muted, #a1a1aa);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .progress-chart-date {
   font-weight: 400;
-  font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
+  font-size: 11px;
+  color: var(--fit-muted, #a1a1aa);
 }
 
 .progress-chart-loading {
   font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
+  color: var(--fit-muted, #a1a1aa);
 }
 
-/* Строка с подходами в одну линию */
 .previous-sets-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  padding: 4px 0;
+  gap: 6px;
 }
 
 .previous-set-chip {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #000000);
-  background: var(--tg-theme-bg-color, #ffffff);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 4px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   white-space: nowrap;
 }
 
-.progress-chart-empty {
-  text-align: center;
-  font-size: 13px;
-  color: var(--tg-theme-hint-color, #999999);
-  padding: 8px 0;
-}
-
-/* Стили для блока предыдущей тренировки - столбиком по центру */
 .previous-sets-column {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 4px 0;
 }
 
 .previous-set-item-center {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--tg-theme-text-color, #000000);
-  background: var(--tg-theme-bg-color, #ffffff);
+  color: var(--fit-text, #f4f4f5);
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 6px 16px;
   border-radius: 8px;
   width: 100%;
   max-width: 200px;
   text-align: center;
 }
+
+.progress-chart-empty {
+  text-align: center;
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+  padding: 4px 0;
+}
+
+/* Sets table */
+.workout-sets-list {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.workout-sets-header {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr 52px;
+  gap: 8px;
+  padding: 0 4px 10px;
+  border-bottom: 1px solid var(--fit-border, #27272a);
+  font-size: 12px;
+  color: var(--fit-muted, #a1a1aa);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.workout-set-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr 52px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--fit-border, #27272a);
+}
+
+.workout-set-row.active-row {
+  background: var(--fit-card, #18181b);
+  border-radius: 10px;
+  border-color: transparent;
+  padding: 8px 8px;
+  margin: 0 -4px;
+}
+
+.set-number {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--fit-text, #f4f4f5);
+  text-align: center;
+}
+
+.set-input {
+  width: 100%;
+  padding: 8px 6px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 8px;
+  background: var(--fit-card-2, #1c1c1f);
+  color: var(--fit-text, #f4f4f5);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.set-input:focus { border-color: var(--fit-accent, #a3e635); }
+
+.set-input:disabled {
+  background: transparent;
+  border-color: transparent;
+  color: var(--fit-muted, #a1a1aa);
+}
+
+.set-checkbox {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--fit-border, #27272a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.set-checkbox.completed { color: var(--fit-accent, #a3e635); }
+
+.add-set-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: 1px dashed var(--fit-border, #27272a);
+  border-radius: 10px;
+  background: none;
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.add-set-btn:hover {
+  border-color: var(--fit-accent, #a3e635);
+  color: var(--fit-accent, #a3e635);
+}
+
+/* Rest timer */
+.timer-section {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.timer-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fit-muted, #a1a1aa);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.timer-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  letter-spacing: -1px;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.timer-btn {
+  flex: 1;
+  height: 40px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 10px;
+  background: var(--fit-card-2, #1c1c1f);
+  color: var(--fit-text, #f4f4f5);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.timer-btn:hover:not(:disabled) {
+  border-color: var(--fit-accent, #a3e635);
+  color: var(--fit-accent, #a3e635);
+}
+
+.timer-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.timer-btn.active {
+  background: var(--fit-accent, #a3e635);
+  border-color: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+}
+
+/* Footer buttons */
+.workout-footer { margin-top: auto; }
+
+.exercise-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  background: var(--fit-card, #18181b);
+  color: var(--fit-text, #f4f4f5);
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) { border-color: var(--fit-accent, #a3e635); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.complete-workout-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  font-size: 16px;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.complete-workout-btn:hover { background: var(--fit-accent-hover, #84cc16); }

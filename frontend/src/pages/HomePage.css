@@ -1,97 +1,105 @@
 .home-container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    background: var(--tg-theme-bg-color, #ffffff);
-  }
-  
-  .welcome-card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 40px 20px;
-  }
-  
-  .logo-icon {
-    color: var(--tg-theme-button-color, #2481cc);
-    margin-bottom: 20px;
-  }
-  
-  .welcome-card h1 {
-    font-size: 32px;
-    margin: 10px 0;
-    color: var(--tg-theme-text-color, #000000);
-  }
-  
-  .welcome-card p {
-    font-size: 16px;
-    color: var(--tg-theme-hint-color, #999999);
-    margin-bottom: 40px;
-  }
-  
-  .primary-button {
-    background: var(--tg-theme-button-color, #2481cc);
-    color: var(--tg-theme-button-text-color, #ffffff);
-    border: none;
-    border-radius: 12px;
-    padding: 16px 32px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    max-width: 300px;
-    transition: opacity 0.2s;
-  }
-  
-  .primary-button:hover {
-    opacity: 0.9;
-  }
-  
-  .user-header {
-    margin-bottom: 30px;
-  }
-  
-  .user-header h2 {
-    font-size: 24px;
-    color: var(--tg-theme-text-color, #000000);
-    margin: 0;
-  }
-  
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
-  }
-  
-  .menu-card {
-    background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-    border-radius: 16px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
-  }
-  
-  .menu-card:hover {
-    transform: translateY(-2px);
-    background-color: var(--tg-theme-hint-color, #e0e0e0);
-  }
-  
-  .menu-card svg {
-    color: var(--tg-theme-button-color, #2481cc);
-  }
-  
-  .menu-card h3 {
-    margin: 0;
-    font-size: 16px;
-    text-align: center;
-    color: var(--tg-theme-text-color, #000000);
-  }
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: var(--fit-bg, #0a0a0c);
+}
+
+.welcome-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.logo-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 0 32px rgba(163, 230, 53, 0.35);
+}
+
+.welcome-card h1 {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--fit-text, #f4f4f5);
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+}
+
+.welcome-card p {
+  font-size: 15px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0 0 40px;
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+.primary-button {
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  border: none;
+  border-radius: 14px;
+  padding: 16px 32px;
+  font-size: 17px;
+  font-weight: 700;
+  width: 100%;
+  max-width: 320px;
+  transition: background 0.2s;
+}
+
+.primary-button:hover { background: var(--fit-accent-hover, #84cc16); }
+
+.user-header { margin-bottom: 24px; }
+
+.user-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  margin: 0;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.menu-card {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 18px;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.menu-card:hover {
+  border-color: var(--fit-accent, #a3e635);
+  transform: translateY(-2px);
+}
+
+.menu-card svg { color: var(--fit-accent, #a3e635); }
+
+.menu-card h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--fit-text, #f4f4f5);
+}

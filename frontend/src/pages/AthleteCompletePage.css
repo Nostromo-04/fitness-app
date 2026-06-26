@@ -1,6 +1,6 @@
 .athlete-complete-page {
   padding: 20px;
-  background: var(--tg-theme-bg-color, #ffffff);
+  background: var(--fit-bg, #0a0a0c);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -9,166 +9,182 @@
 .complete-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 32px;
 }
 
 .complete-header h1 {
   margin: 0;
   font-size: 20px;
-  color: var(--tg-theme-text-color, #000000);
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  color: var(--tg-theme-button-color, #2481cc);
+  color: var(--fit-text, #f4f4f5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.back-btn:hover { border-color: var(--fit-accent, #a3e635); }
 
 .congrats-message {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .trophy-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  animation: bounce 1s ease infinite;
+  font-size: 72px;
+  margin-bottom: 20px;
+  animation: bounce 1.2s ease-in-out infinite;
+  display: block;
+  line-height: 1;
 }
 
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-12px); }
 }
 
+.trophy-svg-wrapper {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--fit-accent, #a3e635);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 16px rgba(163, 230, 53, 0.4); }
+  to { box-shadow: 0 0 36px rgba(163, 230, 53, 0.75); }
+}
+
+.trophy-svg-wrapper svg { color: #0a0a0c; }
+
 .congrats-message h2 {
-  margin: 0 0 8px;
-  font-size: 24px;
-  color: var(--tg-theme-text-color, #000000);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--fit-text, #f4f4f5);
+  margin: 0 0 6px;
+}
+
+.congrats-message p {
+  font-size: 15px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 32px;
+  gap: 10px;
+  margin-bottom: 36px;
 }
 
 .stat-card {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 6px;
 }
 
-.stat-card svg {
-  color: var(--tg-theme-button-color, #2481cc);
-  margin-bottom: 8px;
-}
+.stat-card svg { color: var(--fit-accent, #a3e635); }
 
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
+.stat-info { display: flex; flex-direction: column; gap: 2px; }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #000000);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
+  font-size: 11px;
+  color: var(--fit-muted, #a1a1aa);
 }
 
 .feedback-section {
   flex: 1;
-  text-align: center;
 }
 
 .feedback-section h3 {
-  margin: 0 0 20px;
-  font-size: 18px;
-  color: var(--tg-theme-text-color, #000000);
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .emoji-buttons {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .emoji-btn {
   flex: 1;
-  max-width: 150px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 20px;
-  border: 2px solid transparent;
-  border-radius: 16px;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  color: var(--tg-theme-text-color, #000000);
+  padding: 20px 12px;
+  border: 2px solid var(--fit-border, #27272a);
+  border-radius: 18px;
+  background: var(--fit-card, #18181b);
+  color: var(--fit-text, #f4f4f5);
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.emoji-btn svg {
-  width: 32px;
-  height: 32px;
-  transition: transform 0.2s;
+.emoji-btn svg { width: 32px; height: 32px; }
+.emoji-btn:hover { border-color: var(--fit-accent, #a3e635); transform: translateY(-2px); }
+
+.emoji-btn.selected.easy {
+  border-color: var(--fit-accent, #a3e635);
+  background: rgba(163, 230, 53, 0.1);
+  color: var(--fit-accent, #a3e635);
 }
 
-.emoji-btn:hover {
-  transform: translateY(-2px);
+.emoji-btn.selected.hard {
+  border-color: var(--fit-danger, #f87171);
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--fit-danger, #f87171);
 }
 
-.emoji-btn.selected {
-  border-color: var(--tg-theme-button-color, #2481cc);
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-}
+.emoji-btn span { font-size: 14px; font-weight: 600; }
 
-.emoji-btn.selected svg {
-  transform: scale(1.1);
-}
-
-.emoji-btn span {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.complete-actions {
-  margin-top: 24px;
-}
+.complete-actions { margin-top: auto; }
 
 .complete-btn {
   width: 100%;
   padding: 16px;
   border: none;
-  border-radius: 12px;
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
+  border-radius: 14px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
   font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
+  font-weight: 700;
+  transition: background 0.2s, opacity 0.2s;
 }
 
-.complete-btn:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.complete-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.complete-btn:hover:not(:disabled) { background: var(--fit-accent-hover, #84cc16); }
+.complete-btn:disabled { opacity: 0.4; cursor: not-allowed; }

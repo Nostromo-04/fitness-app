@@ -1,9 +1,13 @@
 .plan-exercise-item {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 12px;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
   padding: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
 }
+
+.plan-exercise-item:hover { border-color: rgba(163,230,53,0.25); }
 
 .exercise-header {
   display: flex;
@@ -12,142 +16,127 @@
   margin-bottom: 12px;
 }
 
-.exercise-title {
-  flex: 1;
-}
+.exercise-title { flex: 1; }
 
 .exercise-title h4 {
-  margin: 0 0 4px;
-  font-size: 16px;
-  color: var(--tg-theme-text-color, #000000);
+  margin: 0 0 5px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
 }
 
 .muscle-badge {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
+  background: rgba(163, 230, 53, 0.12);
+  color: var(--fit-accent, #a3e635);
+  border: 1px solid rgba(163, 230, 53, 0.3);
+  padding: 3px 10px;
+  border-radius: 20px;
   font-size: 12px;
+  font-weight: 600;
   display: inline-block;
 }
 
-.exercise-actions {
-  display: flex;
-  gap: 8px;
-}
+.exercise-actions { display: flex; gap: 6px; }
 
 .icon-btn {
-  background: none;
-  border: none;
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  color: var(--tg-theme-hint-color, #999999);
+  color: var(--fit-muted, #a1a1aa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
 .icon-btn:hover {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
+  border-color: var(--fit-accent, #a3e635);
+  color: var(--fit-accent, #a3e635);
 }
 
 .icon-btn.delete:hover {
-  background: #ff4444;
-  color: white;
+  border-color: var(--fit-danger, #f87171);
+  color: var(--fit-danger, #f87171);
 }
 
-.icon-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
+.icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 .exercise-details {
   display: flex;
   gap: 24px;
-  padding-top: 8px;
-  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  padding-top: 10px;
+  border-top: 1px solid var(--fit-border, #27272a);
 }
 
-.details-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.details-row { display: flex; align-items: center; gap: 8px; }
 
-.detail-label {
-  font-size: 14px;
-  color: var(--tg-theme-hint-color, #999999);
-}
+.detail-label { font-size: 13px; color: var(--fit-muted, #a1a1aa); }
 
 .detail-value {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #000000);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
 }
 
 .exercise-edit-form {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-top: 1px solid var(--fit-border, #27272a);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
 
 .form-group label {
   font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
+  font-weight: 500;
+  color: var(--fit-muted, #a1a1aa);
 }
 
 .form-group input {
-  padding: 8px;
-  border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-  border-radius: 6px;
-  background: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
+  padding: 8px 10px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 8px;
+  background: var(--fit-card-2, #1c1c1f);
+  color: var(--fit-text, #f4f4f5);
   font-size: 14px;
+  width: auto;
 }
 
-.form-group input:focus {
-  outline: none;
-  border-color: var(--tg-theme-button-color, #2481cc);
-}
+.form-group input:focus { border-color: var(--fit-accent, #a3e635); }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
 }
 
 .cancel-btn, .save-btn {
   padding: 8px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
-  cursor: pointer;
+  font-weight: 600;
   transition: opacity 0.2s;
 }
 
 .cancel-btn {
-  background: var(--tg-theme-secondary-bg-color, #e0e0e0);
-  color: var(--tg-theme-text-color, #000000);
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-border, #27272a);
+  color: var(--fit-text, #f4f4f5);
 }
 
 .save-btn {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
 }
 
-.cancel-btn:hover, .save-btn:hover {
-  opacity: 0.9;
-}
+.cancel-btn:hover, .save-btn:hover { opacity: 0.85; }

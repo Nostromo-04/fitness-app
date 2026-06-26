@@ -1,70 +1,146 @@
 .athlete-plan-page {
-  padding: 20px;
-  background: var(--tg-theme-bg-color, #ffffff);
+  padding: 20px 20px 100px;
+  background: var(--fit-bg, #0a0a0c);
   min-height: 100vh;
 }
 
 .page-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: 20px;
-  color: var(--tg-theme-text-color, #000000);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  color: var(--tg-theme-button-color, #2481cc);
+  color: var(--fit-text, #f4f4f5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.plan-info {
-  margin-bottom: 24px;
-}
+.back-btn:hover { border-color: var(--fit-accent, #a3e635); }
+
+.plan-info { margin-bottom: 24px; }
 
 .plan-description {
-  color: var(--tg-theme-hint-color, #999999);
   font-size: 14px;
-  margin: 0;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 4px 0 0;
+}
+
+/* Next workout card */
+.next-workout-card {
+  background: linear-gradient(135deg, rgba(163,230,53,0.15) 0%, rgba(74,222,128,0.08) 100%);
+  border: 1px solid rgba(163,230,53,0.35);
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+}
+
+.next-workout-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fit-accent, #a3e635);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+.next-workout-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  margin-bottom: 3px;
+}
+
+.next-workout-sub {
+  font-size: 14px;
+  color: var(--fit-muted, #a1a1aa);
+  margin-bottom: 16px;
+}
+
+.start-next-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  font-size: 15px;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.start-next-btn:hover { background: var(--fit-accent-hover, #84cc16); }
+
+/* Days list */
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
+  margin-bottom: 14px;
 }
 
 .days-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .day-card {
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 12px;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
   padding: 16px;
   cursor: pointer;
-  transition: transform 0.2s;
-  border: 2px solid transparent;
+  transition: border-color 0.2s, transform 0.15s;
 }
 
-.day-card:hover {
-  transform: translateY(-2px);
+.day-card:hover { transform: translateY(-1px); }
+
+.day-card.completed { border-color: rgba(163,230,53,0.25); }
+
+.day-card.next-day {
+  border-color: var(--fit-accent, #a3e635);
+  background: rgba(163,230,53,0.06);
 }
 
-.day-card.completed {
-  opacity: 0.8;
-  border-color: var(--tg-theme-button-color, #2481cc);
+.day-card.locked { opacity: 0.45; cursor: default; }
+.day-card.locked:hover { transform: none; }
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .day-number {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #000000);
-  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+}
+
+.next-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fit-accent, #a3e635);
+  background: rgba(163,230,53,0.12);
+  border: 1px solid rgba(163,230,53,0.3);
+  padding: 2px 8px;
+  border-radius: 20px;
 }
 
 .day-info {
@@ -77,211 +153,107 @@
 .exercises-count {
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: var(--tg-theme-hint-color, #999999);
-  font-size: 14px;
+  gap: 6px;
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 13px;
 }
 
-.exercises-count svg {
-  color: var(--tg-theme-button-color, #2481cc);
-}
+.exercises-count svg { color: var(--fit-accent, #a3e635); }
 
 .completed-badge {
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: var(--tg-theme-button-color, #2481cc);
-  font-size: 14px;
+  gap: 5px;
+  color: var(--fit-accent, #a3e635);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .start-day-btn {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
   border: none;
-  border-radius: 20px;
+  border-radius: 10px;
   padding: 8px 16px;
   font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
+  font-weight: 700;
+  transition: background 0.2s;
 }
 
-.start-day-btn:hover {
-  opacity: 0.9;
-}
+.start-day-btn:hover { background: var(--fit-accent-hover, #84cc16); }
 
 .exercises-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-top: 1px solid var(--fit-border, #27272a);
 }
 
 .exercise-tag {
-  background: var(--tg-theme-bg-color, #ffffff);
-  color: var(--tg-theme-text-color, #000000);
-  padding: 4px 12px;
-  border-radius: 16px;
+  background: var(--fit-card-2, #1c1c1f);
+  color: var(--fit-text, #f4f4f5);
+  border: 1px solid var(--fit-border, #27272a);
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
   white-space: nowrap;
 }
 
 .exercise-tag.more {
-  background: var(--tg-theme-hint-color, #999999);
-  color: white;
-}
-
-.loading {
-  text-align: center;
-  color: var(--tg-theme-hint-color, #999999);
-  padding: 40px;
-}
-
-/* Стиль для следующего дня */
-.day-card.next-day {
-  background: var(--tg-theme-button-color, #2481cc);
-  border: 2px solid var(--tg-theme-button-color, #2481cc);
-  color: white;
-}
-
-.day-card.next-day .day-number {
-  color: white;
-}
-
-.day-card.next-day .exercises-count {
-  color: white;
-}
-
-.day-card.next-day .exercises-count svg {
-  color: white;
-}
-
-.day-card.next-day .start-day-btn {
-  background: white;
-  color: var(--tg-theme-button-color, #2481cc);
-}
-
-.day-card.next-day .exercise-tag {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.day-card.next-day .exercise-tag.more {
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
-}
-
-.next-badge {
-  background: rgba(255, 255, 255, 0.25);
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: normal;
-  margin-left: 10px;
-}
-
-.day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  background: var(--fit-muted, #a1a1aa);
+  color: var(--fit-bg, #0a0a0c);
+  border-color: transparent;
 }
 
 .exercises-full-list {
-  margin-top: 16px;
+  margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+  border-top: 1px solid var(--fit-border, #27272a);
 }
 
-/* Стили для элементов упражнений внутри карточки дня */
 .exercise-item {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f0f0f0);
+  border-bottom: 1px solid var(--fit-border, #27272a);
 }
 
-.exercise-item:last-child {
-  border-bottom: none;
-}
+.exercise-item:last-child { border-bottom: none; }
 
 .exercise-image {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 8px;
+  background: var(--fit-card-2, #1c1c1f);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
-.exercise-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.exercise-img { width: 100%; height: 100%; object-fit: cover; }
+.exercise-img-placeholder { color: var(--fit-muted, #a1a1aa); }
 
-.exercise-img-placeholder {
-  color: var(--tg-theme-hint-color, #999999);
-}
-
-.exercise-info {
-  flex: 1;
-}
+.exercise-info { flex: 1; }
 
 .exercise-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--tg-theme-text-color, #000000);
+  color: var(--fit-text, #f4f4f5);
 }
 
 .exercise-muscle {
   font-size: 12px;
-  color: var(--tg-theme-hint-color, #999999);
+  color: var(--fit-muted, #a1a1aa);
   margin-top: 2px;
 }
 
-/* === ИСПРАВЛЕНИЕ: Для выделенного (следующего) дня делаем текст черным === */
-/* Убираем белый цвет для названий упражнений в выделенном дне */
-.day-card.next-day .exercise-name {
-  color: #000000; /* Черный цвет для лучшей читаемости на светлом фоне */
-}
-
-/* Для группы мышц тоже делаем черным, но чуть светлее для иерархии */
-.day-card.next-day .exercise-muscle {
-  color: #333333; /* Темно-серый, почти черный */
-}
-
-/* Если фон внутри упражнения становится светлым, делаем текст черным */
-.day-card.next-day .exercise-item {
-  /* Можно добавить фон для упражнений в выделенном дне, чтобы они были читаемы */
-  border-bottom-color: rgba(0, 0, 0, 0.1);
-}
-
-.day-card.next-day .exercise-image {
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.day-card.next-day .exercise-img-placeholder {
-  color: #555555;
-}
-
-/* Разделитель упражнений в выделенном дне */
-.day-card.next-day .exercises-full-list {
-  border-top-color: rgba(255, 255, 255, 0.3);
-}
-
-/* Кнопка "Начать" в выделенном дне */
-.day-card.next-day .start-day-btn {
-  background: white;
-  color: var(--tg-theme-button-color, #2481cc);
-}
-
-.day-card.next-day .start-day-btn:hover {
-  background: rgba(255, 255, 255, 0.9);
+.loading {
+  text-align: center;
+  color: var(--fit-muted, #a1a1aa);
+  padding: 40px;
 }

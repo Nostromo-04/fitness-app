@@ -1,148 +1,137 @@
 .coach-plans-page {
-  padding: 20px;
-  background: var(--tg-theme-bg-color, #ffffff);
+  padding: 20px 20px 100px;
+  background: var(--fit-bg, #0a0a0c);
   min-height: 100vh;
 }
 
 .plans-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 24px;
 }
 
 .plans-header h1 {
   margin: 0;
-  font-size: 20px;
-  color: var(--tg-theme-text-color, #000000);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
 }
 
 .back-btn {
-  background: none;
-  border: none;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  color: var(--tg-theme-button-color, #2481cc);
+  color: var(--fit-text, #f4f4f5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.back-btn:hover { border-color: var(--fit-accent, #a3e635); }
+
 .athlete-info-card {
-  background: linear-gradient(135deg, var(--tg-theme-button-color, #2481cc) 0%, #1a5a8c 100%);
-  border-radius: 16px;
-  padding: 16px;
+  background: linear-gradient(135deg, rgba(163,230,53,0.15) 0%, rgba(74,222,128,0.08) 100%);
+  border: 1px solid rgba(163,230,53,0.3);
+  border-radius: 18px;
+  padding: 16px 18px;
   margin-bottom: 24px;
-  color: white;
 }
 
 .athlete-info-card h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+}
+
+.athlete-info-card p {
   margin: 0;
-  font-size: 18px;
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
 }
 
 .plans-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .plan-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   padding: 16px;
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  border-radius: 12px;
-  transition: transform 0.2s;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
+  transition: border-color 0.2s, transform 0.15s;
+  cursor: pointer;
 }
 
 .plan-card:hover {
-  transform: translateY(-2px);
+  border-color: var(--fit-accent, #a3e635);
+  transform: translateY(-1px);
 }
 
 .plan-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.plan-info {
-  flex: 1;
-}
+.plan-info { flex: 1; }
 
 .plan-info h3 {
-  margin: 0 0 4px;
-  font-size: 16px;
-  color: var(--tg-theme-text-color, #000000);
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
 }
 
 .plan-info p {
   margin: 0;
-  font-size: 14px;
-  color: var(--tg-theme-hint-color, #999999);
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
 }
 
-.plan-date {
-  font-size: 12px;
-  margin-top: 4px;
+.plan-arrow {
+  font-size: 18px;
+  color: var(--fit-muted, #a1a1aa);
 }
 
-.plan-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.edit-plan-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+.add-plan-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px dashed var(--fit-border, #27272a);
+  border-radius: 14px;
+  background: none;
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 15px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(36, 129, 204, 0.1);
-  color: var(--tg-theme-button-color, #2481cc);
+  gap: 8px;
   transition: all 0.2s;
 }
 
-.edit-plan-btn:hover {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-}
-
-.create-plan-action {
-  margin-top: 24px;
-}
-
-.create-plan-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  border: none;
-  border-radius: 12px;
-  background: var(--tg-theme-button-color, #2481cc);
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.create-plan-btn:hover {
-  opacity: 0.9;
+.add-plan-btn:hover {
+  border-color: var(--fit-accent, #a3e635);
+  color: var(--fit-accent, #a3e635);
 }
 
 .loading, .empty-state {
   text-align: center;
-  color: var(--tg-theme-hint-color, #999999);
+  color: var(--fit-muted, #a1a1aa);
   padding: 40px;
 }
