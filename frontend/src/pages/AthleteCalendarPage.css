@@ -202,3 +202,136 @@
   color: var(--fit-muted, #a1a1aa);
   padding: 20px;
 }
+
+/* ── Days-of-week row: hidden per UX decision ── */
+.calendar-weekdays {
+  display: none;
+}
+
+/* ── Workout detail panel ── */
+.workout-details {
+  margin-top: 24px;
+}
+
+.workout-details h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  margin: 0 0 8px;
+}
+
+.workout-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.plan-name {
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+}
+
+.feedback-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.feedback-badge.good {
+  background: rgba(163, 230, 53, 0.15);
+  color: var(--fit-accent, #a3e635);
+  border: 1px solid rgba(163, 230, 53, 0.3);
+}
+
+.feedback-badge.bad {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--fit-danger, #f87171);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+/* ── Exercise cards inside workout detail ── */
+.exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exercise-card {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.exercise-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  margin: 0 0 3px;
+}
+
+.exercise-card .muscle-group {
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0 0 14px;
+}
+
+/* ── Sets table ── */
+.sets-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  gap: 2px;
+}
+
+.sets-header {
+  display: contents;
+}
+
+.sets-header span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fit-muted, #a1a1aa);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--fit-border, #27272a);
+}
+
+.set-row {
+  display: contents;
+}
+
+.set-row span {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fit-text, #f4f4f5);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fit-border, #27272a);
+}
+
+/* First column (set number) — slightly muted */
+.set-row span:first-child {
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 13px;
+}
+
+/* Last row — no border */
+.sets-grid > .set-row:last-child span {
+  border-bottom: none;
+}
+
+/* Weight value — accent colour */
+.set-row span:last-child {
+  color: var(--fit-accent, #a3e635);
+  font-weight: 700;
+}
+
+.no-data {
+  font-size: 14px;
+  color: var(--fit-muted, #a1a1aa);
+  text-align: center;
+  padding: 24px 0;
+}
