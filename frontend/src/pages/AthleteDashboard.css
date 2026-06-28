@@ -13,19 +13,18 @@
   font-weight: 700;
   color: var(--fit-text, #f4f4f5);
   margin: 0 0 4px;
+  text-align: center;
 }
 
 .athlete-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--fit-accent, #a3e635);
-  margin: 0 0 2px;
+  display: none;
 }
 
 .dashboard-header p {
   font-size: 14px;
   color: var(--fit-muted, #a1a1aa);
   margin: 0;
+  text-align: center;
 }
 
 .stats-grid {

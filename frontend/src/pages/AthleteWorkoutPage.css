@@ -57,12 +57,14 @@
   font-weight: 700;
   color: var(--fit-text, #f4f4f5);
   margin: 0 0 4px;
+  text-align: center;
 }
 
 .muscle-group {
   font-size: 13px;
   color: var(--fit-muted, #a1a1aa);
   margin: 0 0 10px;
+  text-align: center;
 }
 
 .exercise-media { display: flex; gap: 14px; }
@@ -158,7 +160,7 @@
 /* Sets table */
 .workout-sets-list {
   flex: 1;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .workout-sets-header {
@@ -167,7 +169,7 @@
   gap: 8px;
   padding: 0 4px 10px;
   border-bottom: 1px solid var(--fit-border, #27272a);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--fit-muted, #a1a1aa);
   text-align: center;
   text-transform: uppercase;
