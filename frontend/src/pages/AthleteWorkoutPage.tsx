@@ -44,6 +44,85 @@ interface PreviousWorkout {
   }[];
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Лёгкий SVG линейный график (без сторонних библиотек).
+   Каждая вершина подписана значением. Дата по оси X не выводится.
+   ────────────────────────────────────────────────────────────── */
+const ProgressLineChart: React.FC<{
+  data: number[];
+  color?: string;
+  format?: (v: number) => string;
+}> = ({ data, color = '#a3e635', format }) => {
+  if (!data || data.length === 0) {
+    return <div className="progress-chart-empty">Недостаточно данных</div>;
+  }
+
+  const fmt = format || ((v: number) => (Number.isInteger(v) ? `${v}` : v.toFixed(1)));
+  const W = 320;
+  const H = 150;
+  const padL = 18;
+  const padR = 18;
+  const padTop = 30;
+  const padBottom = 16;
+
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const n = data.length;
+  const innerW = W - padL - padR;
+  const innerH = H - padTop - padBottom;
+
+  const xFor = (i: number) => (n === 1 ? W / 2 : padL + (innerW * i) / (n - 1));
+  const yFor = (v: number) => padTop + innerH * (1 - (v - min) / range);
+
+  const pts = data.map((v, i) => ({ x: xFor(i), y: yFor(v), v }));
+  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const area = `${line} L${pts[pts.length - 1].x.toFixed(1)},${(H - padBottom).toFixed(1)} L${pts[0].x.toFixed(
+    1
+  )},${(H - padBottom).toFixed(1)} Z`;
+  const gradId = `fitGrad-${color.replace('#', '')}`;
+
+  return (
+    <svg
+      className="progress-line-chart"
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+    >
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gradId})`} />
+      <path
+        d={line}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {pts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r="3.5" fill={color} stroke="#0a0a0c" strokeWidth="1.5" />
+          <text
+            x={Math.max(14, Math.min(W - 14, p.x))}
+            y={p.y - 10}
+            textAnchor="middle"
+            fontSize="11"
+            fontWeight="700"
+            fill={color}
+          >
+            {fmt(p.v)}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+};
+
 export const AthleteWorkoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { planId, dayId } = useParams<{ planId: string; dayId: string }>();
@@ -60,6 +139,9 @@ export const AthleteWorkoutPage: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [previousWorkout, setPreviousWorkout] = useState<PreviousWorkout | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  // История показателей по упражнению (последние 10 тренировок, старые -> новые)
+  const [weightHistory, setWeightHistory] = useState<number[]>([]);
+  const [setsHistory, setSetsHistory] = useState<number[]>([]);
 
   const currentExercise = exercises[currentExerciseIndex];
   const currentSets = sets[currentExercise?.id] || [];
@@ -76,92 +158,120 @@ export const AthleteWorkoutPage: React.FC = () => {
     if (currentExercise) {
       loadPreviousWorkout(currentExercise.exercise_id);
     }
-  }, [currentExercise]);
+    // sessionId в зависимостях: чтобы корректно исключить текущую сессию,
+    // когда она становится известна уже после первой загрузки.
+  }, [currentExercise, sessionId]);
 
   const initAudio = () => {
     audioRef.current = new Audio('/sounds/beep.mp3');
   };
 
-  // Новая функция: загрузка предыдущей тренировки с этим упражнением
+  // Загрузка предыдущей тренировки + сбор истории показателей по упражнению
   const loadPreviousWorkout = async (exerciseId: number) => {
     const athleteId = localStorage.getItem('selectedAthleteId');
     if (!athleteId) return;
-    
+
     setProgressLoading(true);
+    setWeightHistory([]);
+    setSetsHistory([]);
     try {
-      // Получаем календарь за текущий месяц
+      // Идём по месяцам назад, пока не наберём 10 точек (или не упрёмся в лимит).
       const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth() + 1;
-      
-      const calendarResponse = await athleteService.getWorkoutCalendar(
-        parseInt(athleteId), 
-        currentYear, 
-        currentMonth
-      );
-      
-      const calendar = calendarResponse.data.calendar || {};
-      let allSessions: any[] = [];
-      
-      // Собираем все сессии из календаря
-      for (const dayKey in calendar) {
-        const sessions = calendar[dayKey]?.sessions || [];
-        allSessions = [...allSessions, ...sessions];
-      }
-      
-      // Сортируем по дате (от новых к старым)
-      allSessions.sort((a, b) => {
-        const dateA = new Date(a.workout_date);
-        const dateB = new Date(b.workout_date);
-        return dateB.getTime() - dateA.getTime();
-      });
-      
-      // Ищем сессию, которая не является текущей и содержит это упражнение
+      const MAX_MONTHS_BACK = 24; // защита от бесконечного цикла
+      const todayKey = `${now.getFullYear()}-${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+
+      const seenDates = new Set<string>();
+      const historyDesc: { maxWeight: number; setsCount: number }[] = [];
       let foundWorkout: PreviousWorkout | null = null;
-      
-      for (const session of allSessions) {
-        // Пропускаем текущую сессию
-        if (session.id === sessionId) continue;
-        
+
+      for (let back = 0; back < MAX_MONTHS_BACK && historyDesc.length < 10; back++) {
+        const monthDate = new Date(now.getFullYear(), now.getMonth() - back, 1);
+
+        let monthSessions: any[] = [];
         try {
-          // Получаем детали тренировки
-          const detailsResponse = await athleteService.getWorkoutByDate(
+          const calendarResponse = await athleteService.getWorkoutCalendar(
             parseInt(athleteId),
-            session.workout_date.split('T')[0]
+            monthDate.getFullYear(),
+            monthDate.getMonth() + 1
           );
-          
-          const workoutData = detailsResponse.data;
-          
-          // Проверяем, есть ли в этой тренировке нужное упражнение
-          const exerciseData = workoutData.exercises?.find(
-            (ex: any) => ex.exercise_id === exerciseId
-          );
-          
-          if (exerciseData && exerciseData.sets && exerciseData.sets.length > 0) {
-            foundWorkout = {
-              id: workoutData.id,
-              workout_date: workoutData.workout_date,
-              plan_name: workoutData.plan_name,
-              day_number: workoutData.day_number,
-              exercises: [{
-                exercise_id: exerciseId,
-                exercise_name: exerciseData.exercise_name,
-                sets: exerciseData.sets.map((set: any) => ({
-                  set_number: set.set_number,
-                  reps_done: set.reps_done,
-                  weight_done: set.weight_done,
-                  is_completed: set.is_completed
-                }))
-              }]
-            };
-            break;
+          const calendar = calendarResponse.data.calendar || {};
+          for (const dayKey in calendar) {
+            const sessions = calendar[dayKey]?.sessions || [];
+            monthSessions = [...monthSessions, ...sessions];
           }
-        } catch (error) {
-          console.log('Ошибка загрузки деталей тренировки:', error);
+        } catch (e) {
+          // пропускаем месяц, который не удалось загрузить
           continue;
         }
+
+        // Внутри месяца — от новых к старым
+        monthSessions.sort((a, b) => {
+          const dateA = new Date(a.workout_date);
+          const dateB = new Date(b.workout_date);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        for (const session of monthSessions) {
+          if (historyDesc.length >= 10) break;
+
+          // Пропускаем текущую (активную) сессию и сегодняшний день
+          if (session.id === sessionId) continue;
+
+          const dateKey = (session.workout_date || '').split('T')[0];
+          if (!dateKey || dateKey === todayKey || seenDates.has(dateKey)) continue;
+
+          try {
+            const detailsResponse = await athleteService.getWorkoutByDate(parseInt(athleteId), dateKey);
+            const workoutData = detailsResponse.data;
+
+            const exerciseData = workoutData.exercises?.find((ex: any) => ex.exercise_id === exerciseId);
+
+            if (exerciseData && exerciseData.sets && exerciseData.sets.length > 0) {
+              seenDates.add(dateKey);
+
+              // Максимальный вес из упражнения за день
+              const weights = exerciseData.sets.map((s: any) => Number(s.weight_done) || 0);
+              const maxWeight = Math.max(...weights);
+              // Количество подходов за день
+              const setsCount = exerciseData.sets.length;
+
+              historyDesc.push({ maxWeight, setsCount });
+
+              // Первая найденная (самая свежая) тренировка — для блока "Предыдущая тренировка"
+              if (!foundWorkout) {
+                foundWorkout = {
+                  id: workoutData.id,
+                  workout_date: workoutData.workout_date,
+                  plan_name: workoutData.plan_name,
+                  day_number: workoutData.day_number,
+                  exercises: [
+                    {
+                      exercise_id: exerciseId,
+                      exercise_name: exerciseData.exercise_name,
+                      sets: exerciseData.sets.map((set: any) => ({
+                        set_number: set.set_number,
+                        reps_done: set.reps_done,
+                        weight_done: set.weight_done,
+                        is_completed: set.is_completed,
+                      })),
+                    },
+                  ],
+                };
+              }
+            }
+          } catch (error) {
+            console.log('Ошибка загрузки деталей тренировки:', error);
+            continue;
+          }
+        }
       }
-      
+
+      // В хронологическом порядке (старые -> новые) для графика
+      const historyAsc = historyDesc.slice(0, 10).reverse();
+      setWeightHistory(historyAsc.map((h) => h.maxWeight));
+      setSetsHistory(historyAsc.map((h) => h.setsCount));
       setPreviousWorkout(foundWorkout);
     } catch (error) {
       console.error('Ошибка загрузки предыдущей тренировки:', error);
@@ -174,28 +284,32 @@ export const AthleteWorkoutPage: React.FC = () => {
     try {
       const response = await athleteService.getPlanDetails(Number(planId));
       const day = response.data.days.find((d: any) => d.id === Number(dayId));
-      
+
       if (day) {
         setExercises(day.exercises || []);
-        
+
         const initialSets: { [key: number]: Set[] } = {};
         day.exercises.forEach((ex: Exercise) => {
           initialSets[ex.id] = Array.from({ length: ex.sets_count }, (_, i) => ({
             set_number: i + 1,
             reps: ex.default_reps,
             weight: ex.default_weight === 0 ? null : ex.default_weight,
-            completed: false
+            completed: false,
           }));
         });
         setSets(initialSets);
-        
+
         const athleteId = localStorage.getItem('selectedAthleteId');
         if (!athleteId) {
           console.error('Не выбран спортсмен');
           return;
         }
-        
-        const sessionResponse = await athleteService.startWorkout(parseInt(athleteId), Number(planId), Number(dayId));
+
+        const sessionResponse = await athleteService.startWorkout(
+          parseInt(athleteId),
+          Number(planId),
+          Number(dayId)
+        );
         setSessionId(sessionResponse.data.id);
       }
     } catch (error) {
@@ -208,41 +322,48 @@ export const AthleteWorkoutPage: React.FC = () => {
   const handleSetComplete = async (exerciseId: number, setNumber: number, completed: boolean) => {
     if (!sessionId) return;
 
-    const exercise = exercises.find(e => e.id === exerciseId);
+    const exercise = exercises.find((e) => e.id === exerciseId);
     if (!exercise) return;
 
-    setSets(prevSets => {
+    setSets((prevSets) => {
       const updatedSets = { ...prevSets };
-      const setIndex = updatedSets[exerciseId]?.findIndex(s => s.set_number === setNumber);
-      
+      const setIndex = updatedSets[exerciseId]?.findIndex((s) => s.set_number === setNumber);
+
       if (setIndex !== -1 && setIndex !== undefined) {
         updatedSets[exerciseId][setIndex].completed = completed;
-        
+
         // Сохраняем на сервер
-        athleteService.logSet(sessionId, {
-          exercise_id: exercise.exercise_id,
-          set_number: setNumber,
-          reps_done: updatedSets[exerciseId][setIndex].reps,
-          weight_done: updatedSets[exerciseId][setIndex].weight,
-          is_completed: completed
-        }).catch(error => {
-          console.error('Ошибка сохранения подхода:', error);
-          // Откат при ошибке
-          updatedSets[exerciseId][setIndex].completed = !completed;
-        });
+        athleteService
+          .logSet(sessionId, {
+            exercise_id: exercise.exercise_id,
+            set_number: setNumber,
+            reps_done: updatedSets[exerciseId][setIndex].reps,
+            weight_done: updatedSets[exerciseId][setIndex].weight,
+            is_completed: completed,
+          })
+          .catch((error) => {
+            console.error('Ошибка сохранения подхода:', error);
+            // Откат при ошибке
+            updatedSets[exerciseId][setIndex].completed = !completed;
+          });
       }
       return updatedSets;
     });
   };
 
-  const handleSetChange = (exerciseId: number, setNumber: number, field: 'reps' | 'weight', value: number | null) => {
-    setSets(prevSets => {
+  const handleSetChange = (
+    exerciseId: number,
+    setNumber: number,
+    field: 'reps' | 'weight',
+    value: number | null
+  ) => {
+    setSets((prevSets) => {
       const updatedSets = { ...prevSets };
-      const setIndex = updatedSets[exerciseId]?.findIndex(s => s.set_number === setNumber);
-      
+      const setIndex = updatedSets[exerciseId]?.findIndex((s) => s.set_number === setNumber);
+
       if (setIndex !== -1 && setIndex !== undefined) {
         updatedSets[exerciseId][setIndex][field] = value;
-        
+
         if (field === 'weight' && setIndex < updatedSets[exerciseId].length - 1) {
           for (let i = setIndex + 1; i < updatedSets[exerciseId].length; i++) {
             updatedSets[exerciseId][i][field] = value;
@@ -254,10 +375,10 @@ export const AthleteWorkoutPage: React.FC = () => {
   };
 
   const handleAddSet = async (exerciseId: number) => {
-    const exercise = exercises.find(e => e.id === exerciseId);
+    const exercise = exercises.find((e) => e.id === exerciseId);
     if (!exercise) return;
 
-    setSets(prevSets => {
+    setSets((prevSets) => {
       const currentExerciseSets = prevSets[exerciseId] || [];
       if (currentExerciseSets.length >= 10) {
         alert('Максимальное количество подходов - 10');
@@ -269,41 +390,47 @@ export const AthleteWorkoutPage: React.FC = () => {
       const newSet: Set = {
         set_number: newSetNumber,
         reps: lastSet ? lastSet.reps : exercise.default_reps,
-        weight: lastSet ? (lastSet.weight !== null ? lastSet.weight : null) : (exercise.default_weight === 0 ? null : exercise.default_weight),
-        completed: false
+        weight: lastSet
+          ? lastSet.weight !== null
+            ? lastSet.weight
+            : null
+          : exercise.default_weight === 0
+          ? null
+          : exercise.default_weight,
+        completed: false,
       };
 
       return {
         ...prevSets,
-        [exerciseId]: [...currentExerciseSets, newSet]
+        [exerciseId]: [...currentExerciseSets, newSet],
       };
     });
   };
 
   const isExerciseCompleted = (exerciseId: number) => {
     const exerciseSets = sets[exerciseId] || [];
-    return exerciseSets.length > 0 && exerciseSets.every(s => s.completed);
+    return exerciseSets.length > 0 && exerciseSets.every((s) => s.completed);
   };
 
   const allExercisesCompleted = () => {
-    return exercises.length > 0 && exercises.every(ex => isExerciseCompleted(ex.id));
+    return exercises.length > 0 && exercises.every((ex) => isExerciseCompleted(ex.id));
   };
 
   const startTimer = () => {
     setTimerActive(true);
-    
+
     if (timerRef.current) clearInterval(timerRef.current);
-    
+
     timerRef.current = setInterval(() => {
-      setTimerValue(prev => {
+      setTimerValue((prev) => {
         if (prev <= 1) {
           setTimerActive(false);
           if (timerRef.current) clearInterval(timerRef.current);
-          
+
           if (timerSound && audioRef.current) {
-            audioRef.current.play().catch(e => console.log('Ошибка воспроизведения звука:', e));
+            audioRef.current.play().catch((e) => console.log('Ошибка воспроизведения звука:', e));
           }
-          
+
           setTimerValue(timerDefault);
           return timerDefault;
         }
@@ -344,11 +471,11 @@ export const AthleteWorkoutPage: React.FC = () => {
   const handleCompleteWorkout = async () => {
     if (!sessionId) return;
 
-    navigate('/athlete/complete', { 
-      state: { 
+    navigate('/athlete/complete', {
+      state: {
         sessionId,
-        planName: exercises[0]?.exercise_name
-      } 
+        planName: exercises[0]?.exercise_name,
+      },
     });
   };
 
@@ -370,6 +497,12 @@ export const AthleteWorkoutPage: React.FC = () => {
     return numWeight.toFixed(2);
   };
 
+  // Компактный формат веса для подписей графика (без лишних нулей)
+  const formatWeightShort = (weight: number): string => {
+    const n = Number(weight) || 0;
+    return Number.isInteger(n) ? `${n}` : n.toFixed(1);
+  };
+
   if (loading) {
     return <div className="loading">Загрузка тренировки...</div>;
   }
@@ -385,7 +518,7 @@ export const AthleteWorkoutPage: React.FC = () => {
             Упражнение {currentExerciseIndex + 1} из {exercises.length}
           </div>
           <div className="progress-bar">
-            <div 
+            <div
               className="progress-fill"
               style={{ width: `${((currentExerciseIndex + 1) / exercises.length) * 100}%` }}
             />
@@ -397,16 +530,14 @@ export const AthleteWorkoutPage: React.FC = () => {
         <div className="current-exercise">
           <h2>{currentExercise.exercise_name}</h2>
           <p className="muscle-group">{currentExercise.muscle_group}</p>
-          
+
           {/* НОВЫЙ БЛОК: Предыдущая тренировка */}
           <div className="progress-chart-mini">
             <div className="progress-chart-header">
-              <span className="progress-chart-title">
-                Предыдущая тренировка
-              </span>
+              <span className="progress-chart-title">Предыдущая тренировка</span>
               {progressLoading && <span className="progress-chart-loading">Загрузка...</span>}
             </div>
-            
+
             {previousData ? (
               <div className="previous-sets-column">
                 {previousData.sets.map((set, idx) => (
@@ -418,6 +549,36 @@ export const AthleteWorkoutPage: React.FC = () => {
             ) : (
               <div className="progress-chart-empty">
                 {progressLoading ? 'Поиск предыдущей тренировки...' : 'Нет предыдущих тренировок'}
+              </div>
+            )}
+          </div>
+
+          {/* НОВЫЙ БЛОК: Прогресс по весу */}
+          <div className="progress-stat-chart">
+            <div className="progress-chart-header">
+              <span className="progress-chart-title">Прогресс по весу (кг)</span>
+              {progressLoading && <span className="progress-chart-loading">Загрузка...</span>}
+            </div>
+            {weightHistory.length > 0 ? (
+              <ProgressLineChart data={weightHistory} color="#a3e635" format={formatWeightShort} />
+            ) : (
+              <div className="progress-chart-empty">
+                {progressLoading ? 'Загрузка...' : 'Недостаточно данных'}
+              </div>
+            )}
+          </div>
+
+          {/* НОВЫЙ БЛОК: Прогресс по количеству подходов */}
+          <div className="progress-stat-chart">
+            <div className="progress-chart-header">
+              <span className="progress-chart-title">Прогресс по подходам</span>
+              {progressLoading && <span className="progress-chart-loading">Загрузка...</span>}
+            </div>
+            {setsHistory.length > 0 ? (
+              <ProgressLineChart data={setsHistory} color="#a3e635" />
+            ) : (
+              <div className="progress-chart-empty">
+                {progressLoading ? 'Загрузка...' : 'Недостаточно данных'}
               </div>
             )}
           </div>
@@ -450,16 +611,18 @@ export const AthleteWorkoutPage: React.FC = () => {
         {currentSets.map((set) => (
           <div key={set.set_number} className="workout-set-row">
             <span className="set-number">{set.set_number}</span>
-            
+
             <input
               type="number"
               min="1"
               value={set.reps}
-              onChange={(e) => handleSetChange(currentExercise.id, set.set_number, 'reps', parseInt(e.target.value) || 1)}
+              onChange={(e) =>
+                handleSetChange(currentExercise.id, set.set_number, 'reps', parseInt(e.target.value) || 1)
+              }
               disabled={set.completed}
               className="set-input"
             />
-            
+
             <input
               type="number"
               min="0"
@@ -473,7 +636,7 @@ export const AthleteWorkoutPage: React.FC = () => {
               className="set-input"
               placeholder="вес"
             />
-            
+
             <button
               className={`set-checkbox ${set.completed ? 'completed' : ''}`}
               onClick={() => handleSetComplete(currentExercise.id, set.set_number, !set.completed)}
@@ -484,10 +647,7 @@ export const AthleteWorkoutPage: React.FC = () => {
         ))}
 
         {currentSets.length < 10 && (
-          <button 
-            className="add-set-btn"
-            onClick={() => handleAddSet(currentExercise.id)}
-          >
+          <button className="add-set-btn" onClick={() => handleAddSet(currentExercise.id)}>
             <Plus size={20} />
             Добавить подход
           </button>
@@ -498,50 +658,33 @@ export const AthleteWorkoutPage: React.FC = () => {
         <div className="timer-display">
           <span className="timer-value">{formatTime(timerValue)}</span>
         </div>
-        
+
         <div className="timer-controls">
-          <button 
+          <button
             className={`timer-btn ${timerSound ? 'active' : ''}`}
             onClick={() => setTimerSound(!timerSound)}
             title={timerSound ? 'Звук вкл' : 'Звук выкл'}
           >
             {timerSound ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
-          
-          <button 
-            className="timer-btn play-pause"
-            onClick={startTimer}
-            disabled={timerActive}
-          >
+
+          <button className="timer-btn play-pause" onClick={startTimer} disabled={timerActive}>
             <Play size={20} />
           </button>
-          
-          <button 
-            className="timer-btn play-pause"
-            onClick={pauseTimer}
-            disabled={!timerActive}
-          >
+
+          <button className="timer-btn play-pause" onClick={pauseTimer} disabled={!timerActive}>
             <Pause size={20} />
           </button>
-          
-          <button 
-            className="timer-btn"
-            onClick={resetTimer}
-          >
+
+          <button className="timer-btn" onClick={resetTimer}>
             <RotateCcw size={20} />
           </button>
-          
-          <button 
-            className="timer-btn"
-            onClick={handleTimerIncrease}
-          >
+
+          <button className="timer-btn" onClick={handleTimerIncrease}>
             +1
           </button>
-          
-          <button 
-            className="timer-btn"
-            onClick={handleTimerDecrease}
-          >
+
+          <button className="timer-btn" onClick={handleTimerDecrease}>
             -1
           </button>
         </div>
@@ -552,15 +695,15 @@ export const AthleteWorkoutPage: React.FC = () => {
           <button
             className="nav-btn"
             disabled={currentExerciseIndex === 0}
-            onClick={() => setCurrentExerciseIndex(prev => prev - 1)}
+            onClick={() => setCurrentExerciseIndex((prev) => prev - 1)}
           >
             Предыдущее
           </button>
-          
+
           <button
             className="nav-btn"
             disabled={currentExerciseIndex === exercises.length - 1}
-            onClick={() => setCurrentExerciseIndex(prev => prev + 1)}
+            onClick={() => setCurrentExerciseIndex((prev) => prev + 1)}
           >
             Следующее
           </button>

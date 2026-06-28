@@ -157,6 +157,22 @@
   padding: 4px 0;
 }
 
+/* ── Блоки графиков прогресса (вес / подходы) ── */
+.progress-stat-chart {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+}
+
+.progress-line-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
 /* Sets table */
 .workout-sets-list {
   flex: 1;

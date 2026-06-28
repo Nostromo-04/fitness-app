@@ -1,0 +1,62 @@
+# Fitness App — Design Package
+
+Тёмная тема (#0a0a0c) + лаймовый акцент (#a3e635).
+
+## Что внутри
+
+```
+frontend/src/
+├── index.css                          ← CSS-переменные + глобальные стили
+├── pages/
+│   ├── AthleteDashboard.css
+│   ├── AthleteWorkoutPage.css
+│   ├── AthleteProgressPage.css
+│   ├── AthleteCalendarPage.css
+│   ├── AthletePlanPage.css
+│   ├── AthleteCompletePage.css
+│   ├── CoachDashboard.css
+│   ├── CoachAthletePlansPage.css
+│   ├── CoachAthleteCalendarPage.css
+│   ├── CoachAthleteProgressPage.css
+│   ├── CreatePlanPage.css
+│   ├── ExerciseLibrary.css
+│   ├── HomePage.css
+│   ├── LoginPage.css
+│   └── UserSelectionPage.css          ← обновлён (добавлен список пользователей)
+└── components/
+    ├── ExerciseCard.css
+    ├── ExerciseModal.css
+    ├── ExerciseSelector.css
+    └── PlanExerciseItem.css
+
+pages/ (ОБНОВЛЁННЫЙ TSX)
+└── UserSelectionPage.tsx              ← ID-бейдж вместо инициалов
+```
+
+## Как перенести
+
+1. Скопируй **все файлы из `frontend/src/pages/*.css`** в `frontend/src/pages/` своего проекта.
+2. Скопируй **все файлы из `frontend/src/components/*.css`** в `frontend/src/components/`.
+3. Замени **`frontend/src/index.css`** (содержит все CSS-переменные темы).
+4. Замени **`frontend/src/pages/UserSelectionPage.tsx`** — добавлен ID-бейдж (лаймовый блок слева карточки).
+
+## CSS-переменные темы
+
+```css
+--fit-bg:           #0a0a0c   /* фон страниц */
+--fit-card:         #18181b   /* карточки */
+--fit-card-2:       #1c1c1f   /* вложенные элементы */
+--fit-accent:       #a3e635   /* лайм — акцент */
+--fit-accent-hover: #84cc16   /* лайм при hover */
+--fit-text:         #f4f4f5   /* основной текст */
+--fit-muted:        #a1a1aa   /* второстепенный текст */
+--fit-border:       #27272a   /* границы */
+--fit-danger:       #f87171   /* ошибки/опасность */
+```
+
+## Изменения в UserSelectionPage
+
+- **Раньше:** `.user-avatar` показывал инициалы («АФ»), ниже текст «ID: 2»
+- **Сейчас:** `.user-avatar` стал лаймовым бейджем «ID:2», имя без лишней строки
+- Кнопка «назад» (`←`) в верхнем левом углу, цвет — лайм
+- Кнопка «Войти как тренер вместо этого» — убрана
