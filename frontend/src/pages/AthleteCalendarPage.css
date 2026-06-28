@@ -34,21 +34,29 @@
 
 .back-btn:hover { border-color: var(--fit-accent, #a3e635); }
 
-/* Month navigation */
-.month-navigation {
+/* Month navigation — реальные классы из JSX: .calendar-navigation / .nav-btn */
+.month-navigation,
+.calendar-navigation {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
+  padding: 8px 12px;
   margin-bottom: 20px;
 }
 
-.month-navigation h2 {
+.month-navigation h2,
+.calendar-navigation h2 {
   font-size: 17px;
   font-weight: 600;
   color: var(--fit-text, #f4f4f5);
 }
 
-.month-btn {
+/* Кнопки < > месяца — лаймовые */
+.month-btn,
+.nav-btn {
   background: var(--fit-card-2, #1c1c1f);
   border: 1px solid var(--fit-accent, #a3e635);
   border-radius: 10px;
@@ -61,7 +69,8 @@
   transition: opacity 0.2s;
 }
 
-.month-btn:hover { opacity: 0.75; }
+.month-btn:hover,
+.nav-btn:hover { opacity: 0.75; }
 
 /* Calendar grid */
 .calendar-grid {
@@ -149,9 +158,11 @@
   background: var(--fit-muted, #a1a1aa);
 }
 
-/* Feedback-coloured dots */
-.dot.good { background: var(--fit-accent, #a3e635); }
-.dot.hard { background: var(--fit-danger, #f87171); }
+/* Feedback-coloured dots — JSX рендерит классы "good" / "bad" / "neutral" */
+.dot.good  { background: var(--fit-accent, #a3e635); }
+.dot.bad   { background: var(--fit-danger, #f87171); }
+.dot.hard  { background: var(--fit-danger, #f87171); } /* алиас на случай */
+.dot.neutral { background: var(--fit-muted, #a1a1aa); }
 
 /* Selected day detail panel */
 .day-detail {
@@ -233,11 +244,13 @@
   font-weight: 700;
   color: var(--fit-text, #f4f4f5);
   margin: 0 0 8px;
+  text-align: center;
 }
 
 .workout-meta {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   margin-bottom: 16px;
   flex-wrap: wrap;
