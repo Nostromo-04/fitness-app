@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Dumbbell, ArrowLeft } from 'lucide-react';
+import { Users, Dumbbell, ArrowLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
 import './UserSelectionPage.css';
 
@@ -19,7 +19,6 @@ export const UserSelectionPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Загружаем всех пользователей при выборе роли
   useEffect(() => {
     if (role) {
       loadUsers();
@@ -29,10 +28,8 @@ export const UserSelectionPage: React.FC = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      // Получаем всех пользователей
       const response = await api.get('/users');
       const allUsers = response.data.data || [];
-      // Фильтруем по роли
       const filteredUsers = allUsers.filter((u: User) => u.role === role);
       setUsers(filteredUsers);
     } catch (error) {
@@ -44,11 +41,9 @@ export const UserSelectionPage: React.FC = () => {
 
   const handleUserSelect = (user: User) => {
     if (user.role === 'coach') {
-      // Сохраняем ID тренера в localStorage
       localStorage.setItem('selectedCoachId', user.id.toString());
       navigate('/coach/dashboard');
     } else {
-      // Сохраняем ID спортсмена в localStorage
       localStorage.setItem('selectedAthleteId', user.id.toString());
       navigate('/athlete/dashboard');
     }
@@ -95,12 +90,13 @@ export const UserSelectionPage: React.FC = () => {
                 onClick={() => handleUserSelect(user)}
               >
                 <div className="user-avatar">
-                  {user.first_name?.[0] || '?'}
-                  {user.last_name?.[0] || ''}
+                  ID:{user.id}
                 </div>
                 <div className="user-info">
                   <h3>{user.first_name} {user.last_name}</h3>
-                  <p>ID: {user.id}</p>
+                </div>
+                <div className="user-card-arrow">
+                  <ChevronRight size={18} />
                 </div>
               </div>
             ))}

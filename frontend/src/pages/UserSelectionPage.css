@@ -1,3 +1,4 @@
+/* ── Role Selection Screen ── */
 .user-selection-page {
   min-height: 100vh;
   background: var(--fit-bg, #0a0a0c);
@@ -23,7 +24,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 24px;
-  box-shadow: 0 0 28px rgba(163,230,53,0.3);
+  box-shadow: 0 0 28px rgba(163, 230, 53, 0.3);
 }
 
 .role-selection h1 {
@@ -79,4 +80,113 @@
   color: var(--fit-muted, #a1a1aa);
   margin: 0;
   line-height: 1.4;
+}
+
+/* ── User List Screen (after role chosen) ── */
+.user-list-container {
+  padding: 20px 20px 100px;
+  min-height: 100vh;
+  background: var(--fit-bg, #0a0a0c);
+}
+
+.user-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.user-list-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+}
+
+.user-list-header .back-btn {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--fit-accent, #a3e635);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.user-list-header .back-btn:hover {
+  border-color: var(--fit-accent, #a3e635);
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card: lime ID badge on the left, name on the right */
+.user-card {
+  display: flex;
+  align-items: stretch;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--fit-border, #27272a);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.user-card:hover {
+  border-color: var(--fit-accent, #a3e635);
+  transform: translateY(-1px);
+}
+
+/* user-avatar repurposed as the lime ID badge */
+.user-avatar {
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: none;
+}
+
+.user-info {
+  flex: 1;
+  background: var(--fit-card, #18181b);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-info h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fit-text, #f4f4f5);
+}
+
+/* Hide the redundant "ID: X" text — ID is now in the badge */
+.user-info p {
+  display: none;
+}
+
+/* Chevron arrow on the right */
+.user-card-arrow {
+  background: var(--fit-card, #18181b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 16px;
 }
