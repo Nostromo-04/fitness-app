@@ -141,7 +141,7 @@ export const AthleteWorkoutPage: React.FC = () => {
   const [progressLoading, setProgressLoading] = useState(false);
   // История показателей по упражнению (последние 10 тренировок, старые -> новые)
   const [weightHistory, setWeightHistory] = useState<number[]>([]);
-  const [setsHistory, setSetsHistory] = useState<number[]>([]);
+  const [repsHistory, setRepsHistory] = useState<number[]>([]);
 
   const currentExercise = exercises[currentExerciseIndex];
   const currentSets = sets[currentExercise?.id] || [];
@@ -183,7 +183,7 @@ export const AthleteWorkoutPage: React.FC = () => {
         .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
 
       const seenDates = new Set<string>();
-      const historyDesc: { maxWeight: number; setsCount: number }[] = [];
+      const historyDesc: { maxWeight: number; maxReps: number }[] = [];
       let foundWorkout: PreviousWorkout | null = null;
 
       for (let back = 0; back < MAX_MONTHS_BACK && historyDesc.length < 10; back++) {
@@ -234,10 +234,11 @@ export const AthleteWorkoutPage: React.FC = () => {
               // Максимальный вес из упражнения за день
               const weights = exerciseData.sets.map((s: any) => Number(s.weight_done) || 0);
               const maxWeight = Math.max(...weights);
-              // Количество подходов за день
-              const setsCount = exerciseData.sets.length;
+              // Максимальное число повторений из упражнения за день
+              const repsList = exerciseData.sets.map((s: any) => Number(s.reps_done) || 0);
+              const maxReps = Math.max(...repsList);
 
-              historyDesc.push({ maxWeight, setsCount });
+              historyDesc.push({ maxWeight, maxReps });
 
               // Первая найденная (самая свежая) тренировка — для блока "Предыдущая тренировка"
               if (!foundWorkout) {
@@ -271,7 +272,7 @@ export const AthleteWorkoutPage: React.FC = () => {
       // В хронологическом порядке (старые -> новые) для графика
       const historyAsc = historyDesc.slice(0, 10).reverse();
       setWeightHistory(historyAsc.map((h) => h.maxWeight));
-      setSetsHistory(historyAsc.map((h) => h.setsCount));
+      setRepsHistory(historyAsc.map((h) => h.maxReps));
       setPreviousWorkout(foundWorkout);
     } catch (error) {
       console.error('Ошибка загрузки предыдущей тренировки:', error);
@@ -568,14 +569,14 @@ export const AthleteWorkoutPage: React.FC = () => {
             )}
           </div>
 
-          {/* НОВЫЙ БЛОК: Прогресс по количеству подходов */}
+          {/* НОВЫЙ БЛОК: Прогресс по повторениям */}
           <div className="progress-stat-chart">
             <div className="progress-chart-header">
-              <span className="progress-chart-title">Прогресс по подходам</span>
+              <span className="progress-chart-title">Прогресс по повторениям</span>
               {progressLoading && <span className="progress-chart-loading">Загрузка...</span>}
             </div>
-            {setsHistory.length > 0 ? (
-              <ProgressLineChart data={setsHistory} color="#a3e635" />
+            {repsHistory.length > 0 ? (
+              <ProgressLineChart data={repsHistory} color="#a3e635" />
             ) : (
               <div className="progress-chart-empty">
                 {progressLoading ? 'Загрузка...' : 'Недостаточно данных'}
