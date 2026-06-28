@@ -16,6 +16,8 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--fit-text, #f4f4f5);
+  flex: 1;
+  text-align: center;
 }
 
 .back-btn {
@@ -47,19 +49,19 @@
 }
 
 .month-btn {
-  background: var(--fit-card, #18181b);
-  border: 1px solid var(--fit-border, #27272a);
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-accent, #a3e635);
   border-radius: 10px;
   padding: 8px;
-  color: var(--fit-text, #f4f4f5);
+  color: var(--fit-accent, #a3e635);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: opacity 0.2s;
 }
 
-.month-btn:hover { border-color: var(--fit-accent, #a3e635); }
+.month-btn:hover { opacity: 0.75; }
 
 /* Calendar grid */
 .calendar-grid {
@@ -95,7 +97,10 @@
   position: relative;
 }
 
-.calendar-day.has-workout { cursor: pointer; }
+.calendar-day.has-workout {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+}
 .calendar-day.has-workout:hover { border-color: var(--fit-accent, #a3e635); }
 
 .calendar-day.good-workout {
@@ -136,7 +141,17 @@
   line-height: 1;
 }
 
-.dot { display: inline-block; }
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fit-muted, #a1a1aa);
+}
+
+/* Feedback-coloured dots */
+.dot.good { background: var(--fit-accent, #a3e635); }
+.dot.hard { background: var(--fit-danger, #f87171); }
 
 /* Selected day detail panel */
 .day-detail {
@@ -271,12 +286,14 @@
   font-weight: 700;
   color: var(--fit-text, #f4f4f5);
   margin: 0 0 3px;
+  text-align: center;
 }
 
 .exercise-card .muscle-group {
   font-size: 13px;
   color: var(--fit-muted, #a1a1aa);
   margin: 0 0 14px;
+  text-align: center;
 }
 
 /* ── Sets table ── */
@@ -298,6 +315,7 @@
   letter-spacing: 0.4px;
   padding: 0 0 8px;
   border-bottom: 1px solid var(--fit-border, #27272a);
+  text-align: center;
 }
 
 .set-row {
@@ -310,6 +328,7 @@
   color: var(--fit-text, #f4f4f5);
   padding: 8px 0;
   border-bottom: 1px solid var(--fit-border, #27272a);
+  text-align: center;
 }
 
 /* First column (set number) — slightly muted */
