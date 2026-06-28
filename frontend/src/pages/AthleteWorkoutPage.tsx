@@ -158,9 +158,7 @@ export const AthleteWorkoutPage: React.FC = () => {
     if (currentExercise) {
       loadPreviousWorkout(currentExercise.exercise_id);
     }
-    // sessionId в зависимостях: чтобы корректно исключить текущую сессию,
-    // когда она становится известна уже после первой загрузки.
-  }, [currentExercise, sessionId]);
+  }, [currentExercise]);
 
   const initAudio = () => {
     audioRef.current = new Audio('/sounds/beep.mp3');
@@ -173,107 +171,71 @@ export const AthleteWorkoutPage: React.FC = () => {
 
     setProgressLoading(true);
     setWeightHistory([]);
-    setSetsHistory([]);
+    setRepsHistory([]);
     try {
-      // Идём по месяцам назад, пока не наберём 10 точек (или не упрёмся в лимит).
+      // Один лёгкий запрос: история выполненных сетов по упражнению
+      // (бэкенд отдаёт строки сетов, отсортированные по дате тренировки DESC).
+      const response = await athleteService.getExerciseProgress(parseInt(athleteId), exerciseId, 100);
+      const rows: any[] = response?.data?.progress || [];
+
       const now = new Date();
-      const MAX_MONTHS_BACK = 24; // защита от бесконечного цикла
       const todayKey = `${now.getFullYear()}-${(now.getMonth() + 1)
         .toString()
         .padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
 
-      const seenDates = new Set<string>();
-      const historyDesc: { maxWeight: number; maxReps: number }[] = [];
-      let foundWorkout: PreviousWorkout | null = null;
-
-      for (let back = 0; back < MAX_MONTHS_BACK && historyDesc.length < 10; back++) {
-        const monthDate = new Date(now.getFullYear(), now.getMonth() - back, 1);
-
-        let monthSessions: any[] = [];
-        try {
-          const calendarResponse = await athleteService.getWorkoutCalendar(
-            parseInt(athleteId),
-            monthDate.getFullYear(),
-            monthDate.getMonth() + 1
-          );
-          const calendar = calendarResponse.data.calendar || {};
-          for (const dayKey in calendar) {
-            const sessions = calendar[dayKey]?.sessions || [];
-            monthSessions = [...monthSessions, ...sessions];
-          }
-        } catch (e) {
-          // пропускаем месяц, который не удалось загрузить
-          continue;
+      // Группируем сеты по дате тренировки, сохраняя порядок (даты идут DESC).
+      const byDate = new Map<string, any[]>();
+      const datesDesc: string[] = [];
+      for (const row of rows) {
+        const dateKey = (row.workout_date || '').split('T')[0];
+        if (!dateKey || dateKey === todayKey) continue; // исключаем сегодняшний (активный) день
+        if (!byDate.has(dateKey)) {
+          byDate.set(dateKey, []);
+          datesDesc.push(dateKey);
         }
-
-        // Внутри месяца — от новых к старым
-        monthSessions.sort((a, b) => {
-          const dateA = new Date(a.workout_date);
-          const dateB = new Date(b.workout_date);
-          return dateB.getTime() - dateA.getTime();
-        });
-
-        for (const session of monthSessions) {
-          if (historyDesc.length >= 10) break;
-
-          // Пропускаем текущую (активную) сессию и сегодняшний день
-          if (session.id === sessionId) continue;
-
-          const dateKey = (session.workout_date || '').split('T')[0];
-          if (!dateKey || dateKey === todayKey || seenDates.has(dateKey)) continue;
-
-          try {
-            const detailsResponse = await athleteService.getWorkoutByDate(parseInt(athleteId), dateKey);
-            const workoutData = detailsResponse.data;
-
-            const exerciseData = workoutData.exercises?.find((ex: any) => ex.exercise_id === exerciseId);
-
-            if (exerciseData && exerciseData.sets && exerciseData.sets.length > 0) {
-              seenDates.add(dateKey);
-
-              // Максимальный вес из упражнения за день
-              const weights = exerciseData.sets.map((s: any) => Number(s.weight_done) || 0);
-              const maxWeight = Math.max(...weights);
-              // Максимальное число повторений из упражнения за день
-              const repsList = exerciseData.sets.map((s: any) => Number(s.reps_done) || 0);
-              const maxReps = Math.max(...repsList);
-
-              historyDesc.push({ maxWeight, maxReps });
-
-              // Первая найденная (самая свежая) тренировка — для блока "Предыдущая тренировка"
-              if (!foundWorkout) {
-                foundWorkout = {
-                  id: workoutData.id,
-                  workout_date: workoutData.workout_date,
-                  plan_name: workoutData.plan_name,
-                  day_number: workoutData.day_number,
-                  exercises: [
-                    {
-                      exercise_id: exerciseId,
-                      exercise_name: exerciseData.exercise_name,
-                      sets: exerciseData.sets.map((set: any) => ({
-                        set_number: set.set_number,
-                        reps_done: set.reps_done,
-                        weight_done: set.weight_done,
-                        is_completed: set.is_completed,
-                      })),
-                    },
-                  ],
-                };
-              }
-            }
-          } catch (error) {
-            console.log('Ошибка загрузки деталей тренировки:', error);
-            continue;
-          }
-        }
+        byDate.get(dateKey)!.push(row);
       }
 
-      // В хронологическом порядке (старые -> новые) для графика
-      const historyAsc = historyDesc.slice(0, 10).reverse();
+      // До 10 последних тренировок; за каждый день берём максимумы.
+      const recentDatesDesc = datesDesc.slice(0, 10);
+      const historyDesc = recentDatesDesc.map((dateKey) => {
+        const sets = byDate.get(dateKey)!;
+        const maxWeight = Math.max(...sets.map((s) => Number(s.weight_done) || 0));
+        const maxReps = Math.max(...sets.map((s) => Number(s.reps_done) || 0));
+        return { maxWeight, maxReps };
+      });
+
+      // Хронологический порядок (старые -> новые) для графика.
+      const historyAsc = [...historyDesc].reverse();
       setWeightHistory(historyAsc.map((h) => h.maxWeight));
       setRepsHistory(historyAsc.map((h) => h.maxReps));
-      setPreviousWorkout(foundWorkout);
+
+      // Блок "Предыдущая тренировка" — самая свежая дата.
+      if (recentDatesDesc.length > 0) {
+        const lastDate = recentDatesDesc[0];
+        // Сеты приходят DESC по времени создания — разворачиваем для естественного порядка.
+        const lastSets = [...byDate.get(lastDate)!].reverse();
+        setPreviousWorkout({
+          id: 0,
+          workout_date: lastDate,
+          plan_name: lastSets[0]?.plan_name || '',
+          day_number: lastSets[0]?.day_number || 0,
+          exercises: [
+            {
+              exercise_id: exerciseId,
+              exercise_name: '',
+              sets: lastSets.map((s, i) => ({
+                set_number: i + 1,
+                reps_done: Number(s.reps_done) || 0,
+                weight_done: Number(s.weight_done) || 0,
+                is_completed: true,
+              })),
+            },
+          ],
+        });
+      } else {
+        setPreviousWorkout(null);
+      }
     } catch (error) {
       console.error('Ошибка загрузки предыдущей тренировки:', error);
     } finally {
