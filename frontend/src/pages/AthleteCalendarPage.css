@@ -150,19 +150,20 @@
   line-height: 1;
 }
 
+/* JSX рендерит символ ● внутри span.dot — красим сам глиф, без фонового кружка */
 .dot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--fit-muted, #a1a1aa);
+  font-size: 9px;
+  line-height: 1;
+  background: none;
+  color: var(--fit-muted, #a1a1aa);
 }
 
 /* Feedback-coloured dots — JSX рендерит классы "good" / "bad" / "neutral" */
-.dot.good  { background: var(--fit-accent, #a3e635); }
-.dot.bad   { background: var(--fit-danger, #f87171); }
-.dot.hard  { background: var(--fit-danger, #f87171); } /* алиас на случай */
-.dot.neutral { background: var(--fit-muted, #a1a1aa); }
+.dot.good  { color: var(--fit-accent, #a3e635); }
+.dot.bad   { color: var(--fit-danger, #f87171); }
+.dot.hard  { color: var(--fit-danger, #f87171); } /* алиас на случай */
+.dot.neutral { color: var(--fit-muted, #a1a1aa); }
 
 /* Selected day detail panel */
 .day-detail {
