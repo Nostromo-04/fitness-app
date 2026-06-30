@@ -47,6 +47,17 @@ class WorkoutSession {
     const result = await db.query(query, [sessionId, feedbackEmoji]);
     return result.rows[0];
   }
+
+  // Удаление незавершённой сессии вместе с её подходами
+  // (используется, чтобы не оставлять "тренировки без эмодзи" при старте новой)
+  static async deleteIncomplete(sessionId) {
+    await db.query('DELETE FROM set_logs WHERE session_id = $1', [sessionId]);
+    const result = await db.query(
+      'DELETE FROM workout_sessions WHERE id = $1 AND completed_at IS NULL RETURNING id',
+      [sessionId]
+    );
+    return result.rows[0];
+  }
   
   // Получение всех тренировок спортсмена за период (для календаря)
   static async getAthleteSessions(athleteId, startDate, endDate) {

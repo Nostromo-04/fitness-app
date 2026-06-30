@@ -142,6 +142,10 @@ export const AthleteWorkoutPage: React.FC = () => {
   // История показателей по упражнению (последние 10 тренировок, старые -> новые)
   const [weightHistory, setWeightHistory] = useState<number[]>([]);
   const [repsHistory, setRepsHistory] = useState<number[]>([]);
+  // Модалка подтверждения выхода из незавершённой тренировки
+  const [showExitModal, setShowExitModal] = useState(false);
+  // Актуальный флаг "тренировка начата и не завершена" — для перехватчиков выхода
+  const isDirtyRef = useRef(false);
 
   const currentExercise = exercises[currentExerciseIndex];
   const currentSets = sets[currentExercise?.id] || [];
@@ -159,6 +163,41 @@ export const AthleteWorkoutPage: React.FC = () => {
       loadPreviousWorkout(currentExercise.exercise_id);
     }
   }, [currentExercise]);
+
+  // Держим ref в актуальном состоянии: тренировка начата и ещё не завершена
+  useEffect(() => {
+    isDirtyRef.current = !loading && !!sessionId && !allExercisesCompleted();
+  });
+
+  // Перехват системной/жестовой кнопки "назад" и закрытия вкладки
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      if (isDirtyRef.current) {
+        // Остаёмся на странице и показываем модалку
+        window.history.pushState(null, '', window.location.href);
+        setShowExitModal(true);
+      } else {
+        // Тренировка завершена/не начата — выходим как обычно
+        window.history.back();
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const initAudio = () => {
     audioRef.current = new Audio('/sounds/beep.mp3');
@@ -442,6 +481,26 @@ export const AthleteWorkoutPage: React.FC = () => {
     });
   };
 
+  // Клик по кнопке "назад" в шапке
+  const handleBackClick = () => {
+    if (isDirtyRef.current) {
+      setShowExitModal(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // "Да" в модалке — завершить и оценить (запись с эмодзи)
+  const handleConfirmExit = () => {
+    setShowExitModal(false);
+    handleCompleteWorkout();
+  };
+
+  // "Нет" в модалке — остаться на экране подходов
+  const handleCancelExit = () => {
+    setShowExitModal(false);
+  };
+
   // Получаем данные для отображения предыдущей тренировки
   const getPreviousWorkoutData = () => {
     if (!previousWorkout || previousWorkout.exercises.length === 0) return null;
@@ -473,7 +532,7 @@ export const AthleteWorkoutPage: React.FC = () => {
   return (
     <div className="athlete-workout-page">
       <div className="workout-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
+        <button className="back-btn" onClick={handleBackClick}>
           <ArrowLeft size={20} />
         </button>
         <div className="workout-progress">
@@ -678,6 +737,25 @@ export const AthleteWorkoutPage: React.FC = () => {
           </button>
         )}
       </div>
+
+      {showExitModal && (
+        <div className="exit-modal-overlay" onClick={handleCancelExit}>
+          <div className="exit-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="exit-modal-title">Вы не закончили тренировку</h3>
+            <p className="exit-modal-text">
+              Хотите завершить и оценить тренировку или продолжить?
+            </p>
+            <div className="exit-modal-actions">
+              <button className="exit-modal-confirm" onClick={handleConfirmExit}>
+                Завершить и оценить
+              </button>
+              <button className="exit-modal-cancel" onClick={handleCancelExit}>
+                Продолжить тренировку
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

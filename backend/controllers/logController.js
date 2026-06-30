@@ -28,9 +28,9 @@ const logController = {
           });
         }
         
-        // Если другой день - завершаем старую и создаем новую
-        console.log('Завершаем старую тренировку и создаем новую');
-        await WorkoutSession.complete(activeSession.id, null);
+        // Если другой день — удаляем старую незавершённую (не оставляем строку без эмодзи)
+        console.log('Удаляем старую незавершённую тренировку и создаём новую');
+        await WorkoutSession.deleteIncomplete(activeSession.id);
       }
 
       const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });

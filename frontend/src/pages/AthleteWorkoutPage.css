@@ -374,3 +374,68 @@
 }
 
 .complete-workout-btn:hover { background: var(--fit-accent-hover, #84cc16); }
+
+/* ===== Модалка выхода из незавершённой тренировки ===== */
+.exit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+.exit-modal {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 16px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+.exit-modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+}
+.exit-modal-text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fit-muted, #a1a1aa);
+}
+.exit-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.exit-modal-confirm {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.exit-modal-confirm:hover { background: var(--fit-accent-hover, #84cc16); }
+.exit-modal-cancel {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--fit-text, #f4f4f5);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.exit-modal-cancel:hover {
+  border-color: var(--fit-accent, #a3e635);
+  color: var(--fit-accent, #a3e635);
+}
