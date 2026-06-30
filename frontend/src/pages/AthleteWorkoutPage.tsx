@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Volume2, VolumeX, Repeat } from 'lucide-react';
 import athleteService from '../services/athleteService';
+import exerciseService, { type Exercise as LibraryExercise } from '../services/exerciseService';
 import './AthleteWorkoutPage.css';
 
 interface Exercise {
@@ -146,6 +147,10 @@ export const AthleteWorkoutPage: React.FC = () => {
   const [showExitModal, setShowExitModal] = useState(false);
   // Актуальный флаг "тренировка начата и не завершена" — для перехватчиков выхода
   const isDirtyRef = useRef(false);
+  // Замена упражнения (только на текущую тренировку)
+  const [showReplaceModal, setShowReplaceModal] = useState(false);
+  const [replaceOptions, setReplaceOptions] = useState<LibraryExercise[]>([]);
+  const [replaceLoading, setReplaceLoading] = useState(false);
 
   const currentExercise = exercises[currentExerciseIndex];
   const currentSets = sets[currentExercise?.id] || [];
@@ -501,6 +506,59 @@ export const AthleteWorkoutPage: React.FC = () => {
     setShowExitModal(false);
   };
 
+  // Есть ли уже выполненные подходы по упражнению (тогда замена запрещена)
+  const hasCompletedSets = (exerciseId: number) => {
+    const exerciseSets = sets[exerciseId] || [];
+    return exerciseSets.some((s) => s.completed);
+  };
+
+  // Открыть модалку замены: подгружаем упражнения той же группы мышц
+  const handleReplaceClick = async () => {
+    if (!currentExercise) return;
+    if (hasCompletedSets(currentExercise.id)) return; // подстраховка: кнопка и так отключена
+
+    setShowReplaceModal(true);
+    setReplaceLoading(true);
+    setReplaceOptions([]);
+    try {
+      const response = await exerciseService.getAll(currentExercise.muscle_group);
+      const list: LibraryExercise[] = response?.data?.exercises || [];
+      // Исключаем упражнения, уже присутствующие в сегодняшнем дне (включая текущее)
+      const usedExerciseIds = new Set(exercises.map((ex) => ex.exercise_id));
+      setReplaceOptions(list.filter((ex) => !usedExerciseIds.has(ex.id)));
+    } catch (error) {
+      console.error('Ошибка загрузки упражнений для замены:', error);
+    } finally {
+      setReplaceLoading(false);
+    }
+  };
+
+  // Выбор замены: подменяем упражнение в текущей позиции (план тренера не меняется,
+  // цель по подходам/повторам/весу сохраняется, новые подходы пишутся под новый exercise_id)
+  const handleSelectReplacement = (newExercise: LibraryExercise) => {
+    setExercises((prev) =>
+      prev.map((ex, idx) =>
+        idx === currentExerciseIndex
+          ? {
+              ...ex,
+              exercise_id: newExercise.id,
+              exercise_name: newExercise.name,
+              muscle_group: newExercise.muscle_group,
+              image_url: newExercise.image_url,
+              video_url: newExercise.video_url,
+            }
+          : ex
+      )
+    );
+    setShowReplaceModal(false);
+    setReplaceOptions([]);
+  };
+
+  const handleCloseReplace = () => {
+    setShowReplaceModal(false);
+    setReplaceOptions([]);
+  };
+
   // Получаем данные для отображения предыдущей тренировки
   const getPreviousWorkoutData = () => {
     if (!previousWorkout || previousWorkout.exercises.length === 0) return null;
@@ -552,6 +610,18 @@ export const AthleteWorkoutPage: React.FC = () => {
         <div className="current-exercise">
           <h2>{currentExercise.exercise_name}</h2>
           <p className="muscle-group">{currentExercise.muscle_group}</p>
+
+          <button
+            className="replace-exercise-btn"
+            onClick={handleReplaceClick}
+            disabled={hasCompletedSets(currentExercise.id)}
+          >
+            <Repeat size={16} />
+            Заменить упражнение
+          </button>
+          {hasCompletedSets(currentExercise.id) && (
+            <p className="replace-hint">Замена недоступна: уже есть выполненные подходы</p>
+          )}
 
           {/* НОВЫЙ БЛОК: Предыдущая тренировка */}
           <div className="progress-chart-mini">
@@ -753,6 +823,40 @@ export const AthleteWorkoutPage: React.FC = () => {
                 Продолжить тренировку
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showReplaceModal && (
+        <div className="replace-modal-overlay" onClick={handleCloseReplace}>
+          <div className="replace-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="replace-modal-title">Заменить упражнение</h3>
+            <p className="replace-modal-subtitle">
+              {currentExercise?.muscle_group} · та же группа мышц
+            </p>
+
+            {replaceLoading ? (
+              <div className="replace-modal-empty">Загрузка...</div>
+            ) : replaceOptions.length > 0 ? (
+              <div className="replace-options-list">
+                {replaceOptions.map((ex) => (
+                  <button
+                    key={ex.id}
+                    className="replace-option"
+                    onClick={() => handleSelectReplacement(ex)}
+                  >
+                    <span className="replace-option-name">{ex.name}</span>
+                    <span className="replace-option-group">{ex.muscle_group}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="replace-modal-empty">Нет других упражнений этой группы мышц</div>
+            )}
+
+            <button className="replace-modal-cancel" onClick={handleCloseReplace}>
+              Отмена
+            </button>
           </div>
         </div>
       )}
