@@ -1,106 +1,105 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ThumbsUp, ThumbsDown, Dumbbell, Clock, BarChart } from 'lucide-react';
-import athleteService from '../services/athleteService';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronLeft, Dumbbell, BarChart2, Weight } from 'lucide-react';
+import axios from 'axios';
 import './AthleteCompletePage.css';
 
-interface LocationState {
-  sessionId: number;
-  planName: string;
+interface SessionStats {
+  exerciseCount: number;
+  setCount: number;
+  totalWeightKg: number;
 }
 
-export const AthleteCompletePage: React.FC = () => {
-  const navigate = useNavigate();
+type FeedbackEmoji = '👍' | '👎';
+
+export default function AthleteCompletePage() {
   const location = useLocation();
-  const state = location.state as LocationState;
-  const [selectedEmoji, setSelectedEmoji] = useState<'👍' | '👎' | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [stats, setStats] = useState({
-    totalSets: 0,
-    totalExercises: 0,
-    totalWeight: 0
-  });
+  const navigate = useNavigate();
+  const { sessionId } = (location.state as { sessionId: number; planName?: string }) || {};
+
+  const [feedback, setFeedback] = useState<FeedbackEmoji | null>(null);
+  const [stats, setStats] = useState<SessionStats>({ exerciseCount: 0, setCount: 0, totalWeightKg: 0 });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!state?.sessionId) {
-      navigate('/athlete/dashboard');
-      return;
-    }
-    loadWorkoutStats();
-  }, []);
+    if (!sessionId) return;
+    axios
+      .get(`/api/workout-sessions/${sessionId}/sets`)
+      .then(({ data }) => {
+        const sets: { weight_done?: number; reps_done?: number; is_completed?: boolean; exercise_id?: number }[] =
+          data.data ?? [];
+        const completed = sets.filter((s) => s.is_completed);
+        const exerciseIds = new Set(completed.map((s) => s.exercise_id));
+        const totalWeight = completed.reduce((acc, s) => {
+          const w = parseFloat(String(s.weight_done ?? 0));
+          const r = parseInt(String(s.reps_done ?? 0), 10);
+          return acc + (isNaN(w) || isNaN(r) ? 0 : w * r);
+        }, 0);
+        setStats({
+          exerciseCount: exerciseIds.size,
+          setCount: completed.length,
+          totalWeightKg: Math.round(totalWeight),
+        });
+      })
+      .catch(() => {});
+  }, [sessionId]);
 
-  const loadWorkoutStats = async () => {
+  const handleSubmit = async () => {
+    if (!feedback || !sessionId || submitting) return;
+    setSubmitting(true);
     try {
-      // Получаем все подходы тренировки
-      const response = await athleteService.getSessionSets(state.sessionId);
-      const sets = response.data || [];
-      
-      const totalSets = sets.length;
-      const uniqueExercises = new Set(sets.map((s: any) => s.exercise_id)).size;
-      const totalWeight = sets.reduce((sum: number, s: any) => sum + (s.weight_done * s.reps_done), 0);
-      
-      setStats({
-        totalSets,
-        totalExercises: uniqueExercises,
-        totalWeight
+      await axios.post(`/api/workout-sessions/${sessionId}/complete`, {
+        feedback_emoji: feedback,
       });
-    } catch (error) {
-      console.error('Ошибка загрузки статистики:', error);
+      navigate('/athlete/dashboard', { replace: true });
+    } catch {
+      setSubmitting(false);
     }
   };
-
-  const handleComplete = async () => {
-    if (!selectedEmoji || !state?.sessionId) return;
-
-    setSaving(true);
-    try {
-      await athleteService.completeWorkout(state.sessionId, selectedEmoji);
-      navigate('/athlete/dashboard');
-    } catch (error) {
-      console.error('Ошибка завершения тренировки:', error);
-      alert('Не удалось завершить тренировку');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (!state) return null;
 
   return (
     <div className="athlete-complete-page">
       <div className="complete-header">
         <button className="back-btn" onClick={() => navigate(-1)}>
-          <ArrowLeft size={20} />
+          <ChevronLeft size={20} />
         </button>
         <h1>Тренировка завершена!</h1>
       </div>
 
       <div className="congrats-message">
-        <div className="trophy-icon">🏆</div>
+        <div className="trophy-svg-wrapper">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg>
+        </div>
         <h2>Отличная работа!</h2>
+        <p>Так держать, не останавливайся!</p>
       </div>
 
       <div className="stats-grid">
         <div className="stat-card">
-          <Dumbbell size={24} />
           <div className="stat-info">
-            <span className="stat-value">{stats.totalExercises}</span>
+            <Dumbbell size={22} color="var(--fit-accent, #a3e635)" />
+            <span className="stat-value">{stats.exerciseCount}</span>
             <span className="stat-label">упражнений</span>
           </div>
         </div>
-
         <div className="stat-card">
-          <Clock size={24} />
           <div className="stat-info">
-            <span className="stat-value">{stats.totalSets}</span>
+            <BarChart2 size={22} color="var(--fit-accent, #a3e635)" />
+            <span className="stat-value">{stats.setCount}</span>
             <span className="stat-label">подходов</span>
           </div>
         </div>
-
         <div className="stat-card">
-          <BarChart size={24} />
           <div className="stat-info">
-            <span className="stat-value">{stats.totalWeight} кг</span>
+            <Weight size={22} color="var(--fit-accent, #a3e635)" />
+            <span className="stat-value">{stats.totalWeightKg} кг</span>
             <span className="stat-label">общий вес</span>
           </div>
         </div>
@@ -110,17 +109,23 @@ export const AthleteCompletePage: React.FC = () => {
         <h3>Как прошла тренировка?</h3>
         <div className="emoji-buttons">
           <button
-            className={`emoji-btn ${selectedEmoji === '👍' ? 'selected' : ''}`}
-            onClick={() => setSelectedEmoji('👍')}
+            className={`emoji-btn easy${feedback === '👍' ? ' selected' : ''}`}
+            onClick={() => setFeedback('👍')}
           >
-            <ThumbsUp size={32} />
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 10v12" />
+              <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+            </svg>
             <span>Легко</span>
           </button>
           <button
-            className={`emoji-btn ${selectedEmoji === '👎' ? 'selected' : ''}`}
-            onClick={() => setSelectedEmoji('👎')}
+            className={`emoji-btn hard${feedback === '👎' ? ' selected' : ''}`}
+            onClick={() => setFeedback('👎')}
           >
-            <ThumbsDown size={32} />
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 14V2" />
+              <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+            </svg>
             <span>Тяжело</span>
           </button>
         </div>
@@ -129,12 +134,12 @@ export const AthleteCompletePage: React.FC = () => {
       <div className="complete-actions">
         <button
           className="complete-btn"
-          onClick={handleComplete}
-          disabled={!selectedEmoji || saving}
+          onClick={handleSubmit}
+          disabled={!feedback || submitting}
         >
-          {saving ? 'Сохранение...' : 'Завершить'}
+          {submitting ? 'Сохранение…' : 'Сохранить и выйти'}
         </button>
       </div>
     </div>
   );
-};
+}
