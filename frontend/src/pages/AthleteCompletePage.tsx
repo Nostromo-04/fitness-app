@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Dumbbell, BarChart2, Weight } from 'lucide-react';
-import axios from 'axios';
+import athleteService from '../services/athleteService';
 import './AthleteCompletePage.css';
 
 interface SessionStats {
@@ -23,11 +23,11 @@ export function AthleteCompletePage() {
 
   useEffect(() => {
     if (!sessionId) return;
-    axios
-      .get(`/api/workout-sessions/${sessionId}/sets`)
-      .then(({ data }) => {
+    athleteService
+      .getSessionSets(sessionId)
+      .then((data) => {
         const sets: { weight_done?: number; reps_done?: number; is_completed?: boolean; exercise_id?: number }[] =
-          data.data ?? [];
+          Array.isArray(data) ? data : (data.data ?? []);
         const completed = sets.filter((s) => s.is_completed);
         const exerciseIds = new Set(completed.map((s) => s.exercise_id));
         const totalWeight = completed.reduce((acc, s) => {
@@ -48,9 +48,7 @@ export function AthleteCompletePage() {
     if (!feedback || !sessionId || submitting) return;
     setSubmitting(true);
     try {
-      await axios.post(`/api/workout-sessions/${sessionId}/complete`, {
-        feedback_emoji: feedback,
-      });
+      await athleteService.completeWorkout(sessionId, feedback);
       navigate('/athlete/dashboard', { replace: true });
     } catch {
       setSubmitting(false);
