@@ -135,3 +135,58 @@
   color: var(--fit-muted, #a1a1aa);
   padding: 40px;
 }
+
+.plan-info p.plan-date {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--fit-muted, #a1a1aa);
+}
+
+.plan-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.edit-plan-btn {
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-border, #27272a);
+  padding: 9px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--fit-muted, #a1a1aa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.edit-plan-btn:hover {
+  border-color: var(--fit-accent, #a3e635);
+  color: var(--fit-accent, #a3e635);
+}
+
+.create-plan-action {
+  margin-top: 4px;
+}
+
+.create-plan-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.create-plan-btn:hover { background: var(--fit-accent-hover, #84cc16); }
+.create-plan-btn:disabled { opacity: 0.4; cursor: not-allowed; }

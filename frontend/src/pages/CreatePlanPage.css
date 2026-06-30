@@ -173,3 +173,121 @@
 }
 .save-plan-btn:hover { background: var(--fit-accent-hover, #84cc16); }
 .save-plan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Coach edit-plan screen — buttons, day tabs, assign + athlete selector */
+.create-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.create-btn:hover { background: var(--fit-accent-hover, #84cc16); }
+.create-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.days-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 16px;
+}
+
+.day-tab {
+  padding: 8px 14px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 10px;
+  background: var(--fit-card, #18181b);
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.day-tab:hover { border-color: var(--fit-accent, #a3e635); color: var(--fit-text, #f4f4f5); }
+.day-tab.active {
+  background: var(--fit-accent, #a3e635);
+  border-color: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+}
+
+.day-content { margin-bottom: 20px; }
+
+.exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.plan-actions { margin-top: 8px; }
+
+.assign-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--fit-accent, #a3e635);
+  border-radius: 14px;
+  background: rgba(163, 230, 53, 0.12);
+  color: var(--fit-accent, #a3e635);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.assign-btn:hover { background: rgba(163, 230, 53, 0.2); }
+
+/* Athlete selector modal (reuses .selector-* from ExerciseSelector.css) */
+.athlete-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.athlete-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  background: var(--fit-card-2, #1c1c1f);
+  color: var(--fit-text, #f4f4f5);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.athlete-checkbox:hover { border-color: var(--fit-accent, #a3e635); }
+.athlete-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--fit-accent, #a3e635);
+  cursor: pointer;
+}
+
+.selector-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.selector-actions .cancel-btn,
+.selector-actions .save-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
