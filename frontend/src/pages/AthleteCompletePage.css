@@ -160,14 +160,16 @@
 
 .emoji-btn.selected.easy {
   border-color: var(--fit-accent, #a3e635);
-  background: rgba(163, 230, 53, 0.1);
+  background: rgba(163, 230, 53, 0.28);
   color: var(--fit-accent, #a3e635);
+  box-shadow: 0 0 16px rgba(163, 230, 53, 0.18) inset;
 }
 
 .emoji-btn.selected.hard {
   border-color: var(--fit-danger, #f87171);
-  background: rgba(248, 113, 113, 0.1);
+  background: rgba(248, 113, 113, 0.28);
   color: var(--fit-danger, #f87171);
+  box-shadow: 0 0 16px rgba(248, 113, 113, 0.18) inset;
 }
 
 .emoji-btn span { font-size: 14px; font-weight: 600; }

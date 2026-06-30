@@ -442,7 +442,7 @@
 
 /* ===== Кнопка и модалка замены упражнения ===== */
 .replace-exercise-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   margin-top: 10px;
