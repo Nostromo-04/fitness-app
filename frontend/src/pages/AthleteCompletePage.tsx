@@ -12,7 +12,7 @@ interface SessionStats {
 
 type FeedbackEmoji = '👍' | '👎';
 
-export default function AthleteCompletePage() {
+export function AthleteCompletePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { sessionId } = (location.state as { sessionId: number; planName?: string }) || {};
