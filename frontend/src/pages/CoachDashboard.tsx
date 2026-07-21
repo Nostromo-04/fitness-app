@@ -33,6 +33,7 @@ export const CoachDashboard: React.FC = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [createdName, setCreatedName] = useState('');
+  const [athleteBotLink, setAthleteBotLink] = useState(''); // уникальная ссылка с ID спортсмена
   const [copied, setCopied] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -97,11 +98,15 @@ export const CoachDashboard: React.FC = () => {
     setModalStep('saving');
 
     try {
-      await api.post('/athletes', {
+      const { data } = await api.post('/athletes', {
         first_name: trimmed,
         last_name: lastName.trim() || undefined,
         coach_id: parseInt(coachId),
       });
+
+      // Уникальная ссылка со startapp=athlete_{id} — нужна для автопривязки telegram_id
+      const botLink: string = data.data.botLink || BOT_LINK;
+      setAthleteBotLink(botLink);
 
       const fullName = [trimmed, lastName.trim()].filter(Boolean).join(' ');
       setCreatedName(fullName);
@@ -117,7 +122,7 @@ export const CoachDashboard: React.FC = () => {
           await navigator.share({
             title: 'Приглашение в команду',
             text: shareText,
-            url: BOT_LINK,
+            url: botLink,
           });
         } catch { /* отменили — ничего страшного */ }
       }
@@ -129,12 +134,13 @@ export const CoachDashboard: React.FC = () => {
   };
 
   const handleShare = async () => {
+    const link = athleteBotLink || BOT_LINK;
     const text = `Привет! Тренер добавил тебя в фитнес-приложение. Открой бота в Telegram и нажми Старт:`;
 
     // 1. Web Share API (iOS/Android — открывает WhatsApp, Telegram и др.)
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Приглашение в команду', text, url: BOT_LINK });
+        await navigator.share({ title: 'Приглашение в команду', text, url: link });
         return;
       } catch { /* пользователь отменил */ }
     }
@@ -143,7 +149,7 @@ export const CoachDashboard: React.FC = () => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg?.openTelegramLink) {
       tg.openTelegramLink(
-        `https://t.me/share/url?url=${encodeURIComponent(BOT_LINK)}&text=${encodeURIComponent(text)}`
+        `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`
       );
       return;
     }
@@ -153,8 +159,9 @@ export const CoachDashboard: React.FC = () => {
   };
 
   const handleCopy = async () => {
+    const link = athleteBotLink || BOT_LINK;
     try {
-      await navigator.clipboard.writeText(BOT_LINK);
+      await navigator.clipboard.writeText(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch { }
@@ -325,7 +332,7 @@ export const CoachDashboard: React.FC = () => {
                   Теперь отправьте спортсмену ссылку на бота. Он нажмёт <strong>Старт</strong> — и приложение откроется.
                 </p>
                 <div className="bot-link-box">
-                  <span className="bot-link-text">{BOT_LINK}</span>
+                  <span className="bot-link-text">{athleteBotLink || BOT_LINK}</span>
                 </div>
                 <div className="done-actions">
                   <button className="share-btn" onClick={handleShare}>

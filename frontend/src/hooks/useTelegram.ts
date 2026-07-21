@@ -1,46 +1,36 @@
 import { useEffect, useState } from 'react';
 
-export function useTelegram() {
-  const [isReady, setIsReady] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const initTelegram = async () => {
-      try {
-        // Проверяем, запущено ли приложение в Telegram
-        if (window.Telegram?.WebApp) {
-          const tg = window.Telegram.WebApp;
-          
-          // Сообщаем Telegram, что приложение готово
-          tg.ready();
-          
-          // Растягиваем на весь экран
-          tg.expand();
-          
-          // Получаем данные пользователя
-          if (tg.initDataUnsafe?.user) {
-            setUser(tg.initDataUnsafe.user);
-          }
-        }
-        setIsReady(true);
-      } catch (error) {
-        console.error('Telegram initialization error:', error);
-        setIsReady(true);
-      }
-    };
-
-    initTelegram();
-  }, []);
-
-  return {
-    isReady,
-    user,
-  };
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
 }
 
-// Добавляем типы для Telegram WebApp
-declare global {
-  interface Window {
-    Telegram: any;
-  }
+interface UseTelegramReturn {
+  isReady: boolean;
+  user: TelegramUser | null;
+  telegramId: string | null;
+}
+
+export function useTelegram(): UseTelegramReturn {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+    // Даём время SDK инициализироваться
+    const timer = setTimeout(() => setIsReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const tg = (window as any).Telegram?.WebApp;
+  const user: TelegramUser | null = tg?.initDataUnsafe?.user ?? null;
+  const telegramId = user ? String(user.id) : null;
+
+  return { isReady, user, telegramId };
 }

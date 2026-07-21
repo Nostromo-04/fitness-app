@@ -35,8 +35,10 @@ const athleteController = {
         phone: null,
       });
 
-      // Ссылка на бота — спортсмен нажмёт Start и откроется Mini App
-      const botLink = `https://t.me/${BOT_USERNAME}`;
+      // Ссылка содержит ID спортсмена через startapp.
+      // При первом открытии Mini App прочитает start_param=athlete_{id}
+      // и автоматически привяжет telegram_id к этой записи.
+      const botLink = `https://t.me/${BOT_USERNAME}?startapp=athlete_${newAthlete.id}`;
 
       res.status(201).json({
         status: 'success',

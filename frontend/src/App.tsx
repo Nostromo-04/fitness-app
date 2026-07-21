@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useTelegram } from './hooks/useTelegram';
 import { AppRoot } from '@telegram-apps/telegram-ui';
-import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
+import { useTelegram } from './hooks/useTelegram';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
 import { CoachDashboard } from './pages/CoachDashboard';
 import { AthleteDashboard } from './pages/AthleteDashboard';
+import { HomePage } from './pages/HomePage';
 import { ExerciseLibrary } from './pages/ExerciseLibrary';
 import { CreatePlanPage } from './pages/CreatePlanPage';
 import { AthletePlanPage } from './pages/AthletePlanPage';
@@ -18,108 +19,176 @@ import { CoachAthleteProgressPage } from './pages/CoachAthleteProgressPage';
 import { UserSelectionPage } from './pages/UserSelectionPage';
 import { CoachAthletePlansPage } from './pages/CoachAthletePlansPage';
 import { CoachEditPlanPage } from './pages/CoachEditPlanPage';
-import { AthleteInvitePage } from './pages/AthleteInvitePage';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import './App.css';
 
-const ProtectedRoute: React.FC<{
+// ──────────────────────────────────────────────────────────────────────
+// Экран загрузки
+// ──────────────────────────────────────────────────────────────────────
+const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загрузка…' }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    gap: 16,
+    background: 'var(--fit-bg, #0a0a0c)',
+    color: 'var(--fit-muted, #a1a1aa)',
+    fontFamily: 'system-ui, sans-serif',
+  }}>
+    <div style={{
+      width: 36, height: 36,
+      border: '3px solid #27272a',
+      borderTopColor: '#a3e635',
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite',
+    }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <span style={{ fontSize: 14 }}>{message}</span>
+  </div>
+);
+
+// ──────────────────────────────────────────────────────────────────────
+// Экран «не зарегистрирован»
+// ──────────────────────────────────────────────────────────────────────
+const NotRegisteredScreen: React.FC = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    gap: 12,
+    padding: 24,
+    background: 'var(--fit-bg, #0a0a0c)',
+    color: 'var(--fit-text, #f4f4f5)',
+    fontFamily: 'system-ui, sans-serif',
+    textAlign: 'center',
+  }}>
+    <div style={{ fontSize: 48 }}>🏋️</div>
+    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Аккаунт не найден</h2>
+    <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
+      Вас ещё нет в системе. Обратитесь к тренеру — он добавит вас и пришлёт ссылку.
+    </p>
+  </div>
+);
+
+// ──────────────────────────────────────────────────────────────────────
+// Защищённый маршрут — проверяет роль из AuthContext
+// ──────────────────────────────────────────────────────────────────────
+const RequireRole: React.FC<{
+  role: 'coach' | 'athlete' | 'admin';
   children: React.ReactNode;
-  role: 'coach' | 'athlete';
-}> = ({ children, role }) => {
-  const storageKey = role === 'coach' ? 'selectedCoachId' : 'selectedAthleteId';
-  const userId = localStorage.getItem(storageKey);
+}> = ({ role, children }) => {
+  const { authUser, authStatus } = useAuth();
 
-  if (!userId) {
-    return <Navigate to="/select-user" replace />;
-  }
-
+  if (authStatus === 'loading') return <LoadingScreen />;
+  if (!authUser || authUser.role !== role) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
-function App() {
-  const { isReady, user } = useTelegram();
+// ──────────────────────────────────────────────────────────────────────
+// Корневой маршрут — роутинг по роли
+// ──────────────────────────────────────────────────────────────────────
+const RootRedirect: React.FC = () => {
+  const { authUser, authStatus } = useAuth();
 
-  // Если приложение открыто по инвайт-ссылке — сразу на страницу регистрации
-  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
-  const isInvite = startParam.startsWith('coach_');
+  if (authStatus === 'loading') return <LoadingScreen message="Авторизация…" />;
 
-  if (!isReady) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: 'var(--tg-theme-bg-color, #ffffff)',
-        color: 'var(--tg-theme-text-color, #000000)',
-      }}>
-        Загрузка...
-      </div>
-    );
+  if (authStatus === 'not_found') return <NotRegisteredScreen />;
+  if (authStatus === 'error')    return <NotRegisteredScreen />;
+
+  if (!authUser) return <NotRegisteredScreen />;
+
+  switch (authUser.role) {
+    case 'coach':   return <Navigate to="/coach/dashboard"   replace />;
+    case 'athlete': return <Navigate to="/athlete/dashboard" replace />;
+    case 'admin':   return <Navigate to="/home"              replace />;
+    default:        return <NotRegisteredScreen />;
   }
+};
+
+// ──────────────────────────────────────────────────────────────────────
+// Роутер
+// ──────────────────────────────────────────────────────────────────────
+function AppRoutes() {
+  return (
+    <Router>
+      <Routes>
+        {/* Корень — определяет куда идти по роли */}
+        <Route path="/" element={<RootRedirect />} />
+
+        {/* Маршруты тренера */}
+        <Route path="/coach/dashboard" element={
+          <RequireRole role="coach"><CoachDashboard /></RequireRole>
+        } />
+        <Route path="/coach/exercises" element={
+          <RequireRole role="coach"><ExerciseLibrary /></RequireRole>
+        } />
+        <Route path="/coach/create-plan" element={
+          <RequireRole role="coach"><CreatePlanPage /></RequireRole>
+        } />
+        <Route path="/coach/athlete/:athleteId/calendar" element={
+          <RequireRole role="coach"><CoachAthleteCalendarPage /></RequireRole>
+        } />
+        <Route path="/coach/athlete/:athleteId/progress" element={
+          <RequireRole role="coach"><CoachAthleteProgressPage /></RequireRole>
+        } />
+        <Route path="/coach/athlete/:athleteId/plans" element={
+          <RequireRole role="coach"><CoachAthletePlansPage /></RequireRole>
+        } />
+        <Route path="/coach/edit-plan/:planId" element={
+          <RequireRole role="coach"><CoachEditPlanPage /></RequireRole>
+        } />
+
+        {/* Маршруты спортсмена */}
+        <Route path="/athlete/dashboard" element={
+          <RequireRole role="athlete"><AthleteDashboard /></RequireRole>
+        } />
+        <Route path="/athlete/plan/:planId" element={
+          <RequireRole role="athlete"><AthletePlanPage /></RequireRole>
+        } />
+        <Route path="/athlete/workout/:planId/day/:dayId" element={
+          <RequireRole role="athlete"><AthleteWorkoutPage /></RequireRole>
+        } />
+        <Route path="/athlete/complete" element={
+          <RequireRole role="athlete"><AthleteCompletePage /></RequireRole>
+        } />
+        <Route path="/athlete/calendar" element={
+          <RequireRole role="athlete"><AthleteCalendarPage /></RequireRole>
+        } />
+        <Route path="/athlete/progress" element={
+          <RequireRole role="athlete"><AthleteProgressPage /></RequireRole>
+        } />
+
+        {/* /admin не нужен: admin → /home через RootRedirect */}
+
+        {/* Стартовый экран (для admin и новых пользователей) */}
+        <Route path="/home" element={<HomePage />} />
+
+        {/* Служебные */}
+        <Route path="/select-user" element={<UserSelectionPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Точка входа
+// ──────────────────────────────────────────────────────────────────────
+function App() {
+  const { isReady, telegramId } = useTelegram();
+
+  if (!isReady) return <LoadingScreen />;
 
   return (
     <AppRoot>
-      <Router>
-        <Routes>
-          {/* Инвайт — публичный маршрут, перехватывает start_param */}
-          <Route
-            path="/"
-            element={isInvite ? <AthleteInvitePage /> : <HomePage user={user} />}
-          />
-
-          {/* Публичные маршруты */}
-          <Route path="/select-user" element={<UserSelectionPage />} />
-          <Route path="/invite" element={<AthleteInvitePage />} />
-
-          {/* Маршруты тренера */}
-          <Route path="/coach/dashboard" element={
-            <ProtectedRoute role="coach"><CoachDashboard /></ProtectedRoute>
-          } />
-          <Route path="/coach/exercises" element={
-            <ProtectedRoute role="coach"><ExerciseLibrary /></ProtectedRoute>
-          } />
-          <Route path="/coach/create-plan" element={
-            <ProtectedRoute role="coach"><CreatePlanPage /></ProtectedRoute>
-          } />
-          <Route path="/coach/athlete/:athleteId/calendar" element={
-            <ProtectedRoute role="coach"><CoachAthleteCalendarPage /></ProtectedRoute>
-          } />
-          <Route path="/coach/athlete/:athleteId/progress" element={
-            <ProtectedRoute role="coach"><CoachAthleteProgressPage /></ProtectedRoute>
-          } />
-
-          {/* Маршруты спортсмена */}
-          <Route path="/athlete/dashboard" element={
-            <ProtectedRoute role="athlete"><AthleteDashboard /></ProtectedRoute>
-          } />
-          <Route path="/athlete/plan/:planId" element={
-            <ProtectedRoute role="athlete"><AthletePlanPage /></ProtectedRoute>
-          } />
-          <Route path="/athlete/workout/:planId/day/:dayId" element={
-            <ProtectedRoute role="athlete"><AthleteWorkoutPage /></ProtectedRoute>
-          } />
-          <Route path="/athlete/complete" element={
-            <ProtectedRoute role="athlete"><AthleteCompletePage /></ProtectedRoute>
-          } />
-          <Route path="/athlete/calendar" element={
-            <ProtectedRoute role="athlete"><AthleteCalendarPage /></ProtectedRoute>
-          } />
-          <Route path="/athlete/progress" element={
-            <ProtectedRoute role="athlete"><AthleteProgressPage /></ProtectedRoute>
-          } />
-          <Route path="/coach/athlete/:athleteId/plans" element={
-            <CoachAthletePlansPage />
-          } />
-          <Route path="/coach/edit-plan/:planId" element={
-            <CoachEditPlanPage />
-          } />
-
-          <Route path="/login" element={<Navigate to="/select-user" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+      <AuthProvider telegramId={telegramId}>
+        <AppRoutes />
+      </AuthProvider>
     </AppRoot>
   );
 }
