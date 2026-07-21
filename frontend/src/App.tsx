@@ -53,8 +53,12 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
 // ──────────────────────────────────────────────────────────────────────
 // Экран «не зарегистрирован»
 // ──────────────────────────────────────────────────────────────────────
-const NotRegisteredScreen: React.FC = () => {
-  const detectedId = (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id;
+const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegramId }) => {
+  // Дополнительный fallback — читаем напрямую из объекта Telegram
+  const rawId = telegramId
+    ?? String((window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id ?? '')
+    || null;
+
   return (
     <div style={{
       display: 'flex',
@@ -74,19 +78,21 @@ const NotRegisteredScreen: React.FC = () => {
       <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
         Вас ещё нет в системе. Обратитесь к тренеру — он добавит вас и пришлёт ссылку.
       </p>
-      {detectedId && (
-        <div style={{
-          marginTop: 16,
-          background: '#18181b',
-          border: '1px solid #27272a',
-          borderRadius: 12,
-          padding: '10px 16px',
-          fontSize: 13,
-          color: '#a1a1aa',
-        }}>
-          Ваш Telegram ID: <strong style={{ color: '#a3e635' }}>{String(detectedId)}</strong>
-        </div>
-      )}
+      <div style={{
+        marginTop: 16,
+        background: '#18181b',
+        border: '1px solid #27272a',
+        borderRadius: 12,
+        padding: '10px 16px',
+        fontSize: 13,
+        color: '#a1a1aa',
+        minWidth: 200,
+      }}>
+        {rawId
+          ? <>Ваш Telegram ID: <strong style={{ color: '#a3e635' }}>{rawId}</strong></>
+          : <span style={{ color: '#f87171' }}>Telegram ID не определён (открыто вне бота?)</span>
+        }
+      </div>
     </div>
   );
 };
@@ -110,11 +116,12 @@ const RequireRole: React.FC<{
 // ──────────────────────────────────────────────────────────────────────
 const RootRedirect: React.FC = () => {
   const { authUser, authStatus } = useAuth();
+  const { telegramId } = useTelegram();
 
   if (authStatus === 'loading') return <LoadingScreen message="Авторизация…" />;
 
-  if (authStatus === 'not_found') return <NotRegisteredScreen />;
-  if (authStatus === 'error')    return <NotRegisteredScreen />;
+  if (authStatus === 'not_found') return <NotRegisteredScreen telegramId={telegramId} />;
+  if (authStatus === 'error')    return <NotRegisteredScreen telegramId={telegramId} />;
 
   if (!authUser) return <NotRegisteredScreen />;
 
