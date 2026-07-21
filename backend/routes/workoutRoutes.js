@@ -5,7 +5,7 @@ const workoutController = require('../controllers/workoutController');
 // Планы тренера
 router.get('/coach/:coachId/plans', workoutController.getCoachPlans);
 
-// Планы спортсмена — только назначенные ему (фильтр по athlete_id)
+// Планы спортсмена — фильтр по coach_id пользователя
 router.get('/athlete/:athleteId/plans', workoutController.getAthletePlans);
 
 // Сводная статистика спортсмена
@@ -26,7 +26,11 @@ router.post('/create', workoutController.createPlan);
 // Назначить план спортсмену
 router.put('/:planId/assign', workoutController.assignPlan);
 
-// Детали плана
+// ── Детали плана ──────────────────────────────────────────────
+// /plans/:planId — вызывается athleteService.getPlanDetails()
+//   athleteService делает: api.get(`/workouts/plans/${planId}`)
+// /:planId       — оставляем для обратной совместимости
+router.get('/plans/:planId', workoutController.getPlanDetails);
 router.get('/:planId', workoutController.getPlanDetails);
 
 // Начать тренировку

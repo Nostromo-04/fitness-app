@@ -116,8 +116,10 @@ const workoutController = {
         [planId]
       );
 
-      // БЕЗ обёртки {status,data} — фронтенд читает response.data.days
-      res.json({ ...plan, days: daysResult.rows });
+      // athleteService.getPlanDetails() возвращает response.data (HTTP body).
+      // AthletePlanPage затем читает: response.data.days
+      // Поэтому HTTP body = { data: { ...plan, days } }
+      res.json({ data: { ...plan, days: daysResult.rows } });
     } catch (error) {
       console.error('getPlanDetails error:', error);
       res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
