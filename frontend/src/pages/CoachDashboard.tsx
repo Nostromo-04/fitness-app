@@ -36,6 +36,7 @@ export const CoachDashboard: React.FC = () => {
   const [athleteBotLink, setAthleteBotLink] = useState(''); // уникальная ссылка с ID спортсмена
   const [copied, setCopied] = useState(false);
   const [formError, setFormError] = useState('');
+  const [createdAthleteId, setCreatedAthleteId] = useState<number | null>(null);
 
   useEffect(() => {
     const coachId = localStorage.getItem('selectedCoachId');
@@ -104,9 +105,9 @@ export const CoachDashboard: React.FC = () => {
         coach_id: parseInt(coachId),
       });
 
-      // Уникальная ссылка со startapp=athlete_{id} — нужна для автопривязки telegram_id
       const botLink: string = data.data.botLink || BOT_LINK;
       setAthleteBotLink(botLink);
+      setCreatedAthleteId(data.data.athlete?.id ?? null);
 
       const fullName = [trimmed, lastName.trim()].filter(Boolean).join(' ');
       setCreatedName(fullName);
@@ -331,9 +332,13 @@ export const CoachDashboard: React.FC = () => {
                 <p className="modal-hint">
                   Теперь отправьте спортсмену ссылку на бота. Он нажмёт <strong>Старт</strong> — и приложение откроется.
                 </p>
-                <div className="bot-link-box">
-                  <span className="bot-link-text">{athleteBotLink || BOT_LINK}</span>
+
+                {/* Код приглашения — только ID спортсмена */}
+                <div className="invite-code-block">
+                  <p className="invite-code-label">Сообщи этот код спортсмену</p>
+                  <div className="invite-code-value">{createdAthleteId ?? '—'}</div>
                 </div>
+
                 <div className="done-actions">
                   <button className="share-btn" onClick={handleShare}>
                     <Share2 size={18} />

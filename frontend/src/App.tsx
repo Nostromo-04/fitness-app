@@ -92,8 +92,14 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message ?? `Ошибка ${res.status}`);
       }
-      // Перезагружаем страницу — AuthContext снова запросит пользователя и перенаправит
-      window.location.reload();
+      // Открываем бота в Telegram — это добавит его в список чатов
+      // и спортсмен сможет открывать приложение в любое время
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink('https://t.me/kablaev_team_bot?start=joined');
+      } else {
+        window.location.reload();
+      }
     } catch (e: any) {
       setErrMsg(e.message ?? 'Ошибка сервера');
       setStatus('error');
@@ -137,12 +143,12 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
       <div style={{ fontSize: 48 }}>🏋️</div>
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Аккаунт не найден</h2>
       <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
-        Вставьте ссылку-приглашение, которую прислал тренер
+        Вставьте ссылку или код, который прислал тренер
       </p>
 
       <div style={s.card}>
         <label style={{ fontSize: 13, color: '#a1a1aa', textAlign: 'left' }}>
-          Код или ссылка приглашения
+          Вставьте здесь
         </label>
         <input
           style={s.input}

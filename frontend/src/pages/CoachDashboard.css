@@ -353,17 +353,25 @@
   padding: 8px 0 0;
 }
 
-.bot-link-box {
+.invite-code-block {
   background: var(--fit-card-2, #1c1c1f);
   border: 1px solid var(--fit-border, #27272a);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 14px 16px;
+  text-align: center;
 }
 
-.bot-link-text {
-  font-size: 14px;
+.invite-code-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+}
+
+.invite-code-value {
+  font-size: 40px;
+  font-weight: 800;
   color: var(--fit-accent, #a3e635);
-  word-break: break-all;
+  letter-spacing: 2px;
 }
 
 .done-actions {
