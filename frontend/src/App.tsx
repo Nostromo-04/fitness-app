@@ -53,27 +53,43 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
 // ──────────────────────────────────────────────────────────────────────
 // Экран «не зарегистрирован»
 // ──────────────────────────────────────────────────────────────────────
-const NotRegisteredScreen: React.FC = () => (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100vh',
-    gap: 12,
-    padding: 24,
-    background: 'var(--fit-bg, #0a0a0c)',
-    color: 'var(--fit-text, #f4f4f5)',
-    fontFamily: 'system-ui, sans-serif',
-    textAlign: 'center',
-  }}>
-    <div style={{ fontSize: 48 }}>🏋️</div>
-    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Аккаунт не найден</h2>
-    <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
-      Вас ещё нет в системе. Обратитесь к тренеру — он добавит вас и пришлёт ссылку.
-    </p>
-  </div>
-);
+const NotRegisteredScreen: React.FC = () => {
+  const detectedId = (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      gap: 12,
+      padding: 24,
+      background: 'var(--fit-bg, #0a0a0c)',
+      color: 'var(--fit-text, #f4f4f5)',
+      fontFamily: 'system-ui, sans-serif',
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: 48 }}>🏋️</div>
+      <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Аккаунт не найден</h2>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
+        Вас ещё нет в системе. Обратитесь к тренеру — он добавит вас и пришлёт ссылку.
+      </p>
+      {detectedId && (
+        <div style={{
+          marginTop: 16,
+          background: '#18181b',
+          border: '1px solid #27272a',
+          borderRadius: 12,
+          padding: '10px 16px',
+          fontSize: 13,
+          color: '#a1a1aa',
+        }}>
+          Ваш Telegram ID: <strong style={{ color: '#a3e635' }}>{String(detectedId)}</strong>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ──────────────────────────────────────────────────────────────────────
 // Защищённый маршрут — проверяет роль из AuthContext
