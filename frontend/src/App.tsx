@@ -56,7 +56,7 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
 const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegramId }) => {
   // Дополнительный fallback — читаем напрямую из объекта Telegram
   const rawId = telegramId
-    ?? String((window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id ?? '')
+    || String((window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id ?? '')
     || null;
 
   return (
