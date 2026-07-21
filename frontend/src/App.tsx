@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CoachDashboard } from './pages/CoachDashboard';
 import { AthleteDashboard } from './pages/AthleteDashboard';
 import { HomePage } from './pages/HomePage';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { ExerciseLibrary } from './pages/ExerciseLibrary';
 import { CreatePlanPage } from './pages/CreatePlanPage';
 import { AthletePlanPage } from './pages/AthletePlanPage';
@@ -107,7 +108,9 @@ const RequireRole: React.FC<{
   const { authUser, authStatus } = useAuth();
 
   if (authStatus === 'loading') return <LoadingScreen />;
-  if (!authUser || authUser.role !== role) return <Navigate to="/" replace />;
+  if (!authUser) return <Navigate to="/" replace />;
+  // Администратор имеет доступ к любому маршруту
+  if (authUser.role !== role && authUser.role !== 'admin') return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -128,7 +131,7 @@ const RootRedirect: React.FC = () => {
   switch (authUser.role) {
     case 'coach':   return <Navigate to="/coach/dashboard"   replace />;
     case 'athlete': return <Navigate to="/athlete/dashboard" replace />;
-    case 'admin':   return <Navigate to="/home"              replace />;
+    case 'admin':   return <Navigate to="/admin/dashboard"   replace />;
     default:        return <NotRegisteredScreen />;
   }
 };
@@ -186,9 +189,12 @@ function AppRoutes() {
           <RequireRole role="athlete"><AthleteProgressPage /></RequireRole>
         } />
 
-        {/* /admin не нужен: admin → /home через RootRedirect */}
+        {/* Панель администратора */}
+        <Route path="/admin/dashboard" element={
+          <RequireRole role="admin"><AdminDashboard /></RequireRole>
+        } />
 
-        {/* Стартовый экран (для admin и новых пользователей) */}
+        {/* Стартовый экран (legacy) */}
         <Route path="/home" element={<HomePage />} />
 
         {/* Служебные */}
