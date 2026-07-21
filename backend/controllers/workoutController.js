@@ -3,9 +3,10 @@ const WorkoutSession = require('../models/WorkoutSession');
 
 const workoutController = {
   // ──────────────────────────────────────────────
-  // GET /api/workouts/coach/:coachId/plans
-  // Все планы тренера — возвращается массив напрямую.
-  // CoachDashboard: workoutService.getCoachPlans(id) → response.data.length
+  // GET /api/workouts/coach/:coachId/plans  (и /plans/coach/:coachId)
+  // Все планы тренера — возвращает { data: [...] }
+  // CoachDashboard: plansRes.data.length
+  // CoachAthletePlansPage: response.data || []
   // ──────────────────────────────────────────────
   async getCoachPlans(req, res) {
     try {
@@ -20,7 +21,11 @@ const workoutController = {
           ORDER BY wp.created_at DESC`,
         [coachId]
       );
-      res.json(result.rows);
+      // workoutService.getCoachPlans() возвращает response.data (HTTP body).
+      // CoachAthletePlansPage: response.data || []
+      // CoachDashboard:        plansRes.data.length
+      // Оба читают .data — возвращаем { data: [...] }
+      res.json({ data: result.rows });
     } catch (error) {
       console.error('getCoachPlans error:', error);
       res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
