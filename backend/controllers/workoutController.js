@@ -10,14 +10,12 @@ const workoutController = {
     try {
       const { coachId } = req.params;
       const result = await db.query(
-        `SELECT wp.id, wp.name, wp.athlete_id, wp.created_at,
-                u.first_name AS athlete_first_name, u.last_name AS athlete_last_name,
+        `SELECT wp.id, wp.name, wp.coach_id, wp.created_at,
                 COUNT(wd.id)::int AS days_count
            FROM workout_plans wp
-           LEFT JOIN users u ON wp.athlete_id = u.id
            LEFT JOIN workout_days wd ON wd.plan_id = wp.id
           WHERE wp.coach_id = $1
-          GROUP BY wp.id, u.id
+          GROUP BY wp.id
           ORDER BY wp.created_at DESC`,
         [coachId]
       );
@@ -30,22 +28,44 @@ const workoutController = {
 
   // ──────────────────────────────────────────────
   // GET /api/workouts/athlete/:athleteId/plans
-  // ТОЛЬКО планы, назначенные этому спортсмену.
-  // Новый спортсмен (без планов) получит пустой массив.
+  // Планы тренера данного спортсмена.
+  // Спортсмен видит только планы своего тренера —
+  // не планы других тренеров.
+  // Таблица workout_plans не содержит athlete_id,
+  // поэтому фильтруем через coach_id пользователя.
   // ──────────────────────────────────────────────
   async getAthletePlans(req, res) {
     try {
       const { athleteId } = req.params;
+
+      // Получаем coach_id спортсмена
+      const userResult = await db.query(
+        `SELECT coach_id FROM users WHERE id = $1`,
+        [athleteId]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ status: 'error', message: 'Пользователь не найден' });
+      }
+
+      const coachId = userResult.rows[0].coach_id;
+
+      // Нет тренера — пустой список
+      if (!coachId) {
+        return res.json({ status: 'success', data: [] });
+      }
+
       const result = await db.query(
-        `SELECT wp.id, wp.name, wp.athlete_id, wp.coach_id, wp.created_at,
+        `SELECT wp.id, wp.name, wp.coach_id, wp.created_at,
                 COUNT(wd.id)::int AS days_count
            FROM workout_plans wp
            LEFT JOIN workout_days wd ON wd.plan_id = wp.id
-          WHERE wp.athlete_id = $1
+          WHERE wp.coach_id = $1
           GROUP BY wp.id
           ORDER BY wp.created_at DESC`,
-        [athleteId]
+        [coachId]
       );
+
       res.json({ status: 'success', data: result.rows });
     } catch (error) {
       console.error('getAthletePlans error:', error);
@@ -61,7 +81,7 @@ const workoutController = {
     try {
       const { planId } = req.params;
       const planResult = await db.query(
-        `SELECT id, name, athlete_id, coach_id, created_at FROM workout_plans WHERE id = $1`,
+        `SELECT id, name, coach_id, created_at FROM workout_plans WHERE id = $1`,
         [planId]
       );
       if (planResult.rows.length === 0) {
@@ -112,32 +132,24 @@ const workoutController = {
 
   // ──────────────────────────────────────────────
   // POST /api/workouts/create
-  // Тренер создаёт план и сразу назначает спортсмену
-  // Body: { name, coach_id, athlete_id, days: [{day_number, exercises}] }
+  // Тренер создаёт план (без athlete_id — планы тренера)
+  // Body: { name, coach_id, days: [{day_number, exercises}] }
   // ──────────────────────────────────────────────
   async createPlan(req, res) {
-    const client = await db.getClient?.() || null;
     try {
-      const { name, coach_id, athlete_id, days = [] } = req.body;
+      const { name, coach_id, days = [] } = req.body;
       if (!name || !coach_id) {
         return res.status(400).json({ status: 'error', message: 'name и coach_id обязательны' });
       }
 
-      // Если клиент транзакций доступен — используем его, иначе простые запросы
-      const query = client
-        ? (sql, params) => client.query(sql, params)
-        : (sql, params) => db.query(sql, params);
-
-      if (client) await client.query('BEGIN');
-
-      const planResult = await query(
-        `INSERT INTO workout_plans (name, coach_id, athlete_id) VALUES ($1, $2, $3) RETURNING id, name, coach_id, athlete_id, created_at`,
-        [name.trim(), coach_id, athlete_id || null]
+      const planResult = await db.query(
+        `INSERT INTO workout_plans (name, coach_id) VALUES ($1, $2) RETURNING id, name, coach_id, created_at`,
+        [name.trim(), coach_id]
       );
       const plan = planResult.rows[0];
 
       for (const day of days) {
-        const dayResult = await query(
+        const dayResult = await db.query(
           `INSERT INTO workout_days (plan_id, day_number) VALUES ($1, $2) RETURNING id`,
           [plan.id, day.day_number]
         );
@@ -145,7 +157,7 @@ const workoutController = {
 
         for (let i = 0; i < (day.exercises || []).length; i++) {
           const ex = day.exercises[i];
-          await query(
+          await db.query(
             `INSERT INTO workout_day_exercises (day_id, exercise_id, sets_count, default_reps, default_weight, order_index)
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [dayId, ex.exercise_id, ex.sets_count || 3, ex.default_reps || 10, ex.default_weight || 0, i]
@@ -153,37 +165,9 @@ const workoutController = {
         }
       }
 
-      if (client) await client.query('COMMIT');
-
       res.status(201).json({ status: 'success', data: plan });
     } catch (error) {
-      if (client) await client.query('ROLLBACK').catch(() => {});
       console.error('createPlan error:', error);
-      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
-    } finally {
-      if (client) client.release?.();
-    }
-  },
-
-  // ──────────────────────────────────────────────
-  // PUT /api/workouts/:planId/assign
-  // Назначить план спортсмену (или переназначить)
-  // Body: { athlete_id }
-  // ──────────────────────────────────────────────
-  async assignPlan(req, res) {
-    try {
-      const { planId } = req.params;
-      const { athlete_id } = req.body;
-      const result = await db.query(
-        `UPDATE workout_plans SET athlete_id = $1 WHERE id = $2 RETURNING id, name, athlete_id`,
-        [athlete_id, planId]
-      );
-      if (result.rows.length === 0) {
-        return res.status(404).json({ status: 'error', message: 'План не найден' });
-      }
-      res.json({ status: 'success', data: result.rows[0] });
-    } catch (error) {
-      console.error('assignPlan error:', error);
       res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
     }
   },
@@ -200,7 +184,7 @@ const workoutController = {
         return res.status(400).json({ status: 'error', message: 'athlete_id, plan_id, day_id обязательны' });
       }
 
-      // Удаляем незавершённые сессии с тем же day_id чтобы не множить "пустые" тренировки
+      // Удаляем незавершённые сессии с тем же day_id
       const existing = await db.query(
         `SELECT id FROM workout_sessions WHERE athlete_id = $1 AND day_id = $2 AND completed_at IS NULL`,
         [athlete_id, day_id]
@@ -282,7 +266,7 @@ const workoutController = {
 
   // ──────────────────────────────────────────────
   // GET /api/workouts/athlete/:athleteId/calendar
-  // Тренировки за месяц (для спортсмена)
+  // Тренировки спортсмена за месяц
   // ──────────────────────────────────────────────
   async getAthleteCalendar(req, res) {
     try {

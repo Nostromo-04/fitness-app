@@ -94,6 +94,10 @@ export const AuthProvider: React.FC<{
           localStorage.setItem('selectedCoachId', String(user.id));
         } else if (user.role === 'athlete') {
           localStorage.setItem('selectedAthleteId', String(user.id));
+        } else if (user.role === 'admin' && user.coach_id) {
+          // Админ, тренирующийся у тренера — может также просматривать
+          // свой дашборд спортсмена
+          localStorage.setItem('selectedAthleteId', String(user.id));
         }
       } catch {
         if (!cancelled) setAuthStatus('error');
