@@ -54,10 +54,8 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
 // Экран «не зарегистрирован»
 // ──────────────────────────────────────────────────────────────────────
 const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegramId }) => {
-  // Дополнительный fallback — читаем напрямую из объекта Telegram
-  const rawId = telegramId
-    || String((window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id ?? '')
-    || null;
+  const tg = (window as any).Telegram?.WebApp;
+  const rawInitData = tg ? JSON.stringify(tg.initDataUnsafe ?? {}) : 'Telegram WebApp не найден';
 
   return (
     <div style={{
@@ -78,20 +76,22 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
       <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
         Вас ещё нет в системе. Обратитесь к тренеру — он добавит вас и пришлёт ссылку.
       </p>
+
+      {/* Debug блок — временный, поможет найти причину */}
       <div style={{
-        marginTop: 16,
+        marginTop: 8,
         background: '#18181b',
         border: '1px solid #27272a',
         borderRadius: 12,
         padding: '10px 16px',
-        fontSize: 13,
+        fontSize: 12,
         color: '#a1a1aa',
-        minWidth: 200,
+        maxWidth: 320,
+        wordBreak: 'break-all',
+        textAlign: 'left',
       }}>
-        {rawId
-          ? <>Ваш Telegram ID: <strong style={{ color: '#a3e635' }}>{rawId}</strong></>
-          : <span style={{ color: '#f87171' }}>Telegram ID не определён (открыто вне бота?)</span>
-        }
+        <div>telegramId из хука: <strong style={{ color: '#a3e635' }}>{telegramId || '—'}</strong></div>
+        <div style={{ marginTop: 6, color: '#71717a' }}>initDataUnsafe: {rawInitData}</div>
       </div>
     </div>
   );
