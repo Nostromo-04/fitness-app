@@ -19,10 +19,12 @@ export const CoachDashboard: React.FC = () => {
   const [plansCount, setPlansCount] = useState(0);
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [inviteLink, setInviteLink] = useState('');
+  const [inviteLink, setInviteLink] = useState('');   // Telegram-ссылка (t.me/bot?startapp=...)
+  const [webLink, setWebLink] = useState('');          // Web-ссылка (fallback для браузера)
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedWeb, setCopiedWeb] = useState(false);
 
   useEffect(() => {
     const coachId = localStorage.getItem('selectedCoachId');
@@ -89,9 +91,11 @@ export const CoachDashboard: React.FC = () => {
     setShowInviteModal(true);
     try {
       const { data } = await api.post(`/invites/coach/${coachId}`);
-      setInviteLink(data.data.inviteLink);
+      setInviteLink(data.data.inviteLink);   // t.me/bot?startapp=TOKEN
+      setWebLink(data.data.webLink || '');   // https://...vercel.app/invite?token=TOKEN
     } catch {
       setInviteLink('');
+      setWebLink('');
     } finally {
       setInviteLoading(false);
     }
@@ -103,6 +107,15 @@ export const CoachDashboard: React.FC = () => {
       await navigator.clipboard.writeText(inviteLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch { }
+  };
+
+  const handleCopyWeb = async () => {
+    if (!webLink) return;
+    try {
+      await navigator.clipboard.writeText(webLink);
+      setCopiedWeb(true);
+      setTimeout(() => setCopiedWeb(false), 2000);
     } catch { }
   };
 
@@ -242,19 +255,34 @@ export const CoachDashboard: React.FC = () => {
             ) : inviteLink ? (
               <>
                 <p className="invite-modal-hint">
-                  Отправьте ссылку спортсмену. После перехода он введёт имя и сразу окажется в вашей команде. Ссылка действует 72 часа.
+                  Ссылка действует 72 часа. Спортсмен введёт имя и сразу окажется в вашей команде.
                 </p>
-                <div className="invite-link-box">
-                  <span className="invite-link-text">{inviteLink}</span>
+
+                {/* Основная: открывает Mini App в Telegram */}
+                <div className="invite-link-row">
+                  <span className="invite-link-label">В Telegram</span>
+                  <div className="invite-modal-actions">
+                    <button className="invite-share-btn" onClick={handleShare}>
+                      Пригласить
+                    </button>
+                    <button className="invite-copy-btn" onClick={handleCopy}>
+                      {copied ? <><Check size={16} /> Скопировано</> : <><Copy size={16} /> Копировать</>}
+                    </button>
+                  </div>
                 </div>
-                <div className="invite-modal-actions">
-                  <button className="invite-share-btn" onClick={handleShare}>
-                    Пригласить
-                  </button>
-                  <button className="invite-copy-btn" onClick={handleCopy}>
-                    {copied ? <><Check size={16} /> Скопировано</> : <><Copy size={16} /> Копировать</>}
-                  </button>
-                </div>
+
+                {/* Fallback: если спортсмен открывает через браузер */}
+                {webLink && (
+                  <div className="invite-link-row">
+                    <span className="invite-link-label">Веб-ссылка (если нет бота)</span>
+                    <div className="invite-link-box">
+                      <span className="invite-link-text">{webLink}</span>
+                    </div>
+                    <button className="invite-copy-btn full-width" onClick={handleCopyWeb}>
+                      {copiedWeb ? <><Check size={16} /> Скопировано</> : <><Copy size={16} /> Копировать веб-ссылку</>}
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <p className="invite-modal-error">Не удалось создать ссылку. Попробуйте ещё раз.</p>

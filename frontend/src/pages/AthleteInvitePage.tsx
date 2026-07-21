@@ -108,7 +108,19 @@ export function AthleteInvitePage() {
         <div className="invite-success-card">
           <CheckCircle size={56} color="var(--fit-accent, #a3e635)" />
           <h2>Добро пожаловать!</h2>
-          <p>Вы добавлены в команду тренера {coachName}.</p>
+          <p>Вы добавлены в команду тренера <strong>{coachName}</strong>.</p>
+          <div className="invite-success-hint">
+            <p>Чтобы открывать приложение в следующий раз — найдите бота в Telegram:</p>
+            <a
+              className="invite-bot-link"
+              href="https://t.me/kablaev_team_bot"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => window.Telegram?.WebApp?.openTelegramLink?.('https://t.me/kablaev_team_bot')}
+            >
+              @kablaev_team_bot
+            </a>
+          </div>
         </div>
       </div>
     );

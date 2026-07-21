@@ -5,7 +5,8 @@ const db = require('../config/database');
 // Для продакшна можно перенести в Redis или отдельную таблицу БД
 const inviteStore = new Map();
 
-// URL фронтенда — задай FRONTEND_URL в .env (например: https://fitness-app-bay-five.vercel.app)
+const BOT_USERNAME = 'kablaev_team_bot';
+// FRONTEND_URL нужен как fallback — если ссылка открыта в браузере, не в Telegram
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://fitness-app-bay-five.vercel.app').replace(/\/$/, '');
 const INVITE_TTL_MS = 72 * 60 * 60 * 1000; // 72 часа
 
@@ -36,13 +37,16 @@ const inviteController = {
         expiresAt: Date.now() + INVITE_TTL_MS,
       });
 
-      // Прямой URL приложения — токен читается через URLSearchParams, не через start_param бота
-      const inviteLink = `${FRONTEND_URL}/invite?token=${token}`;
+      // Telegram-ссылка: открывает Mini App напрямую, токен приходит через initDataUnsafe.start_param
+      const telegramLink = `https://t.me/${BOT_USERNAME}?startapp=${token}`;
+      // Web-ссылка: fallback если открывают в браузере, токен читается через URLSearchParams
+      const webLink = `${FRONTEND_URL}/invite?token=${token}`;
 
       res.json({
         status: 'success',
         data: {
-          inviteLink,
+          inviteLink: telegramLink,
+          webLink,
           token,
           expiresIn: '72 часа',
         },
