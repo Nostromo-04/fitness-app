@@ -94,23 +94,23 @@ const workoutController = {
                 COALESCE(
                   json_agg(
                     json_build_object(
-                      'id', wde.id,
-                      'exercise_id', wde.exercise_id,
+                      'id', de.id,
+                      'exercise_id', de.exercise_id,
                       'exercise_name', e.name,
                       'muscle_group', e.muscle_group,
-                      'sets_count', wde.sets_count,
-                      'default_reps', wde.default_reps,
-                      'default_weight', wde.default_weight,
-                      'order_index', wde.order_index,
+                      'sets_count', de.sets_count,
+                      'default_reps', de.default_reps,
+                      'default_weight', de.default_weight,
+                      'order_index', de.order_index,
                       'image_url', e.image_url,
                       'video_url', e.video_url
-                    ) ORDER BY wde.order_index
-                  ) FILTER (WHERE wde.id IS NOT NULL),
+                    ) ORDER BY de.order_index
+                  ) FILTER (WHERE de.id IS NOT NULL),
                   '[]'
                 ) AS exercises
            FROM workout_days wd
-           LEFT JOIN workout_day_exercises wde ON wde.day_id = wd.id
-           LEFT JOIN exercises e ON e.id = wde.exercise_id
+           LEFT JOIN day_exercises de ON de.day_id = wd.id
+           LEFT JOIN exercises e ON e.id = de.exercise_id
           WHERE wd.plan_id = $1
           GROUP BY wd.id
           ORDER BY wd.day_number`,
@@ -158,7 +158,7 @@ const workoutController = {
         for (let i = 0; i < (day.exercises || []).length; i++) {
           const ex = day.exercises[i];
           await db.query(
-            `INSERT INTO workout_day_exercises (day_id, exercise_id, sets_count, default_reps, default_weight, order_index)
+            `INSERT INTO day_exercises (day_id, exercise_id, sets_count, default_reps, default_weight, order_index)
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [dayId, ex.exercise_id, ex.sets_count || 3, ex.default_reps || 10, ex.default_weight || 0, i]
           );
