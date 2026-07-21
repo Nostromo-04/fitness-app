@@ -5,7 +5,8 @@ const db = require('../config/database');
 // Для продакшна можно перенести в Redis или отдельную таблицу БД
 const inviteStore = new Map();
 
-const BOT_USERNAME = 'kablaev_team_bot';
+// URL фронтенда — задай FRONTEND_URL в .env (например: https://fitness-app-bay-five.vercel.app)
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'https://fitness-app-bay-five.vercel.app').replace(/\/$/, '');
 const INVITE_TTL_MS = 72 * 60 * 60 * 1000; // 72 часа
 
 const inviteController = {
@@ -35,7 +36,8 @@ const inviteController = {
         expiresAt: Date.now() + INVITE_TTL_MS,
       });
 
-      const inviteLink = `https://t.me/${BOT_USERNAME}?start=${token}`;
+      // Прямой URL приложения — токен читается через URLSearchParams, не через start_param бота
+      const inviteLink = `${FRONTEND_URL}/invite?token=${token}`;
 
       res.json({
         status: 'success',

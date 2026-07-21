@@ -249,7 +249,7 @@ export const CoachDashboard: React.FC = () => {
                 </div>
                 <div className="invite-modal-actions">
                   <button className="invite-share-btn" onClick={handleShare}>
-                    Отправить в Telegram
+                    Пригласить
                   </button>
                   <button className="invite-copy-btn" onClick={handleCopy}>
                     {copied ? <><Check size={16} /> Скопировано</> : <><Copy size={16} /> Копировать</>}

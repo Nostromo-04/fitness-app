@@ -18,21 +18,26 @@ export function AthleteInvitePage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    // Считываем start_param из Telegram WebApp
+    // 1. Читаем токен из URL (?token=...) — основной способ
+    const urlToken = new URLSearchParams(window.location.search).get('token') || '';
+
+    // 2. Fallback: start_param из Telegram WebApp (если открыто через бота)
     const tg = window.Telegram?.WebApp;
     const startParam = tg?.initDataUnsafe?.start_param || '';
 
-    if (!startParam || !startParam.startsWith('coach_')) {
+    const resolvedToken = urlToken || startParam;
+
+    if (!resolvedToken || !resolvedToken.startsWith('coach_')) {
       setStep('error');
       setErrorMsg('Ссылка недействительна. Попросите тренера отправить новую.');
       return;
     }
 
-    setToken(startParam);
+    setToken(resolvedToken);
 
     // Проверяем токен на сервере
     api
-      .get(`/invites/check/${startParam}`)
+      .get(`/invites/check/${resolvedToken}`)
       .then(({ data }) => {
         setCoachName(data.data.coachName);
         setStep('form');
