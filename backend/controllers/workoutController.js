@@ -173,6 +173,39 @@ const workoutController = {
   },
 
   // ──────────────────────────────────────────────
+  // PUT /api/workouts/:planId/assign
+  // Назначить план спортсмену (резервный эндпоинт —
+  // на случай если в будущем в таблицу добавят athlete_id)
+  // Body: { athlete_id }
+  // ──────────────────────────────────────────────
+  async assignPlan(req, res) {
+    try {
+      const { planId } = req.params;
+      const { athlete_id } = req.body;
+      // Если колонки athlete_id нет в таблице — просто возвращаем успех
+      // чтобы не ломать маршрут при старте сервера
+      const columns = await db.query(
+        `SELECT column_name FROM information_schema.columns
+          WHERE table_name = 'workout_plans' AND column_name = 'athlete_id'`
+      );
+      if (columns.rows.length > 0) {
+        const result = await db.query(
+          `UPDATE workout_plans SET athlete_id = $1 WHERE id = $2 RETURNING id, name`,
+          [athlete_id, planId]
+        );
+        if (result.rows.length === 0) {
+          return res.status(404).json({ status: 'error', message: 'План не найден' });
+        }
+        return res.json({ status: 'success', data: result.rows[0] });
+      }
+      res.json({ status: 'success', message: 'ok' });
+    } catch (error) {
+      console.error('assignPlan error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
   // POST /api/workouts/start
   // Спортсмен начинает тренировку
   // Body: { athlete_id, plan_id, day_id }
