@@ -2,28 +2,40 @@ const express = require('express');
 const router = express.Router();
 const workoutController = require('../controllers/workoutController');
 
-// === Маршруты для планов ===
-router.post('/plans', workoutController.createPlan);
-router.get('/plans/coach/:coachId', workoutController.getCoachPlans);
-router.get('/plans/:id', workoutController.getPlanById);
-router.put('/plans/:id', workoutController.updatePlan);
-router.delete('/plans/:id', workoutController.deletePlan);
+// Планы тренера
+router.get('/coach/:coachId/plans', workoutController.getCoachPlans);
 
-// Назначение плана спортсмену
-router.post('/plans/:planId/assign/:athleteId', workoutController.assignToAthlete);
-router.get('/plans/:planId/athletes', workoutController.getPlanAthletes);
+// Планы спортсмена — только назначенные ему (фильтр по athlete_id)
+router.get('/athlete/:athleteId/plans', workoutController.getAthletePlans);
 
-// === Маршруты для дней ===
-router.post('/plans/:planId/days', workoutController.addDay);
-router.get('/plans/:planId/days', workoutController.getPlanDays);
-router.get('/days/:id', workoutController.getDayById);
-router.delete('/days/:id', workoutController.deleteDay);
+// Сводная статистика спортсмена
+router.get('/athlete/:athleteId/summary', workoutController.getAthleteSummary);
 
-// === Маршруты для упражнений в дне ===
-router.post('/days/:dayId/exercises', workoutController.addExerciseToDay);
-router.get('/days/:dayId/exercises', workoutController.getDayExercises);
-router.put('/day-exercises/:id', workoutController.updateDayExercise);
-router.delete('/day-exercises/:id', workoutController.deleteDayExercise);
-router.put('/days/:dayId/exercises/reorder', workoutController.reorderExercises);
+// История прогресса по упражнению
+router.get('/athlete/:athleteId/progress/:exerciseId', workoutController.getExerciseProgress);
+
+// Календарь тренировок спортсмена (для самого спортсмена)
+router.get('/athlete/:athleteId/calendar', workoutController.getAthleteCalendar);
+
+// Календарь тренировок спортсмена (для тренера)
+router.get('/coach/:coachId/athlete/:athleteId/calendar', workoutController.getAthleteCalendarForCoach);
+
+// Создать план
+router.post('/create', workoutController.createPlan);
+
+// Назначить план спортсмену
+router.put('/:planId/assign', workoutController.assignPlan);
+
+// Детали плана
+router.get('/:planId', workoutController.getPlanDetails);
+
+// Начать тренировку
+router.post('/start', workoutController.startWorkout);
+
+// Завершить тренировку
+router.post('/complete/:sessionId', workoutController.completeWorkout);
+
+// Удалить план
+router.delete('/:planId', workoutController.deletePlan);
 
 module.exports = router;

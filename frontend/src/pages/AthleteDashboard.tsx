@@ -1,195 +1,166 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Dumbbell, TrendingUp, ThumbsUp, ThumbsDown } from 'lucide-react';
-import athleteService from '../services/athleteService';
-import workoutService from '../services/workoutService';
+import { Dumbbell, Calendar, TrendingUp, ClipboardList } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './AthleteDashboard.css';
 
-interface WorkoutPlan {
+interface Plan {
   id: number;
   name: string;
-  days_count: string;
-  athletes_count: string;
+  days_count: number;
+}
+
+interface Summary {
+  total_workouts: number;
+  total_sets: number;
+  last_workout_date: string | null;
 }
 
 export const AthleteDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [plans, setPlans] = useState<WorkoutPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [athleteName, setAthleteName] = useState('');
-  const [totalWorkouts, setTotalWorkouts] = useState(0);
-  const [goodWorkouts, setGoodWorkouts] = useState(0);
-  const [hardWorkouts, setHardWorkouts] = useState(0);
+  const { authUser } = useAuth();
 
-  // Функция для правильного склонения слова "тренировка"
-  const getTrainingCountText = (count: number): string => {
-    const lastDigit = count % 10;
-    const lastTwoDigits = count % 100;
-    
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-      return `${count} тренировок`;
-    }
-    
-    switch (lastDigit) {
-      case 1:
-        return `${count} тренировка`;
-      case 2:
-      case 3:
-      case 4:
-        return `${count} тренировки`;
-      default:
-        return `${count} тренировок`;
-    }
-  };
+  const [plans, setPlans]       = useState<Plan[]>([]);
+  const [summary, setSummary]   = useState<Summary>({ total_workouts: 0, total_sets: 0, last_workout_date: null });
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
     const athleteId = localStorage.getItem('selectedAthleteId');
-    console.log('🔍 AthleteDashboard mounted, athleteId from localStorage:', athleteId);
-    
-    if (athleteId) {
-      loadAthleteInfo(parseInt(athleteId));
-      loadPlans(parseInt(athleteId));
-      loadWorkoutStats(parseInt(athleteId));
-    } else {
-      console.log('⚠️ Нет выбранного спортсмена, редирект на /select-user');
+    if (!athleteId) {
       navigate('/select-user');
+      return;
     }
+    loadDashboard(parseInt(athleteId));
   }, []);
 
-  const loadAthleteInfo = async (athleteId: number) => {
-    console.log('📋 Загрузка информации о спортсмене ID:', athleteId);
+  const loadDashboard = async (athleteId: number) => {
     try {
-      const response = await api.get(`/users/${athleteId}`);
-      const athlete = response.data.data;
-      console.log('✅ Информация о спортсмене загружена:', athlete);
-      setAthleteName(`${athlete.first_name} ${athlete.last_name}`);
-    } catch (error) {
-      console.error('❌ Ошибка загрузки информации о спортсмене:', error);
-    }
-  };
+      const [plansRes, summaryRes] = await Promise.allSettled([
+        api.get(`/workouts/athlete/${athleteId}/plans`),
+        api.get(`/workouts/athlete/${athleteId}/summary`),
+      ]);
 
-  const loadPlans = async (athleteId: number) => {
-    console.log('📋 Загрузка планов для спортсмена ID:', athleteId);
-    try {
-      console.log('📡 Запрос информации о спортсмене...');
-      const athleteResponse = await api.get(`/users/${athleteId}`);
-      const athlete = athleteResponse.data.data;
-      console.log('✅ Информация о спортсмене получена:', athlete);
-      
-      const coachId = athlete.coach_id;
-      console.log(`👨‍🏫 Тренер ID: ${coachId}`);
-      
-      if (coachId) {
-        console.log(`📡 Запрос планов тренера ID ${coachId}...`);
-        const response = await workoutService.getCoachPlans(coachId);
-        console.log('✅ Получены планы тренера:', response.data);
-        
-        const assignedPlans = response.data || [];
-        console.log(`📊 Найдено планов: ${assignedPlans.length}`);
-        assignedPlans.forEach((plan: WorkoutPlan, idx: number) => {
-          console.log(`  ${idx + 1}. ${plan.name} (ID: ${plan.id})`);
-        });
-        
-        setPlans(assignedPlans);
-      } else {
-        console.log('⚠️ У спортсмена нет привязанного тренера');
+      if (plansRes.status === 'fulfilled') {
+        const raw = plansRes.value.data;
+        // API возвращает либо { data: [...] } либо напрямую массив
+        setPlans(Array.isArray(raw) ? raw : (raw?.data ?? []));
+      }
+
+      if (summaryRes.status === 'fulfilled') {
+        const s = summaryRes.value.data?.data?.summary;
+        if (s) setSummary(s);
       }
     } catch (error) {
-      console.error('❌ Ошибка загрузки планов:', error);
+      console.error('Ошибка загрузки дашборда:', error);
     } finally {
       setLoading(false);
-      console.log('🏁 Загрузка планов завершена');
     }
   };
 
-  const loadWorkoutStats = async (athleteId: number) => {
-    try {
-      const summaryResponse = await athleteService.getAthleteSummary(athleteId);
-      const summary = summaryResponse.data.summary;
-      setTotalWorkouts(parseInt(summary.total_workouts) || 0);
-      setGoodWorkouts(parseInt(summary.good_workouts) || 0);
-      setHardWorkouts(parseInt(summary.hard_workouts) || 0);
-    } catch (error) {
-      console.error('❌ Ошибка загрузки статистики тренировок:', error);
-    }
-  };
+  const firstName = authUser?.first_name ?? '';
 
   return (
     <div className="athlete-dashboard">
       <div className="dashboard-header">
-        <h1>Мои тренировки</h1>
-        {athleteName && <p className="athlete-name">{athleteName}</p>}
-        <p>Выберите план для выполнения</p>
+        <h1>Привет, {firstName}!</h1>
+        <p>Ваши тренировочные планы</p>
       </div>
 
+      {/* Статистика */}
       <div className="stats-grid">
         <div className="stat-card">
-          <Calendar size={24} />
+          <Dumbbell size={22} />
           <div className="stat-info">
-            <span className="stat-value">{totalWorkouts}</span>
-            <span className="stat-label">Всего Тренировок</span>
+            <span className="stat-value">{loading ? '–' : summary.total_workouts}</span>
+            <span className="stat-label">Тренировок</span>
           </div>
         </div>
-
         <div className="stat-card">
-          <ThumbsUp size={24} />
+          <TrendingUp size={22} />
           <div className="stat-info">
-            <span className="stat-value">{goodWorkouts}</span>
-            <span className="stat-label">Всего Легкие</span>
+            <span className="stat-value">{loading ? '–' : summary.total_sets}</span>
+            <span className="stat-label">Подходов</span>
           </div>
         </div>
-
         <div className="stat-card">
-          <ThumbsDown size={24} />
+          <ClipboardList size={22} />
           <div className="stat-info">
-            <span className="stat-value">{hardWorkouts}</span>
-            <span className="stat-label">Всего Тяжелые</span>
+            <span className="stat-value">{loading ? '–' : plans.length}</span>
+            <span className="stat-label">Планов</span>
           </div>
         </div>
       </div>
 
+      {/* Список планов */}
       <div className="section">
-        <h2>Доступные планы</h2>
+        <h2>Мои планы</h2>
+
         {loading ? (
-          <p className="loading">Загрузка...</p>
-        ) : plans.length > 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--fit-muted)', padding: '40px 0' }}>
+            Загрузка…
+          </div>
+        ) : plans.length === 0 ? (
+          /* ── Пустое состояние ── */
+          <div style={{
+            background: 'var(--fit-card, #18181b)',
+            border: '1px solid var(--fit-border, #27272a)',
+            borderRadius: 18,
+            padding: '36px 24px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+            <Dumbbell size={44} style={{ color: 'var(--fit-muted, #a1a1aa)' }} />
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--fit-text, #f4f4f5)' }}>
+              Пока планов нет
+            </p>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
+              Тренер ещё не назначил вам тренировочный план.{'\n'}
+              Как только он это сделает — план появится здесь.
+            </p>
+          </div>
+        ) : (
           <div className="plans-list">
             {plans.map((plan) => (
-              <div 
-                key={plan.id} 
+              <button
+                key={plan.id}
                 className="plan-card"
                 onClick={() => navigate(`/athlete/plan/${plan.id}`)}
               >
                 <div className="plan-icon">
-                  <Dumbbell size={24} />
+                  <Dumbbell size={20} />
                 </div>
                 <div className="plan-info">
                   <h3>{plan.name}</h3>
-                  <p>{getTrainingCountText(parseInt(plan.days_count) || 0)}</p>
+                  <p>{plan.days_count ?? 0} {pluralDays(plan.days_count ?? 0)}</p>
                 </div>
-                <div className="plan-arrow">→</div>
-              </div>
+                <span className="plan-arrow">›</span>
+              </button>
             ))}
           </div>
-        ) : (
-          <p className="empty-state">
-            У вас пока нет планов тренировок<br />
-            Обратитесь к тренеру
-          </p>
         )}
       </div>
 
+      {/* Быстрые действия */}
       <div className="quick-actions">
         <button className="quick-action" onClick={() => navigate('/athlete/calendar')}>
-          <Calendar size={20} />
+          <Calendar size={18} />
           Календарь
         </button>
         <button className="quick-action" onClick={() => navigate('/athlete/progress')}>
-          <TrendingUp size={20} />
+          <TrendingUp size={18} />
           Прогресс
         </button>
       </div>
     </div>
   );
 };
+
+function pluralDays(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return 'день';
+  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'дня';
+  return 'дней';
+}
