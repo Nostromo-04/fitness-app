@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppRoot } from '@telegram-apps/telegram-ui';
 import { useTelegram } from './hooks/useTelegram';
@@ -52,48 +52,117 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
 );
 
 // ──────────────────────────────────────────────────────────────────────
-// Экран «не зарегистрирован»
+// Экран «не зарегистрирован» с вводом кода приглашения
 // ──────────────────────────────────────────────────────────────────────
 const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegramId }) => {
-  const tg = (window as any).Telegram?.WebApp;
-  const rawInitData = tg ? JSON.stringify(tg.initDataUnsafe ?? {}) : 'Telegram WebApp не найден';
+  const [code, setCode]     = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errMsg, setErrMsg] = useState('');
 
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      gap: 12,
-      padding: 24,
+  // Извлекает число из строк вида: "6", "athlete_6",
+  // "https://t.me/bot?startapp=athlete_6", "athlete_6"
+  const parseAthleteId = (raw: string): number | null => {
+    const clean = raw.trim();
+    const m = clean.match(/athlete[_-]?(\d+)/i) ?? clean.match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  };
+
+  const handleLink = async () => {
+    if (!telegramId) {
+      setErrMsg('Telegram ID не определён. Откройте приложение через бота.');
+      setStatus('error');
+      return;
+    }
+    const athleteId = parseAthleteId(code);
+    if (!athleteId) {
+      setErrMsg('Неверный код. Вставьте ссылку-приглашение от тренера.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('loading');
+    try {
+      const API = import.meta.env.VITE_API_URL ?? 'https://fitness-app-production-33d3.up.railway.app/api';
+      const res = await fetch(`${API}/auth/telegram/link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegramId, userId: athleteId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message ?? `Ошибка ${res.status}`);
+      }
+      // Перезагружаем страницу — AuthContext снова запросит пользователя и перенаправит
+      window.location.reload();
+    } catch (e: any) {
+      setErrMsg(e.message ?? 'Ошибка сервера');
+      setStatus('error');
+    }
+  };
+
+  const s = {
+    page: {
+      display: 'flex', flexDirection: 'column' as const,
+      alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', gap: 16, padding: 24,
       background: 'var(--fit-bg, #0a0a0c)',
       color: 'var(--fit-text, #f4f4f5)',
       fontFamily: 'system-ui, sans-serif',
-      textAlign: 'center',
-    }}>
+      textAlign: 'center' as const,
+    },
+    card: {
+      width: '100%', maxWidth: 340,
+      background: '#18181b', border: '1px solid #27272a',
+      borderRadius: 16, padding: 20,
+      display: 'flex', flexDirection: 'column' as const, gap: 12,
+    },
+    input: {
+      width: '100%', padding: '12px 14px',
+      background: '#0a0a0c', border: '1px solid #27272a',
+      borderRadius: 10, color: '#f4f4f5',
+      fontSize: 14, outline: 'none',
+      boxSizing: 'border-box' as const,
+    },
+    btn: {
+      width: '100%', padding: '13px 0',
+      background: status === 'loading' ? '#4d6e1a' : '#a3e635',
+      color: '#0a0a0c', border: 'none',
+      borderRadius: 10, fontSize: 15, fontWeight: 700,
+      cursor: status === 'loading' ? 'default' : 'pointer',
+    },
+  };
+
+  return (
+    <div style={s.page}>
       <div style={{ fontSize: 48 }}>🏋️</div>
       <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Аккаунт не найден</h2>
       <p style={{ margin: 0, fontSize: 14, color: 'var(--fit-muted, #a1a1aa)', lineHeight: 1.5 }}>
-        Вас ещё нет в системе. Обратитесь к тренеру — он добавит вас и пришлёт ссылку.
+        Вставьте ссылку-приглашение, которую прислал тренер
       </p>
 
-      {/* Debug блок — временный, поможет найти причину */}
-      <div style={{
-        marginTop: 8,
-        background: '#18181b',
-        border: '1px solid #27272a',
-        borderRadius: 12,
-        padding: '10px 16px',
-        fontSize: 12,
-        color: '#a1a1aa',
-        maxWidth: 320,
-        wordBreak: 'break-all',
-        textAlign: 'left',
-      }}>
-        <div>telegramId из хука: <strong style={{ color: '#a3e635' }}>{telegramId || '—'}</strong></div>
-        <div style={{ marginTop: 6, color: '#71717a' }}>initDataUnsafe: {rawInitData}</div>
+      <div style={s.card}>
+        <label style={{ fontSize: 13, color: '#a1a1aa', textAlign: 'left' }}>
+          Код или ссылка приглашения
+        </label>
+        <input
+          style={s.input}
+          placeholder="https://t.me/kablaev_team_bot?startapp=athlete_6"
+          value={code}
+          onChange={e => { setCode(e.target.value); setStatus('idle'); }}
+        />
+        {status === 'error' && (
+          <p style={{ margin: 0, fontSize: 13, color: '#f87171', textAlign: 'left' }}>{errMsg}</p>
+        )}
+        <button style={s.btn} onClick={handleLink} disabled={status === 'loading'}>
+          {status === 'loading' ? 'Подключение…' : 'Войти'}
+        </button>
       </div>
+
+      {telegramId && (
+        <p style={{ fontSize: 12, color: '#52525b', margin: 0 }}>
+          Ваш Telegram ID: <strong style={{ color: '#a3e635' }}>{telegramId}</strong>
+        </p>
+      )}
     </div>
   );
 };
