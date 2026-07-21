@@ -18,6 +18,7 @@ const workoutRoutes = require('./routes/workoutRoutes');
 const logRoutes = require('./routes/logRoutes');
 const inviteRoutes = require('./routes/inviteRoutes');
 const athleteRoutes = require('./routes/athleteRoutes');
+const coachRoutes = require('./routes/coachRoutes');
 const telegramAuthRoutes = require('./routes/telegramAuthRoutes');
 
 app.use('/api/users', userRoutes);
@@ -26,6 +27,7 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/athletes', athleteRoutes);
+app.use('/api/coaches', coachRoutes);
 app.use('/api/auth', telegramAuthRoutes);
 
 app.get('/', (req, res) => {

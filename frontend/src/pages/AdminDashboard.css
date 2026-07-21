@@ -104,6 +104,26 @@
   line-height: 1;
 }
 
+.admin-add-coach-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--fit-accent, #a3e635);
+  border: 1.5px solid var(--fit-accent, #a3e635);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.admin-add-coach-btn:active {
+  background: rgba(163, 230, 53, 0.08);
+}
+
 .admin-start-btn {
   background: var(--fit-accent, #a3e635);
   color: #0a0a0c;
@@ -114,4 +134,215 @@
   padding: 18px;
   cursor: pointer;
   margin-top: auto;
+}
+
+/* ── Модалка ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.admin-modal {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fit-text, #f4f4f5);
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--fit-muted, #a1a1aa);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-hint {
+  font-size: 14px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+  font-weight: 500;
+}
+
+.form-input {
+  background: var(--fit-bg, #0a0a0c);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  color: var(--fit-text, #f4f4f5);
+  font-size: 15px;
+  padding: 13px 14px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: var(--fit-accent, #a3e635);
+}
+
+.form-error {
+  font-size: 13px;
+  color: #f87171;
+  margin: 0;
+}
+
+.modal-submit-btn {
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.modal-saving {
+  align-items: center;
+  padding: 24px 0;
+  gap: 12px;
+}
+
+.modal-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--fit-border, #27272a);
+  border-top-color: var(--fit-accent, #a3e635);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.modal-saving p {
+  font-size: 14px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0;
+}
+
+.done-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--fit-text, #f4f4f5);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* Блок с кодом приглашения */
+.invite-code-block {
+  background: var(--fit-bg, #0a0a0c);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.invite-code-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--fit-muted, #a1a1aa);
+}
+
+.invite-code-value {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--fit-accent, #a3e635);
+  letter-spacing: 4px;
+  line-height: 1;
+}
+
+.done-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.share-btn {
+  flex: 1;
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.copy-btn {
+  flex: 1;
+  background: var(--fit-card, #18181b);
+  color: var(--fit-text, #f4f4f5);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.modal-add-more-btn {
+  background: none;
+  border: none;
+  color: var(--fit-accent, #a3e635);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+  text-align: center;
 }
