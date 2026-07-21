@@ -8,9 +8,10 @@ interface User {
   id: number;
   first_name: string;
   last_name: string;
-  role: 'coach' | 'athlete';
+  role: 'coach' | 'athlete' | 'admin';
   telegram_id?: string;
   phone?: string;
+  coach_id?: number;
 }
 
 export const UserSelectionPage: React.FC = () => {
@@ -30,7 +31,10 @@ export const UserSelectionPage: React.FC = () => {
     try {
       const response = await api.get('/users');
       const allUsers = response.data.data || [];
-      const filteredUsers = allUsers.filter((u: User) => u.role === role);
+      // Admin users with coach_id also appear in the athlete list
+      const filteredUsers = allUsers.filter((u: User) =>
+        u.role === role || (role === 'athlete' && u.role === 'admin' && u.coach_id != null)
+      );
       setUsers(filteredUsers);
     } catch (error) {
       console.error('Ошибка загрузки пользователей:', error);
