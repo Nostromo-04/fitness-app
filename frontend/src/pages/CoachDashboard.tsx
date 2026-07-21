@@ -106,14 +106,29 @@ export const CoachDashboard: React.FC = () => {
     } catch { }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!inviteLink) return;
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Присоединяйтесь к моей команде в фитнес-приложении!')}`);
-    } else {
-      handleCopy();
+    const text = 'Присоединяйтесь к моей команде в фитнес-приложении!';
+
+    // 1. Web Share API — открывает системный диалог «Поделиться» (работает в Telegram на iOS/Android)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Приглашение в команду', text, url: inviteLink });
+        return;
+      } catch { /* пользователь отменил — не падаем */ }
     }
+
+    // 2. Telegram openTelegramLink — открывает диалог пересылки внутри Telegram
+    const tg = window.Telegram?.WebApp;
+    if (tg?.openTelegramLink) {
+      tg.openTelegramLink(
+        `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(text)}`
+      );
+      return;
+    }
+
+    // 3. Fallback — просто копируем
+    handleCopy();
   };
 
   return (

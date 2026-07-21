@@ -56,6 +56,7 @@
 
 .action-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 28px;
 }
@@ -72,6 +73,7 @@
   font-size: 14px;
   font-weight: 700;
   transition: opacity 0.2s;
+  cursor: pointer;
 }
 
 .action-button.primary {
@@ -181,8 +183,9 @@
   border: 1px solid var(--fit-border, #27272a);
 }
 
-/* ── Кнопка «Пригласить спортсмена» ── */
+/* ── Кнопка «Пригласить спортсмена» — вся строка ── */
 .action-button.invite {
+  flex: 0 0 100%;
   background: transparent;
   border: 1.5px solid var(--fit-accent, #a3e635);
   color: var(--fit-accent, #a3e635);
