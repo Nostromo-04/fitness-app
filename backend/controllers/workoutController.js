@@ -336,7 +336,7 @@ const workoutController = {
   },
 
   // ──────────────────────────────────────────────
-  // DELETE /api/workouts/:planId
+  // DELETE /api/workouts/plans/:planId  (и /:planId)
   // ──────────────────────────────────────────────
   async deletePlan(req, res) {
     try {
@@ -345,6 +345,266 @@ const workoutController = {
       res.json({ message: 'План удалён' });
     } catch (error) {
       console.error('deletePlan error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // PUT /api/workouts/plans/:planId
+  // workoutService.updatePlan → { name }
+  // ──────────────────────────────────────────────
+  async updatePlan(req, res) {
+    try {
+      const { planId } = req.params;
+      const { name } = req.body;
+      const result = await db.query(
+        `UPDATE workout_plans SET name = $1 WHERE id = $2
+         RETURNING id, name, coach_id, created_at`,
+        [name, planId]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ status: 'error', message: 'План не найден' });
+      }
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('updatePlan error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // POST /api/workouts/plans/:planId/days
+  // workoutService.addDay → { day_number }
+  // ──────────────────────────────────────────────
+  async addDay(req, res) {
+    try {
+      const { planId } = req.params;
+      const { day_number } = req.body;
+      const result = await db.query(
+        `INSERT INTO workout_days (plan_id, day_number) VALUES ($1, $2)
+         RETURNING id, plan_id, day_number`,
+        [planId, day_number]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('addDay error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // GET /api/workouts/plans/:planId/days
+  // workoutService.getPlanDays
+  // ──────────────────────────────────────────────
+  async getPlanDays(req, res) {
+    try {
+      const { planId } = req.params;
+      const result = await db.query(
+        `SELECT wd.id, wd.plan_id, wd.day_number,
+                COALESCE(
+                  json_agg(
+                    json_build_object(
+                      'id',             de.id,
+                      'exercise_id',    de.exercise_id,
+                      'exercise_name',  e.name,
+                      'muscle_group',   e.muscle_group,
+                      'sets_count',     de.sets_count,
+                      'default_reps',   de.default_reps,
+                      'default_weight', de.default_weight,
+                      'order_index',    de.order_index
+                    ) ORDER BY de.order_index
+                  ) FILTER (WHERE de.id IS NOT NULL),
+                  '[]'
+                ) AS exercises
+           FROM workout_days wd
+           LEFT JOIN day_exercises de ON de.day_id = wd.id
+           LEFT JOIN exercises     e  ON e.id = de.exercise_id
+          WHERE wd.plan_id = $1
+          GROUP BY wd.id
+          ORDER BY wd.day_number`,
+        [planId]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error('getPlanDays error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // GET /api/workouts/days/:dayId
+  // workoutService.getDayById
+  // ──────────────────────────────────────────────
+  async getDayById(req, res) {
+    try {
+      const { dayId } = req.params;
+      const result = await db.query(
+        `SELECT wd.id, wd.plan_id, wd.day_number,
+                COALESCE(
+                  json_agg(
+                    json_build_object(
+                      'id',             de.id,
+                      'exercise_id',    de.exercise_id,
+                      'exercise_name',  e.name,
+                      'muscle_group',   e.muscle_group,
+                      'sets_count',     de.sets_count,
+                      'default_reps',   de.default_reps,
+                      'default_weight', de.default_weight,
+                      'order_index',    de.order_index,
+                      'image_url',      e.image_url,
+                      'video_url',      e.video_url
+                    ) ORDER BY de.order_index
+                  ) FILTER (WHERE de.id IS NOT NULL),
+                  '[]'
+                ) AS exercises
+           FROM workout_days wd
+           LEFT JOIN day_exercises de ON de.day_id = wd.id
+           LEFT JOIN exercises     e  ON e.id = de.exercise_id
+          WHERE wd.id = $1
+          GROUP BY wd.id`,
+        [dayId]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ status: 'error', message: 'День не найден' });
+      }
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('getDayById error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // DELETE /api/workouts/days/:dayId
+  // workoutService.deleteDay
+  // ──────────────────────────────────────────────
+  async deleteDay(req, res) {
+    try {
+      const { dayId } = req.params;
+      await db.query('DELETE FROM workout_days WHERE id = $1', [dayId]);
+      res.json({ message: 'День удалён' });
+    } catch (error) {
+      console.error('deleteDay error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // POST /api/workouts/days/:dayId/exercises
+  // workoutService.addExerciseToDay
+  // Body: { exercise_id, sets_count, default_reps, default_weight }
+  // ──────────────────────────────────────────────
+  async addExerciseToDay(req, res) {
+    try {
+      const { dayId } = req.params;
+      const { exercise_id, sets_count = 3, default_reps = 10, default_weight = 0 } = req.body;
+
+      const countResult = await db.query(
+        'SELECT COUNT(*) AS cnt FROM day_exercises WHERE day_id = $1',
+        [dayId]
+      );
+      const orderIndex = parseInt(countResult.rows[0].cnt);
+
+      const result = await db.query(
+        `INSERT INTO day_exercises
+           (day_id, exercise_id, sets_count, default_reps, default_weight, order_index)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         RETURNING id, day_id, exercise_id, sets_count, default_reps, default_weight, order_index`,
+        [dayId, exercise_id, sets_count, default_reps, default_weight ?? 0, orderIndex]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('addExerciseToDay error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // GET /api/workouts/days/:dayId/exercises
+  // workoutService.getDayExercises
+  // ──────────────────────────────────────────────
+  async getDayExercises(req, res) {
+    try {
+      const { dayId } = req.params;
+      const result = await db.query(
+        `SELECT de.id, de.day_id, de.exercise_id,
+                e.name AS exercise_name, e.muscle_group, e.image_url, e.video_url,
+                de.sets_count, de.default_reps, de.default_weight, de.order_index
+           FROM day_exercises de
+           JOIN exercises e ON e.id = de.exercise_id
+          WHERE de.day_id = $1
+          ORDER BY de.order_index`,
+        [dayId]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error('getDayExercises error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // PUT /api/workouts/day-exercises/:id
+  // workoutService.updateDayExercise
+  // ──────────────────────────────────────────────
+  async updateDayExercise(req, res) {
+    try {
+      const { id } = req.params;
+      const { sets_count, default_reps, default_weight } = req.body;
+      const result = await db.query(
+        `UPDATE day_exercises
+            SET sets_count     = COALESCE($1, sets_count),
+                default_reps   = COALESCE($2, default_reps),
+                default_weight = COALESCE($3, default_weight)
+          WHERE id = $4
+          RETURNING id, day_id, exercise_id, sets_count, default_reps, default_weight, order_index`,
+        [sets_count, default_reps, default_weight, id]
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ status: 'error', message: 'Упражнение не найдено' });
+      }
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('updateDayExercise error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // DELETE /api/workouts/day-exercises/:id
+  // workoutService.deleteDayExercise
+  // ──────────────────────────────────────────────
+  async deleteDayExercise(req, res) {
+    try {
+      const { id } = req.params;
+      await db.query('DELETE FROM day_exercises WHERE id = $1', [id]);
+      res.json({ message: 'Упражнение удалено' });
+    } catch (error) {
+      console.error('deleteDayExercise error:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
+  // ──────────────────────────────────────────────
+  // PUT /api/workouts/days/:dayId/exercises/reorder
+  // workoutService.reorderExercises
+  // Body: { exercises: [{ id, order_index }] }
+  // ──────────────────────────────────────────────
+  async reorderExercises(req, res) {
+    try {
+      const { exercises } = req.body;
+      if (!Array.isArray(exercises)) {
+        return res.status(400).json({ status: 'error', message: 'exercises должен быть массивом' });
+      }
+      for (const ex of exercises) {
+        await db.query(
+          'UPDATE day_exercises SET order_index = $1 WHERE id = $2',
+          [ex.order_index, ex.id]
+        );
+      }
+      res.json({ message: 'Порядок обновлён' });
+    } catch (error) {
+      console.error('reorderExercises error:', error);
       res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
     }
   },
