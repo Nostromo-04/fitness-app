@@ -1,0 +1,240 @@
+.invite-page {
+  min-height: 100vh;
+  background: var(--fit-bg, #0a0a0c);
+  color: var(--fit-text, #f4f4f5);
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 32px;
+}
+
+/* Header */
+.invite-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.invite-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.back-btn {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 10px;
+  color: var(--fit-text, #f4f4f5);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Form card */
+.invite-form-card {
+  margin: 12px 16px 0;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 18px;
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.invite-icon-wrap {
+  width: 72px;
+  height: 72px;
+  background: rgba(163, 230, 53, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.invite-subtitle {
+  font-size: 14px;
+  color: var(--fit-muted, #a1a1aa);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+
+.invite-subtitle strong {
+  color: var(--fit-text, #f4f4f5);
+}
+
+/* Form fields */
+.invite-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invite-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.invite-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fit-muted, #a1a1aa);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.invite-field input {
+  background: var(--fit-card-2, #1c1c1f);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  color: var(--fit-text, #f4f4f5);
+  font-size: 16px;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.invite-field input:focus {
+  border-color: var(--fit-accent, #a3e635);
+}
+
+.invite-field input::placeholder {
+  color: var(--fit-muted, #a1a1aa);
+  opacity: 0.6;
+}
+
+/* Error */
+.invite-form-error {
+  font-size: 13px;
+  color: #f87171;
+  text-align: center;
+  margin: 0;
+}
+
+/* Submit button */
+.invite-submit-btn {
+  background: var(--fit-accent, #a3e635);
+  color: #0a0a0c;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+}
+
+.invite-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Loading state */
+.invite-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--fit-muted, #a1a1aa);
+}
+
+.invite-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--fit-border, #27272a);
+  border-top-color: var(--fit-accent, #a3e635);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error card */
+.invite-error-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.invite-error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.invite-error-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.invite-error-card p {
+  font-size: 14px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0;
+}
+
+.invite-back-btn {
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 12px;
+  color: var(--fit-text, #f4f4f5);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 28px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+/* Success card */
+.invite-success-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.invite-success-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.invite-success-card p {
+  font-size: 15px;
+  color: var(--fit-muted, #a1a1aa);
+  margin: 0;
+}

@@ -18,37 +18,41 @@ import { CoachAthleteProgressPage } from './pages/CoachAthleteProgressPage';
 import { UserSelectionPage } from './pages/UserSelectionPage';
 import { CoachAthletePlansPage } from './pages/CoachAthletePlansPage';
 import { CoachEditPlanPage } from './pages/CoachEditPlanPage';
+import { AthleteInvitePage } from './pages/AthleteInvitePage';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import './App.css';
 
-// Компонент-обертка для защиты маршрутов
-const ProtectedRoute: React.FC<{ 
-  children: React.ReactNode; 
+const ProtectedRoute: React.FC<{
+  children: React.ReactNode;
   role: 'coach' | 'athlete';
 }> = ({ children, role }) => {
   const storageKey = role === 'coach' ? 'selectedCoachId' : 'selectedAthleteId';
   const userId = localStorage.getItem(storageKey);
-  
+
   if (!userId) {
     return <Navigate to="/select-user" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 function App() {
   const { isReady, user } = useTelegram();
 
+  // Если приложение открыто по инвайт-ссылке — сразу на страницу регистрации
+  const startParam = window.Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+  const isInvite = startParam.startsWith('coach_');
+
   if (!isReady) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
         background: 'var(--tg-theme-bg-color, #ffffff)',
-        color: 'var(--tg-theme-text-color, #000000)'
+        color: 'var(--tg-theme-text-color, #000000)',
       }}>
         Загрузка...
       </div>
@@ -59,67 +63,51 @@ function App() {
     <AppRoot>
       <Router>
         <Routes>
+          {/* Инвайт — публичный маршрут, перехватывает start_param */}
+          <Route
+            path="/"
+            element={isInvite ? <AthleteInvitePage /> : <HomePage user={user} />}
+          />
+
           {/* Публичные маршруты */}
-          <Route path="/" element={<HomePage user={user} />} />
           <Route path="/select-user" element={<UserSelectionPage />} />
-          
-          {/* Маршруты тренера (защищенные) */}
+          <Route path="/invite" element={<AthleteInvitePage />} />
+
+          {/* Маршруты тренера */}
           <Route path="/coach/dashboard" element={
-            <ProtectedRoute role="coach">
-              <CoachDashboard />
-            </ProtectedRoute>
+            <ProtectedRoute role="coach"><CoachDashboard /></ProtectedRoute>
           } />
           <Route path="/coach/exercises" element={
-            <ProtectedRoute role="coach">
-              <ExerciseLibrary />
-            </ProtectedRoute>
+            <ProtectedRoute role="coach"><ExerciseLibrary /></ProtectedRoute>
           } />
           <Route path="/coach/create-plan" element={
-            <ProtectedRoute role="coach">
-              <CreatePlanPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="coach"><CreatePlanPage /></ProtectedRoute>
           } />
           <Route path="/coach/athlete/:athleteId/calendar" element={
-            <ProtectedRoute role="coach">
-              <CoachAthleteCalendarPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="coach"><CoachAthleteCalendarPage /></ProtectedRoute>
           } />
           <Route path="/coach/athlete/:athleteId/progress" element={
-            <ProtectedRoute role="coach">
-              <CoachAthleteProgressPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="coach"><CoachAthleteProgressPage /></ProtectedRoute>
           } />
-          
-          {/* Маршруты спортсмена (защищенные) */}
+
+          {/* Маршруты спортсмена */}
           <Route path="/athlete/dashboard" element={
-            <ProtectedRoute role="athlete">
-              <AthleteDashboard />
-            </ProtectedRoute>
+            <ProtectedRoute role="athlete"><AthleteDashboard /></ProtectedRoute>
           } />
           <Route path="/athlete/plan/:planId" element={
-            <ProtectedRoute role="athlete">
-              <AthletePlanPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="athlete"><AthletePlanPage /></ProtectedRoute>
           } />
           <Route path="/athlete/workout/:planId/day/:dayId" element={
-            <ProtectedRoute role="athlete">
-              <AthleteWorkoutPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="athlete"><AthleteWorkoutPage /></ProtectedRoute>
           } />
           <Route path="/athlete/complete" element={
-            <ProtectedRoute role="athlete">
-              <AthleteCompletePage />
-            </ProtectedRoute>
+            <ProtectedRoute role="athlete"><AthleteCompletePage /></ProtectedRoute>
           } />
           <Route path="/athlete/calendar" element={
-            <ProtectedRoute role="athlete">
-              <AthleteCalendarPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="athlete"><AthleteCalendarPage /></ProtectedRoute>
           } />
           <Route path="/athlete/progress" element={
-            <ProtectedRoute role="athlete">
-              <AthleteProgressPage />
-            </ProtectedRoute>
+            <ProtectedRoute role="athlete"><AthleteProgressPage /></ProtectedRoute>
           } />
           <Route path="/coach/athlete/:athleteId/plans" element={
             <CoachAthletePlansPage />
@@ -128,7 +116,6 @@ function App() {
             <CoachEditPlanPage />
           } />
 
-          {/* Перенаправление для старых маршрутов */}
           <Route path="/login" element={<Navigate to="/select-user" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
