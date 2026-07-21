@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Dumbbell, Calendar, PlusCircle, CalendarDays, TrendingUp, UserPlus, Copy, Check } from 'lucide-react';
+import {
+  Users, Dumbbell, Calendar, PlusCircle, CalendarDays,
+  TrendingUp, UserPlus, Copy, Check, X, Share2,
+} from 'lucide-react';
 import api from '../services/api';
 import workoutService from '../services/workoutService';
 import athleteService from '../services/athleteService';
@@ -13,135 +16,148 @@ interface Athlete {
   phone?: string;
 }
 
+type ModalStep = 'form' | 'saving' | 'done';
+
+const BOT_LINK = 'https://t.me/kablaev_team_bot';
+
 export const CoachDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [plansCount, setPlansCount] = useState(0);
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [inviteLink, setInviteLink] = useState('');   // Telegram-ссылка (t.me/bot?startapp=...)
-  const [webLink, setWebLink] = useState('');          // Web-ссылка (fallback для браузера)
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteLoading, setInviteLoading] = useState(false);
+
+  // Модалка создания спортсмена
+  const [showModal, setShowModal] = useState(false);
+  const [modalStep, setModalStep] = useState<ModalStep>('form');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [createdName, setCreatedName] = useState('');
   const [copied, setCopied] = useState(false);
-  const [copiedWeb, setCopiedWeb] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     const coachId = localStorage.getItem('selectedCoachId');
     if (coachId) {
-      loadCoachInfo(parseInt(coachId));
-      fetchAthletes(parseInt(coachId));
-      fetchPlansCount(parseInt(coachId));
-      fetchTotalWorkouts(parseInt(coachId));
+      loadDashboard(parseInt(coachId));
     } else {
       navigate('/select-user');
     }
   }, []);
 
-  const loadCoachInfo = async (coachId: number) => {
+  const loadDashboard = async (coachId: number) => {
     try {
-      await api.get(`/users/${coachId}`);
-    } catch (error) {
-      console.error('Ошибка загрузки информации о тренере:', error);
-    }
-  };
+      const [athletesRes, plansRes] = await Promise.all([
+        api.get(`/users/coach/${coachId}/athletes`),
+        workoutService.getCoachPlans(coachId),
+      ]);
+      const allAthletes: Athlete[] = athletesRes.data.data || [];
+      setAthletes(allAthletes);
+      setPlansCount(plansRes.data.length);
 
-  const fetchAthletes = async (coachId: number) => {
-    try {
-      const response = await api.get(`/users/coach/${coachId}/athletes`);
-      setAthletes(response.data.data);
+      let total = 0;
+      for (const a of allAthletes) {
+        try {
+          const s = await athleteService.getAthleteSummary(a.id);
+          total += parseInt(s.data.summary.total_workouts) || 0;
+        } catch { }
+      }
+      setTotalWorkouts(total);
     } catch (error) {
-      console.error('Ошибка загрузки спортсменов:', error);
+      console.error('Ошибка загрузки дашборда:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchPlansCount = async (coachId: number) => {
-    try {
-      const response = await workoutService.getCoachPlans(coachId);
-      setPlansCount(response.data.length);
-    } catch (error) {
-      console.error('Ошибка загрузки количества планов:', error);
-    }
+  // ──────────────────────────────────────────────
+  // Создание спортсмена
+  // ──────────────────────────────────────────────
+  const openModal = () => {
+    setFirstName('');
+    setLastName('');
+    setFormError('');
+    setModalStep('form');
+    setCopied(false);
+    setShowModal(true);
   };
 
-  const fetchTotalWorkouts = async (coachId: number) => {
-    try {
-      const athletesResponse = await api.get(`/users/coach/${coachId}/athletes`);
-      const allAthletes = athletesResponse.data.data || [];
-      let total = 0;
-      for (const athlete of allAthletes) {
-        try {
-          const summaryResponse = await athleteService.getAthleteSummary(athlete.id);
-          const count = parseInt(summaryResponse.data.summary.total_workouts) || 0;
-          total += count;
-        } catch { }
-      }
-      setTotalWorkouts(total);
-    } catch (error) {
-      console.error('Ошибка загрузки тренировок:', error);
-    }
-  };
+  const closeModal = () => setShowModal(false);
 
-  const handleInvite = async () => {
+  const handleCreate = async () => {
+    const trimmed = firstName.trim();
+    if (!trimmed) {
+      setFormError('Введите имя спортсмена');
+      return;
+    }
     const coachId = localStorage.getItem('selectedCoachId');
     if (!coachId) return;
-    setInviteLoading(true);
-    setShowInviteModal(true);
+
+    setFormError('');
+    setModalStep('saving');
+
     try {
-      const { data } = await api.post(`/invites/coach/${coachId}`);
-      setInviteLink(data.data.inviteLink);   // t.me/bot?startapp=TOKEN
-      setWebLink(data.data.webLink || '');   // https://...vercel.app/invite?token=TOKEN
-    } catch {
-      setInviteLink('');
-      setWebLink('');
-    } finally {
-      setInviteLoading(false);
+      await api.post('/athletes', {
+        first_name: trimmed,
+        last_name: lastName.trim() || undefined,
+        coach_id: parseInt(coachId),
+      });
+
+      const fullName = [trimmed, lastName.trim()].filter(Boolean).join(' ');
+      setCreatedName(fullName);
+      setModalStep('done');
+
+      // Обновляем список спортсменов
+      loadDashboard(parseInt(coachId));
+
+      // Автоматически открываем системный диалог «Поделиться»
+      const shareText = `Привет! Тренер добавил тебя в фитнес-приложение. Открой бота в Telegram и нажми Старт:`;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Приглашение в команду',
+            text: shareText,
+            url: BOT_LINK,
+          });
+        } catch { /* отменили — ничего страшного */ }
+      }
+    } catch (error) {
+      console.error('Ошибка создания спортсмена:', error);
+      setModalStep('form');
+      setFormError('Не удалось создать спортсмена. Попробуйте ещё раз.');
     }
-  };
-
-  const handleCopy = async () => {
-    if (!inviteLink) return;
-    try {
-      await navigator.clipboard.writeText(inviteLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch { }
-  };
-
-  const handleCopyWeb = async () => {
-    if (!webLink) return;
-    try {
-      await navigator.clipboard.writeText(webLink);
-      setCopiedWeb(true);
-      setTimeout(() => setCopiedWeb(false), 2000);
-    } catch { }
   };
 
   const handleShare = async () => {
-    if (!inviteLink) return;
-    const text = 'Присоединяйтесь к моей команде в фитнес-приложении!';
+    const text = `Привет! Тренер добавил тебя в фитнес-приложение. Открой бота в Telegram и нажми Старт:`;
 
-    // 1. Web Share API — открывает системный диалог «Поделиться» (работает в Telegram на iOS/Android)
+    // 1. Web Share API (iOS/Android — открывает WhatsApp, Telegram и др.)
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Приглашение в команду', text, url: inviteLink });
+        await navigator.share({ title: 'Приглашение в команду', text, url: BOT_LINK });
         return;
-      } catch { /* пользователь отменил — не падаем */ }
+      } catch { /* пользователь отменил */ }
     }
 
-    // 2. Telegram openTelegramLink — открывает диалог пересылки внутри Telegram
-    const tg = window.Telegram?.WebApp;
+    // 2. Telegram openTelegramLink (если закрыли диалог, но мы в Mini App)
+    const tg = (window as any).Telegram?.WebApp;
     if (tg?.openTelegramLink) {
       tg.openTelegramLink(
-        `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(text)}`
+        `https://t.me/share/url?url=${encodeURIComponent(BOT_LINK)}&text=${encodeURIComponent(text)}`
       );
       return;
     }
 
-    // 3. Fallback — просто копируем
+    // 3. Fallback — копируем в буфер
     handleCopy();
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(BOT_LINK);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch { }
   };
 
   return (
@@ -156,21 +172,21 @@ export const CoachDashboard: React.FC = () => {
           <Users size={24} />
           <div className="stat-info">
             <span className="stat-value">{athletes.length}</span>
-            <span className="stat-label">Всего Спортсменов</span>
+            <span className="stat-label">Спортсменов</span>
           </div>
         </div>
         <div className="stat-card">
           <Dumbbell size={24} />
           <div className="stat-info">
             <span className="stat-value">{plansCount}</span>
-            <span className="stat-label">Всего Планов</span>
+            <span className="stat-label">Планов</span>
           </div>
         </div>
         <div className="stat-card">
           <Calendar size={24} />
           <div className="stat-info">
             <span className="stat-value">{totalWorkouts}</span>
-            <span className="stat-label">Всего Тренировок</span>
+            <span className="stat-label">Тренировок</span>
           </div>
         </div>
       </div>
@@ -184,16 +200,16 @@ export const CoachDashboard: React.FC = () => {
           <PlusCircle size={20} />
           Создать план
         </button>
-        <button className="action-button invite" onClick={handleInvite}>
+        <button className="action-button invite" onClick={openModal}>
           <UserPlus size={20} />
-          Пригласить спортсмена
+          Добавить спортсмена
         </button>
       </div>
 
       <div className="section">
         <h2>Мои спортсмены</h2>
         {loading ? (
-          <p>Загрузка...</p>
+          <p className="loading-text">Загрузка...</p>
         ) : athletes.length > 0 ? (
           <div className="athletes-list">
             {athletes.map((athlete) => (
@@ -209,21 +225,21 @@ export const CoachDashboard: React.FC = () => {
                   <button
                     className="athlete-action-btn plans"
                     onClick={() => navigate(`/coach/athlete/${athlete.id}/plans`)}
-                    title="Планы спортсмена"
+                    title="Планы"
                   >
                     <Dumbbell size={18} />
                   </button>
                   <button
                     className="athlete-action-btn calendar"
                     onClick={() => navigate(`/coach/athlete/${athlete.id}/calendar`)}
-                    title="Календарь тренировок"
+                    title="Календарь"
                   >
                     <CalendarDays size={18} />
                   </button>
                   <button
                     className="athlete-action-btn progress"
                     onClick={() => navigate(`/coach/athlete/${athlete.id}/progress`)}
-                    title="Прогресс спортсмена"
+                    title="Прогресс"
                   >
                     <TrendingUp size={18} />
                   </button>
@@ -232,64 +248,102 @@ export const CoachDashboard: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p className="empty-state">
-            У вас пока нет спортсменов.
-            <br />
-            <button className="empty-invite-btn" onClick={handleInvite}>
-              Пригласить первого
+          <div className="empty-state">
+            <Users size={40} />
+            <p>Спортсменов пока нет</p>
+            <button className="empty-invite-btn" onClick={openModal}>
+              Добавить первого
             </button>
-          </p>
+          </div>
         )}
       </div>
 
-      {/* Модалка с инвайт-ссылкой */}
-      {showInviteModal && (
-        <div className="invite-modal-overlay" onClick={() => setShowInviteModal(false)}>
-          <div className="invite-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Пригласить спортсмена</h3>
-            {inviteLoading ? (
-              <div className="invite-modal-loading">
-                <div className="invite-modal-spinner" />
-                <p>Генерируем ссылку…</p>
-              </div>
-            ) : inviteLink ? (
-              <>
-                <p className="invite-modal-hint">
-                  Ссылка действует 72 часа. Спортсмен введёт имя и сразу окажется в вашей команде.
+      {/* ── Модалка создания спортсмена ── */}
+      {showModal && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="add-athlete-modal" onClick={(e) => e.stopPropagation()}>
+
+            {/* Заголовок */}
+            <div className="modal-header">
+              <h3>
+                {modalStep === 'done' ? 'Спортсмен добавлен' : 'Новый спортсмен'}
+              </h3>
+              <button className="modal-close-btn" onClick={closeModal}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* ── Форма ── */}
+            {modalStep === 'form' && (
+              <div className="modal-body">
+                <p className="modal-hint">
+                  Введите имя и фамилию спортсмена. После этого вы сможете отправить ему ссылку на бота.
                 </p>
-
-                {/* Основная: открывает Mini App в Telegram */}
-                <div className="invite-link-row">
-                  <span className="invite-link-label">В Telegram</span>
-                  <div className="invite-modal-actions">
-                    <button className="invite-share-btn" onClick={handleShare}>
-                      Пригласить
-                    </button>
-                    <button className="invite-copy-btn" onClick={handleCopy}>
-                      {copied ? <><Check size={16} /> Скопировано</> : <><Copy size={16} /> Копировать</>}
-                    </button>
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Имя *</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    placeholder="Например: Алексей"
+                    value={firstName}
+                    onChange={(e) => { setFirstName(e.target.value); setFormError(''); }}
+                    autoFocus
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                  />
                 </div>
-
-                {/* Fallback: если спортсмен открывает через браузер */}
-                {webLink && (
-                  <div className="invite-link-row">
-                    <span className="invite-link-label">Веб-ссылка (если нет бота)</span>
-                    <div className="invite-link-box">
-                      <span className="invite-link-text">{webLink}</span>
-                    </div>
-                    <button className="invite-copy-btn full-width" onClick={handleCopyWeb}>
-                      {copiedWeb ? <><Check size={16} /> Скопировано</> : <><Copy size={16} /> Копировать веб-ссылку</>}
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="invite-modal-error">Не удалось создать ссылку. Попробуйте ещё раз.</p>
+                <div className="form-group">
+                  <label className="form-label">Фамилия</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    placeholder="Например: Иванов"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                  />
+                </div>
+                {formError && <p className="form-error">{formError}</p>}
+                <button className="modal-submit-btn" onClick={handleCreate}>
+                  Готово
+                </button>
+              </div>
             )}
-            <button className="invite-modal-close" onClick={() => setShowInviteModal(false)}>
-              Закрыть
-            </button>
+
+            {/* ── Сохранение ── */}
+            {modalStep === 'saving' && (
+              <div className="modal-body modal-saving">
+                <div className="modal-spinner" />
+                <p>Создаём профиль…</p>
+              </div>
+            )}
+
+            {/* ── Успех + шара ── */}
+            {modalStep === 'done' && (
+              <div className="modal-body">
+                <div className="done-athlete-name">{createdName}</div>
+                <p className="modal-hint">
+                  Теперь отправьте спортсмену ссылку на бота. Он нажмёт <strong>Старт</strong> — и приложение откроется.
+                </p>
+                <div className="bot-link-box">
+                  <span className="bot-link-text">{BOT_LINK}</span>
+                </div>
+                <div className="done-actions">
+                  <button className="share-btn" onClick={handleShare}>
+                    <Share2 size={18} />
+                    Отправить
+                  </button>
+                  <button className="copy-btn" onClick={handleCopy}>
+                    {copied
+                      ? <><Check size={16} /> Скопировано</>
+                      : <><Copy size={16} /> Копировать</>}
+                  </button>
+                </div>
+                <button className="modal-add-more-btn" onClick={openModal}>
+                  + Добавить ещё одного
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
       )}
