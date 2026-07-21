@@ -56,7 +56,6 @@ export const AdminDashboard: React.FC = () => {
       setCreatedName([trimmed, lastName.trim()].filter(Boolean).join(' '));
       setModalStep('done');
 
-      // Открываем диалог «Поделиться» сразу
       const shareText = `Привет! Вы добавлены как тренер в фитнес-приложение. Откройте бота и введите ваш код:`;
       if (navigator.share) {
         try {
@@ -140,7 +139,7 @@ export const AdminDashboard: React.FC = () => {
         Начать
       </button>
 
-      {/* ── Модалка добавления тренера ── */}
+      {/* Модалка добавления тренера */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
