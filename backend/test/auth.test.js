@@ -4,11 +4,12 @@ const crypto = require('crypto');
 const { verifyTelegramInitData } = require('../lib/telegramAuth');
 const { signSession, verifySession } = require('../lib/sessionToken');
 
-function makeInitData(botToken, user, now) {
+function makeInitData(botToken, user, now, extraParams = {}) {
   const params = new URLSearchParams({
     auth_date: String(Math.floor(now / 1000)),
     query_id: 'test-query',
     user: JSON.stringify(user),
+    ...extraParams,
   });
   const check = [...params.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -22,6 +23,14 @@ function makeInitData(botToken, user, now) {
 test('accepts authentic, recent Telegram initData', () => {
   const now = Date.UTC(2026, 6, 22, 10, 0, 0);
   const initData = makeInitData('bot-token', { id: 123, first_name: 'Test' }, now);
+  assert.equal(verifyTelegramInitData(initData, 'bot-token', now).user.id, 123);
+});
+
+test('includes the Telegram signature field in bot-token validation', () => {
+  const now = Date.UTC(2026, 6, 22, 10, 0, 0);
+  const initData = makeInitData('bot-token', { id: 123 }, now, {
+    signature: 'telegram-ed25519-signature',
+  });
   assert.equal(verifyTelegramInitData(initData, 'bot-token', now).user.id, 123);
 });
 
