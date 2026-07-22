@@ -138,9 +138,10 @@ const workoutController = {
   // ──────────────────────────────────────────────
   async createPlan(req, res) {
     try {
-      const { name, coach_id, days = [] } = req.body;
-      if (!name || !coach_id) {
-        return res.status(400).json({ status: 'error', message: 'name и coach_id обязательны' });
+      const { name, days = [] } = req.body;
+      const coach_id = req.user.id;
+      if (!name) {
+        return res.status(400).json({ status: 'error', message: 'name обязателен' });
       }
 
       const planResult = await db.query(

@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const telegramAuthController = require('../controllers/telegramAuthController');
+const { authenticate } = require('../middleware/auth');
 
-// GET /api/auth/telegram/:telegramId — найти пользователя по Telegram ID
-router.get('/telegram/:telegramId', telegramAuthController.findByTelegramId);
+// Единственная точка входа: сервер проверяет подпись Telegram initData.
+router.post('/telegram', telegramAuthController.authenticate);
+router.get('/me', authenticate, telegramAuthController.me);
 
-// POST /api/auth/telegram/link — привязать Telegram ID к существующему пользователю
-router.post('/telegram/link', telegramAuthController.linkTelegramId);
+// Старые маршруты закрыты намеренно: они позволяли подставить чужой Telegram/User ID.
+router.get('/telegram/:telegramId', telegramAuthController.deprecated);
+router.post('/telegram/link', telegramAuthController.deprecated);
 
 module.exports = router;

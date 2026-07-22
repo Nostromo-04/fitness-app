@@ -12,12 +12,16 @@ interface UseTelegramReturn {
   isReady: boolean;
   user: TelegramUser | null;
   telegramId: string | null;
+  initData: string;
+  startParam: string;
 }
 
 export function useTelegram(): UseTelegramReturn {
   const [isReady, setIsReady] = useState(false);
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [telegramId, setTelegramId] = useState<string | null>(null);
+  const [initData, setInitData] = useState('');
+  const [startParam, setStartParam] = useState('');
 
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
@@ -32,6 +36,8 @@ export function useTelegram(): UseTelegramReturn {
         const u: TelegramUser | null = tg.initDataUnsafe?.user ?? null;
         setUser(u);
         setTelegramId(u?.id ? String(u.id) : null);
+        setInitData(tg.initData || '');
+        setStartParam(tg.initDataUnsafe?.start_param || '');
         setIsReady(true);
       }, 300);
 
@@ -42,5 +48,5 @@ export function useTelegram(): UseTelegramReturn {
     }
   }, []);
 
-  return { isReady, user, telegramId };
+  return { isReady, user, telegramId, initData, startParam };
 }

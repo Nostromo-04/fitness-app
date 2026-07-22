@@ -59,12 +59,11 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errMsg, setErrMsg] = useState('');
 
-  // Извлекает число из строк вида: "6", "athlete_6",
-  // "https://t.me/bot?startapp=athlete_6", "athlete_6"
-  const parseAthleteId = (raw: string): number | null => {
+  // Извлекает криптографический токен из ссылки Telegram или введённого кода.
+  const parseInviteToken = (raw: string): string | null => {
     const clean = raw.trim();
-    const m = clean.match(/athlete[_-]?(\d+)/i) ?? clean.match(/(\d+)/);
-    return m ? parseInt(m[1], 10) : null;
+    const m = clean.match(/(?:startapp=|invite_)([A-Za-z0-9_-]{20,})/i);
+    return m?.[1] || (/^[A-Za-z0-9_-]{20,}$/.test(clean) ? clean : null);
   };
 
   const handleLink = async () => {
@@ -73,8 +72,8 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
       setStatus('error');
       return;
     }
-    const athleteId = parseAthleteId(code);
-    if (!athleteId) {
+    const inviteToken = parseInviteToken(code);
+    if (!inviteToken) {
       setErrMsg('Неверный код. Вставьте ссылку-приглашение от тренера.');
       setStatus('error');
       return;
@@ -83,10 +82,11 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
     setStatus('loading');
     try {
       const API = import.meta.env.VITE_API_URL ?? 'https://fitness-app-production-33d3.up.railway.app/api';
-      const res = await fetch(`${API}/auth/telegram/link`, {
+      const initData = (window as any).Telegram?.WebApp?.initData || '';
+      const res = await fetch(`${API}/auth/telegram`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telegramId, userId: athleteId }),
+        body: JSON.stringify({ initData, inviteToken }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -152,7 +152,7 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
         </label>
         <input
           style={s.input}
-          placeholder="https://t.me/kablaev_team_bot?startapp=athlete_6"
+          placeholder="https://t.me/kablaev_team_bot?startapp=invite_..."
           value={code}
           onChange={e => { setCode(e.target.value); setStatus('idle'); }}
         />
@@ -284,13 +284,13 @@ function AppRoutes() {
 // Точка входа
 // ──────────────────────────────────────────────────────────────────────
 function App() {
-  const { isReady, telegramId } = useTelegram();
+  const { isReady, initData, startParam } = useTelegram();
 
   if (!isReady) return <LoadingScreen />;
 
   return (
     <AppRoot>
-      <AuthProvider telegramId={telegramId}>
+      <AuthProvider initData={initData} startParam={startParam}>
         <AppRoutes />
       </AuthProvider>
     </AppRoot>
