@@ -1,5 +1,7 @@
 # Fitness App — Design Package
 
+> Security hardening documentation and required Railway variables are described in [SECURITY.md](SECURITY.md). The production API now requires verified Telegram WebApp `initData`; numeric Telegram/user IDs are not authentication credentials.
+
 Тёмная тема (#0a0a0c) + лаймовый акцент (#a3e635).
 
 ## Что внутри

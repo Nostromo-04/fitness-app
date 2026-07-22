@@ -17,7 +17,7 @@ const userController = {
   // GET /api/users/:id — один пользователь
   async getUserById(req, res) {
     try {
-      const { id } = req.params;
+      const id = req.params.id || req.params.athleteId;
       const result = await db.query(
         'SELECT id, first_name, last_name, role, telegram_id, phone, coach_id FROM users WHERE id = $1',
         [id]
@@ -57,8 +57,11 @@ const userController = {
   // PUT /api/users/:id — обновить пользователя
   async updateUser(req, res) {
     try {
-      const { id } = req.params;
-      const { first_name, last_name, phone, role, coach_id, telegram_id } = req.body;
+      const id = req.params.id || req.params.athleteId;
+      const { first_name, last_name, phone } = req.body;
+      const role = req.user.role === 'admin' ? req.body.role : null;
+      const coach_id = req.user.role === 'admin' ? req.body.coach_id : null;
+      const telegram_id = req.user.role === 'admin' ? req.body.telegram_id : null;
       const result = await db.query(
         `UPDATE users
             SET first_name  = COALESCE($1, first_name),
