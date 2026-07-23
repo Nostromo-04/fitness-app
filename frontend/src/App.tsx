@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AppRoot } from '@telegram-apps/telegram-ui';
 import { useTelegram } from './hooks/useTelegram';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { normalizeInviteToken } from './utils/inviteToken';
+import { inviteLinkFromStartParam, normalizeInviteToken } from './utils/inviteToken';
 
 import { CoachDashboard } from './pages/CoachDashboard';
 import { AthleteDashboard } from './pages/AthleteDashboard';
@@ -55,8 +55,11 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
 // ──────────────────────────────────────────────────────────────────────
 // Экран «не зарегистрирован» с вводом кода приглашения
 // ──────────────────────────────────────────────────────────────────────
-const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegramId }) => {
-  const [code, setCode]     = useState('');
+const NotRegisteredScreen: React.FC<{
+  telegramId?: string | null;
+  startParam?: string;
+}> = ({ telegramId, startParam = '' }) => {
+  const [code, setCode]     = useState(() => inviteLinkFromStartParam(startParam));
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errMsg, setErrMsg] = useState('');
 
@@ -182,12 +185,16 @@ const RequireRole: React.FC<{
 // ──────────────────────────────────────────────────────────────────────
 const RootRedirect: React.FC = () => {
   const { authUser, authStatus } = useAuth();
-  const { telegramId } = useTelegram();
+  const { telegramId, startParam } = useTelegram();
 
   if (authStatus === 'loading') return <LoadingScreen message="Авторизация…" />;
 
-  if (authStatus === 'not_found') return <NotRegisteredScreen telegramId={telegramId} />;
-  if (authStatus === 'error')    return <NotRegisteredScreen telegramId={telegramId} />;
+  if (authStatus === 'not_found') {
+    return <NotRegisteredScreen telegramId={telegramId} startParam={startParam} />;
+  }
+  if (authStatus === 'error') {
+    return <NotRegisteredScreen telegramId={telegramId} startParam={startParam} />;
+  }
 
   if (!authUser) return <NotRegisteredScreen />;
 
