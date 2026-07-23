@@ -4,7 +4,7 @@ function normalizeInviteToken(value) {
   let candidate = String(value || '').trim();
   if (!candidate) return null;
 
-  const startAppMatch = candidate.match(/[?&]startapp=([^&#\s]+)/i);
+  const startAppMatch = candidate.match(/[?&](?:startapp|start|invite)=([^&#\s]+)/i);
   if (startAppMatch) {
     try {
       candidate = decodeURIComponent(startAppMatch[1]);
