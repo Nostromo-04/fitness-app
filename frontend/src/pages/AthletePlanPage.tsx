@@ -146,12 +146,6 @@ export const AthletePlanPage: React.FC = () => {
         <h1>{plan?.name}</h1>
       </div>
 
-      <div className="plan-info">
-        <p className="plan-description">
-          {days.length} тренировок • {plan?.athletes_count || 0} спортсменов
-        </p>
-      </div>
-
       <div className="days-list">
         {days.map((day) => (
           <div 

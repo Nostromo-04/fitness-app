@@ -181,7 +181,7 @@
 
 .workout-sets-header {
   display: grid;
-  grid-template-columns: 56px 1fr 1fr 52px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   padding: 0 4px 10px;
   border-bottom: 1px solid var(--fit-border, #27272a);
@@ -194,7 +194,7 @@
 
 .workout-set-row {
   display: grid;
-  grid-template-columns: 56px 1fr 1fr 52px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   align-items: center;
   padding: 8px 4px;
@@ -218,6 +218,8 @@
 
 .set-input {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 8px 6px;
   border: 1px solid var(--fit-border, #27272a);
   border-radius: 8px;
