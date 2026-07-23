@@ -69,17 +69,16 @@ export const CreatePlanPage: React.FC = () => {
     try {
       const response = await workoutService.createPlan({
         name: planName,
-        coach_id: coachId
+        coach_id: coachId,
+        days: [1, 2, 3].map(dayNumber => ({
+          day_number: dayNumber,
+          exercises: []
+        }))
       });
       const createdPlan = response.data ?? response;
       setPlanId(createdPlan.id);
-      
-      for (let i = 1; i <= 3; i++) {
-        await workoutService.addDay(createdPlan.id, i);
-      }
-      
-      const daysResponse = await workoutService.getPlanDays(createdPlan.id);
-      setDays(daysResponse.data.map((day: WorkoutDay) => ({
+
+      setDays(createdPlan.days.map((day: WorkoutDay) => ({
         number: day.day_number,
         exercises: day.exercises
           .filter((ex: any) => ex && ex.id)

@@ -67,7 +67,8 @@ class WorkoutService {
   // Получение всех дней плана
   async getPlanDays(planId: number) {
     const response = await api.get(`/workouts/plans/${planId}/days`);
-    return response.data;
+    const body = response.data;
+    return Array.isArray(body) ? { data: body } : body;
   }
 
   // Получение конкретного дня

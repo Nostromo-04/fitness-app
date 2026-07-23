@@ -7,6 +7,7 @@ const {
   listAssignedPlans,
   unassignPlanFromAthlete,
 } = require('../lib/planAssignments');
+const { createWorkoutPlan } = require('../lib/workoutPlans');
 
 const workoutController = {
   // ──────────────────────────────────────────────
@@ -125,42 +126,31 @@ const workoutController = {
       const coach_id = req.user.role === 'admin'
         ? Number(req.body.coach_id)
         : Number(req.user.id);
-      if (!name) {
+      if (typeof name !== 'string' || !name.trim()) {
         return res.status(400).json({ status: 'error', message: 'name обязателен' });
       }
       if (!Number.isInteger(coach_id)) {
         return res.status(400).json({ status: 'error', message: 'Тренер не выбран' });
       }
-      const coach = await db.query(`SELECT 1 FROM users WHERE id = $1 AND role = 'coach'`, [coach_id]);
-      if (!coach.rows[0]) {
+      if (!Array.isArray(days)) {
+        return res.status(400).json({ status: 'error', message: 'Некорректный список дней' });
+      }
+      const dayNumbers = days.map(day => Number(day.day_number));
+      if (
+        dayNumbers.some(dayNumber => !Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > 10)
+        || new Set(dayNumbers).size !== dayNumbers.length
+      ) {
+        return res.status(400).json({ status: 'error', message: 'Некорректные номера дней' });
+      }
+
+      const plan = await createWorkoutPlan(db.pool, {
+        name: name.trim(),
+        coachId: coach_id,
+        days,
+      });
+      if (!plan) {
         return res.status(404).json({ status: 'error', message: 'Тренер не найден' });
       }
-
-      const planResult = await db.query(
-        `INSERT INTO workout_plans (name, coach_id) VALUES ($1, $2)
-         RETURNING id, name, coach_id, created_at`,
-        [name.trim(), coach_id]
-      );
-      const plan = planResult.rows[0];
-
-      for (const day of days) {
-        const dayResult = await db.query(
-          `INSERT INTO workout_days (plan_id, day_number) VALUES ($1, $2) RETURNING id`,
-          [plan.id, day.day_number]
-        );
-        const dayId = dayResult.rows[0].id;
-
-        for (let i = 0; i < (day.exercises || []).length; i++) {
-          const ex = day.exercises[i];
-          await db.query(
-            `INSERT INTO day_exercises
-               (day_id, exercise_id, sets_count, default_reps, default_weight, order_index)
-             VALUES ($1,$2,$3,$4,$5,$6)`,
-            [dayId, ex.exercise_id, ex.sets_count || 3, ex.default_reps || 10, ex.default_weight || 0, i]
-          );
-        }
-      }
-
       res.status(201).json(plan);
     } catch (error) {
       console.error('createPlan error:', error);

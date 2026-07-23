@@ -31,6 +31,10 @@ export interface DayExercise {
 export interface CreatePlanData {
   name: string;
   coach_id: number;
+  days?: {
+    day_number: number;
+    exercises?: AddExerciseData[];
+  }[];
 }
 
 export interface CreateDayData {
