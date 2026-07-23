@@ -38,11 +38,13 @@ router.post('/create', requireRole('coach'), workoutController.createPlan);
 // ── Назначить план спортсмену ─────────────────────────────────
 // workoutService.assignToAthlete → POST /workouts/plans/:planId/assign/:athleteId
 router.post('/plans/:planId/assign/:athleteId', requireRole('coach'), requirePlanAccess({ write: true }), requireAthleteAccess(), workoutController.assignPlan);
+router.delete('/plans/:planId/assign/:athleteId', requireRole('coach'), requirePlanAccess({ write: true }), requireAthleteAccess(), workoutController.unassignPlan);
 // наш вариант
 router.put('/plans/:planId/assign', requireRole('coach'), requirePlanAccess({ write: true }), requireAthleteAccess(), workoutController.assignPlan);
 router.put('/:planId/assign', requireRole('coach'), requirePlanAccess({ write: true }), requireAthleteAccess(), workoutController.assignPlan);
 
 // ── Детали плана ──────────────────────────────────────────────
+router.get('/plans/:planId/athletes', requireRole('coach'), requirePlanAccess({ write: true }), workoutController.getPlanAthletes);
 // athleteService.getPlanDetails → GET /workouts/plans/:planId
 // workoutService.getPlanById    → GET /workouts/plans/:planId
 // (специфичные маршруты /plans/coach/... и /plans/... уже выше)

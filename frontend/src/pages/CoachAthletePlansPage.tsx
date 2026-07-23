@@ -19,6 +19,9 @@ export const CoachAthletePlansPage: React.FC = () => {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [athleteName, setAthleteName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [availablePlans, setAvailablePlans] = useState<WorkoutPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     if (athleteId) {
@@ -39,13 +42,19 @@ export const CoachAthletePlansPage: React.FC = () => {
 
   const loadPlans = async () => {
     try {
-      // Получаем тренера спортсмена
       const athleteResponse = await api.get(`/users/${athleteId}`);
       const coachId = athleteResponse.data.data.coach_id;
-      
       if (coachId) {
-        const response = await workoutService.getCoachPlans(coachId);
-        setPlans(response.data || []);
+        const [assignedResponse, coachPlansResponse] = await Promise.all([
+          workoutService.getAthletePlans(Number(athleteId)),
+          workoutService.getCoachPlans(coachId),
+        ]);
+        const assigned = assignedResponse.data || [];
+        const allCoachPlans = coachPlansResponse.data || [];
+        setPlans(assigned);
+        setAvailablePlans(allCoachPlans.filter(
+          (plan: WorkoutPlan) => !assigned.some((item: WorkoutPlan) => item.id === plan.id)
+        ));
       }
     } catch (error) {
       console.error('Ошибка загрузки планов:', error);
@@ -55,8 +64,23 @@ export const CoachAthletePlansPage: React.FC = () => {
   };
 
   const handleEditPlan = (planId: number) => {
-  navigate(`/coach/edit-plan/${planId}`);
-};
+    navigate(`/coach/edit-plan/${planId}`);
+  };
+
+  const handleAssignExisting = async () => {
+    if (!selectedPlanId || !athleteId) return;
+    setAssigning(true);
+    try {
+      await workoutService.assignToAthlete(Number(selectedPlanId), Number(athleteId));
+      setSelectedPlanId('');
+      await loadPlans();
+    } catch (error) {
+      console.error('Ошибка назначения плана:', error);
+      alert('Не удалось назначить план');
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   return (
     <div className="coach-plans-page">
@@ -106,6 +130,29 @@ export const CoachAthletePlansPage: React.FC = () => {
       </div>
 
       <div className="create-plan-action">
+        {availablePlans.length > 0 && (
+          <>
+            <select
+              value={selectedPlanId}
+              onChange={(event) => setSelectedPlanId(event.target.value)}
+              className="plan-select"
+              style={{ width: '100%', padding: 12, borderRadius: 12, marginBottom: 10 }}
+            >
+              <option value="">Выберите существующий план</option>
+              {availablePlans.map(plan => (
+                <option key={plan.id} value={plan.id}>{plan.name}</option>
+              ))}
+            </select>
+            <button
+              className="create-plan-btn"
+              onClick={handleAssignExisting}
+              disabled={!selectedPlanId || assigning}
+            >
+              <Dumbbell size={20} />
+              {assigning ? 'Назначение…' : 'Назначить выбранный план'}
+            </button>
+          </>
+        )}
         <button 
           className="create-plan-btn"
           onClick={() => navigate('/coach/create-plan')}

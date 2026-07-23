@@ -19,6 +19,7 @@ export const CoachEditPlanPage: React.FC = () => {
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [athletes, setAthletes] = useState<any[]>([]);
   const [selectedAthletes, setSelectedAthletes] = useState<number[]>([]);
+  const [initiallyAssigned, setInitiallyAssigned] = useState<number[]>([]);
   const [showAthleteSelector, setShowAthleteSelector] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -72,7 +73,9 @@ export const CoachEditPlanPage: React.FC = () => {
       // Загружаем спортсменов, которым назначен этот план
       const athletesResponse = await workoutService.getPlanAthletes(Number(planId));
       const assignedAthletes = athletesResponse.data || [];
-      setSelectedAthletes(assignedAthletes.map((a: any) => a.id));
+      const assignedIds = assignedAthletes.map((a: any) => a.id);
+      setSelectedAthletes(assignedIds);
+      setInitiallyAssigned(assignedIds);
     } catch (error) {
       console.error('Ошибка загрузки спортсменов:', error);
     }
@@ -256,16 +259,17 @@ export const CoachEditPlanPage: React.FC = () => {
   };
 
   const handleAssignPlans = async () => {
-    if (selectedAthletes.length === 0) {
-      alert('Выберите спортсменов');
-      return;
-    }
-
     try {
-      for (const athleteId of selectedAthletes) {
+      const toAssign = selectedAthletes.filter(id => !initiallyAssigned.includes(id));
+      const toUnassign = initiallyAssigned.filter(id => !selectedAthletes.includes(id));
+      for (const athleteId of toAssign) {
         await workoutService.assignToAthlete(Number(planId), athleteId);
       }
-      alert('План успешно назначен спортсменам!');
+      for (const athleteId of toUnassign) {
+        await workoutService.unassignFromAthlete(Number(planId), athleteId);
+      }
+      setInitiallyAssigned([...selectedAthletes]);
+      alert('Назначения плана сохранены!');
       setShowAthleteSelector(false);
     } catch (error) {
       console.error('Ошибка назначения плана:', error);

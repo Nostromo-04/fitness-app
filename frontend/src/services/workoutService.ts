@@ -28,6 +28,16 @@ class WorkoutService {
     return response.data;
   }
 
+  async unassignFromAthlete(planId: number, athleteId: number) {
+    const response = await api.delete(`/workouts/plans/${planId}/assign/${athleteId}`);
+    return response.data;
+  }
+
+  async getAthletePlans(athleteId: number) {
+    const response = await api.get(`/workouts/athlete/${athleteId}/plans`);
+    return response.data;
+  }
+
   // Получение спортсменов плана
   async getPlanAthletes(planId: number) {
     const response = await api.get(`/workouts/plans/${planId}/athletes`);

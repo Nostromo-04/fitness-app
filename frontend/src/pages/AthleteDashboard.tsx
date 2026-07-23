@@ -26,13 +26,15 @@ export const AthleteDashboard: React.FC = () => {
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    const athleteId = localStorage.getItem('selectedAthleteId');
+    const athleteId = authUser?.role === 'athlete'
+      ? authUser.id
+      : Number(localStorage.getItem('selectedAthleteId'));
     if (!athleteId) {
       navigate('/select-user');
       return;
     }
-    loadDashboard(parseInt(athleteId));
-  }, []);
+    loadDashboard(athleteId);
+  }, [authUser?.id, authUser?.role]);
 
   const loadDashboard = async (athleteId: number) => {
     try {

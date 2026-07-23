@@ -57,8 +57,10 @@ function requirePlanAccess({ write = false } = {}) {
     const planId = Number(req.params.planId);
     const result = await db.query(
       `SELECT wp.coach_id,
-              (EXISTS (SELECT 1 FROM plan_assignments pa WHERE pa.plan_id = wp.id AND pa.athlete_id = $2)
-               OR EXISTS (SELECT 1 FROM users u WHERE u.id = $2 AND u.coach_id = wp.coach_id)) AS assigned
+              EXISTS (
+                SELECT 1 FROM plan_assignments pa
+                 WHERE pa.plan_id = wp.id AND pa.athlete_id = $2
+              ) AS assigned
        FROM workout_plans wp WHERE wp.id = $1`,
       [planId, req.user.id]
     );
@@ -89,15 +91,27 @@ function requireSessionAccess(param = 'sessionId') {
 
 function requireOwnedResource(kind, param) {
   const queries = {
-    day: `SELECT wp.coach_id FROM workout_days wd JOIN workout_plans wp ON wp.id = wd.plan_id WHERE wd.id = $1`,
-    dayExercise: `SELECT wp.coach_id FROM day_exercises de JOIN workout_days wd ON wd.id = de.day_id JOIN workout_plans wp ON wp.id = wd.plan_id WHERE de.id = $1`,
-    set: `SELECT u.coach_id, ws.athlete_id FROM set_logs sl JOIN workout_sessions ws ON ws.id = sl.session_id JOIN users u ON u.id = ws.athlete_id WHERE sl.id = $1`,
+    day: `SELECT wp.coach_id,
+                 EXISTS (SELECT 1 FROM plan_assignments pa WHERE pa.plan_id = wp.id AND pa.athlete_id = $2) AS assigned
+            FROM workout_days wd JOIN workout_plans wp ON wp.id = wd.plan_id WHERE wd.id = $1`,
+    dayExercise: `SELECT wp.coach_id,
+                         EXISTS (SELECT 1 FROM plan_assignments pa WHERE pa.plan_id = wp.id AND pa.athlete_id = $2) AS assigned
+                    FROM day_exercises de
+                    JOIN workout_days wd ON wd.id = de.day_id
+                    JOIN workout_plans wp ON wp.id = wd.plan_id
+                   WHERE de.id = $1`,
+    set: `SELECT u.coach_id, ws.athlete_id, (ws.athlete_id = $2) AS assigned
+            FROM set_logs sl JOIN workout_sessions ws ON ws.id = sl.session_id
+            JOIN users u ON u.id = ws.athlete_id WHERE sl.id = $1`,
   };
   return async (req, res, next) => {
-    const row = (await db.query(queries[kind], [Number(req.params[param])])).rows[0];
+    const row = (await db.query(
+      queries[kind],
+      [Number(req.params[param]), Number(req.user.id)]
+    )).rows[0];
     const allowed = req.user.role === 'admin'
       || (req.user.role === 'coach' && Number(row?.coach_id) === Number(req.user.id))
-      || ((kind === 'day' || kind === 'dayExercise') && req.user.role === 'athlete' && Number(row?.coach_id) === Number(req.user.coach_id))
+      || ((kind === 'day' || kind === 'dayExercise') && req.user.role === 'athlete' && row?.assigned)
       || (kind === 'set' && req.user.role === 'athlete' && Number(row?.athlete_id) === Number(req.user.id));
     if (!allowed) return res.status(403).json({ status: 'error', message: 'Нет доступа к этому ресурсу' });
     next();
