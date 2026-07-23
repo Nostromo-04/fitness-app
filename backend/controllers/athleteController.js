@@ -9,17 +9,27 @@ const athleteController = {
     let client;
     try {
       const { first_name, last_name } = req.body;
-      const coach_id = req.user.id;
+      const requestedCoachId = Number(req.body.coach_id);
+      const coach_id = req.user.role === 'admin' ? requestedCoachId : Number(req.user.id);
 
-      if (!first_name || !coach_id) {
+      if (!first_name?.trim() || !Number.isInteger(coach_id) || coach_id <= 0) {
         return res.status(400).json({
           status: 'error',
-          message: 'Укажите имя спортсмена и coach_id',
+          message: 'Укажите имя спортсмена и тренера',
         });
       }
 
       client = await db.pool.connect();
       await client.query('BEGIN');
+      const coachResult = await client.query(
+        `SELECT id FROM users WHERE id = $1 AND role = 'coach'`,
+        [coach_id]
+      );
+      if (!coachResult.rows[0]) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ status: 'error', message: 'Тренер не найден' });
+      }
+
       const athleteResult = await client.query(
         `INSERT INTO users (telegram_id, role, coach_id, first_name, last_name, phone)
          VALUES (NULL, 'athlete', $1, $2, $3, NULL)

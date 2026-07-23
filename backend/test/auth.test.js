@@ -34,6 +34,17 @@ test('includes the Telegram signature field in bot-token validation', () => {
   assert.equal(verifyTelegramInitData(initData, 'bot-token', now).user.id, 123);
 });
 
+test('returns the signed Telegram start_param for automatic invitations', () => {
+  const now = Date.UTC(2026, 6, 22, 10, 0, 0);
+  const initData = makeInitData('bot-token', { id: 123 }, now, {
+    start_param: 'invite_secure-token-1234567890',
+  });
+  assert.equal(
+    verifyTelegramInitData(initData, 'bot-token', now).startParam,
+    'invite_secure-token-1234567890'
+  );
+});
+
 test('rejects tampered Telegram initData', () => {
   const now = Date.UTC(2026, 6, 22, 10, 0, 0);
   const params = new URLSearchParams(makeInitData('bot-token', { id: 123 }, now));
