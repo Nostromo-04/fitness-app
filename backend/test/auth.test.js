@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const crypto = require('crypto');
 const { verifyTelegramInitData } = require('../lib/telegramAuth');
 const { signSession, verifySession } = require('../lib/sessionToken');
+const { normalizeInviteToken } = require('../lib/inviteToken');
+const { consumeInvite, tokenHash } = require('../lib/athleteInvite');
 
 function makeInitData(botToken, user, now, extraParams = {}) {
   const params = new URLSearchParams({
@@ -43,6 +45,52 @@ test('returns the signed Telegram start_param for automatic invitations', () => 
     verifyTelegramInitData(initData, 'bot-token', now).startParam,
     'invite_secure-token-1234567890'
   );
+});
+
+test('normalizes an invite token from Telegram start_param', () => {
+  assert.equal(
+    normalizeInviteToken('invite_secure-token-1234567890'),
+    'secure-token-1234567890'
+  );
+});
+
+test('normalizes an invite token from a complete Telegram link', () => {
+  assert.equal(
+    normalizeInviteToken('https://t.me/kablaev_team_bot?startapp=invite_secure-token-1234567890'),
+    'secure-token-1234567890'
+  );
+});
+
+test('rejects an empty or numeric athlete ID as an invite token', () => {
+  assert.equal(normalizeInviteToken(''), null);
+  assert.equal(normalizeInviteToken('123'), null);
+});
+
+test('consumes an invite and links Telegram without requiring users.updated_at', async () => {
+  const calls = [];
+  const athlete = {
+    id: 42,
+    role: 'athlete',
+    first_name: 'New',
+    last_name: 'Athlete',
+    coach_id: 7,
+    telegram_id: '555',
+  };
+  const client = {
+    async query(sql, values) {
+      calls.push({ sql, values });
+      if (sql.includes('FROM athlete_invites')) return { rows: [{ id: 9, athlete_id: 42 }] };
+      if (sql.startsWith('UPDATE users')) return { rows: [athlete] };
+      if (sql.startsWith('UPDATE athlete_invites')) return { rows: [] };
+      throw new Error(`Unexpected query: ${sql}`);
+    },
+  };
+
+  assert.deepEqual(await consumeInvite(client, 'secure-token-1234567890', '555'), athlete);
+  assert.equal(calls[0].values[0], tokenHash('secure-token-1234567890'));
+  assert.equal(calls[1].sql.includes('updated_at'), false);
+  assert.deepEqual(calls[1].values, ['555', 42]);
+  assert.deepEqual(calls[2].values, [9]);
 });
 
 test('rejects tampered Telegram initData', () => {

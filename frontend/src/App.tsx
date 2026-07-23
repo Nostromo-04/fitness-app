@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AppRoot } from '@telegram-apps/telegram-ui';
 import { useTelegram } from './hooks/useTelegram';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { normalizeInviteToken } from './utils/inviteToken';
 
 import { CoachDashboard } from './pages/CoachDashboard';
 import { AthleteDashboard } from './pages/AthleteDashboard';
@@ -59,20 +60,13 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errMsg, setErrMsg] = useState('');
 
-  // Извлекает криптографический токен из ссылки Telegram или введённого кода.
-  const parseInviteToken = (raw: string): string | null => {
-    const clean = raw.trim();
-    const m = clean.match(/(?:startapp=|invite_)([A-Za-z0-9_-]{20,})/i);
-    return m?.[1] || (/^[A-Za-z0-9_-]{20,}$/.test(clean) ? clean : null);
-  };
-
   const handleLink = async () => {
     if (!telegramId) {
       setErrMsg('Telegram ID не определён. Откройте приложение через бота.');
       setStatus('error');
       return;
     }
-    const inviteToken = parseInviteToken(code);
+    const inviteToken = normalizeInviteToken(code);
     if (!inviteToken) {
       setErrMsg('Неверный код. Вставьте ссылку-приглашение от тренера.');
       setStatus('error');
@@ -88,18 +82,12 @@ const NotRegisteredScreen: React.FC<{ telegramId?: string | null }> = ({ telegra
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initData, inviteToken }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         throw new Error(data.message ?? `Ошибка ${res.status}`);
       }
-      // Открываем бота в Telegram — это добавит его в список чатов
-      // и спортсмен сможет открывать приложение в любое время
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink('https://t.me/kablaev_team_bot?start=joined');
-      } else {
-        window.location.reload();
-      }
+      if (data.data?.token) sessionStorage.setItem('fitnessAppSession', data.data.token);
+      window.location.reload();
     } catch (e: any) {
       setErrMsg(e.message ?? 'Ошибка сервера');
       setStatus('error');
