@@ -166,27 +166,3 @@
   border-color: var(--fit-accent, #a3e635);
   color: var(--fit-accent, #a3e635);
 }
-
-.create-plan-action {
-  margin-top: 4px;
-}
-
-.create-plan-btn {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: 14px;
-  background: var(--fit-accent, #a3e635);
-  color: #0a0a0c;
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-}
-
-.create-plan-btn:hover { background: var(--fit-accent-hover, #84cc16); }
-.create-plan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
