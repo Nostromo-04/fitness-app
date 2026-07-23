@@ -21,17 +21,47 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
   showMoveButtons = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [setsCount, setSetsCount] = useState(exercise.sets_count);
-  const [reps, setReps] = useState(exercise.default_reps);
-  const [weight, setWeight] = useState<number | null>(exercise.default_weight === 0 ? null : exercise.default_weight);
+  const [setsCount, setSetsCount] = useState(String(exercise.sets_count));
+  const [reps, setReps] = useState(String(exercise.default_reps));
+  const [weight, setWeight] = useState(
+    exercise.default_weight === null || exercise.default_weight === 0
+      ? ''
+      : String(exercise.default_weight)
+  );
+
+  const parsedSets = Number(setsCount);
+  const parsedReps = Number(reps);
+  const parsedWeight = weight === '' ? 0 : Number(weight);
+  const valuesAreValid =
+    setsCount !== ''
+    && Number.isInteger(parsedSets)
+    && parsedSets >= 1
+    && parsedSets <= 10
+    && reps !== ''
+    && Number.isInteger(parsedReps)
+    && parsedReps >= 1
+    && Number.isFinite(parsedWeight)
+    && parsedWeight >= 0;
 
   const handleSave = () => {
+    if (!valuesAreValid) return;
+
     onUpdate(exercise.id, {
-      sets_count: setsCount,
-      default_reps: reps,
-      default_weight: weight === null ? 0 : weight
+      sets_count: parsedSets,
+      default_reps: parsedReps,
+      default_weight: parsedWeight
     });
     setIsEditing(false);
+  };
+
+  const resetValues = () => {
+    setSetsCount(String(exercise.sets_count));
+    setReps(String(exercise.default_reps));
+    setWeight(
+      exercise.default_weight === null || exercise.default_weight === 0
+        ? ''
+        : String(exercise.default_weight)
+    );
   };
 
   const handleMoveUpClick = () => {
@@ -62,7 +92,13 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
 
   const handleEditClick = () => {
     console.log('✏️ Редактирование упражнения:', exercise.id);
-    setIsEditing(!isEditing);
+    if (isEditing) {
+      resetValues();
+      setIsEditing(false);
+      return;
+    }
+    resetValues();
+    setIsEditing(true);
   };
 
   const handleDeleteClick = () => {
@@ -117,7 +153,8 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
                 min="1"
                 max="10"
                 value={setsCount}
-                onChange={(e) => setSetsCount(parseInt(e.target.value) || 1)}
+                inputMode="numeric"
+                onChange={(e) => setSetsCount(e.target.value)}
               />
             </div>
             <div className="form-group">
@@ -126,7 +163,8 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
                 type="number"
                 min="1"
                 value={reps}
-                onChange={(e) => setReps(parseInt(e.target.value) || 1)}
+                inputMode="numeric"
+                onChange={(e) => setReps(e.target.value)}
               />
             </div>
             <div className="form-group">
@@ -135,19 +173,23 @@ export const PlanExerciseItem: React.FC<PlanExerciseItemProps> = ({
                 type="number"
                 min="0"
                 step="2.5"
-                value={weight === null ? '' : weight}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? null : parseFloat(e.target.value);
-                  setWeight(val);
-                }}
+                value={weight}
+                inputMode="decimal"
+                onChange={(e) => setWeight(e.target.value)}
               />
             </div>
           </div>
           <div className="form-actions">
-            <button className="cancel-btn" onClick={() => setIsEditing(false)}>
+            <button
+              className="cancel-btn"
+              onClick={() => {
+                resetValues();
+                setIsEditing(false);
+              }}
+            >
               Отмена
             </button>
-            <button className="save-btn" onClick={handleSave}>
+            <button className="save-btn" onClick={handleSave} disabled={!valuesAreValid}>
               Сохранить
             </button>
           </div>

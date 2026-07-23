@@ -88,12 +88,18 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 14px;
+  width: 100%;
 }
 
-.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
 
 .form-group label {
   font-size: 12px;
@@ -108,7 +114,9 @@
   background: var(--fit-card-2, #1c1c1f);
   color: var(--fit-text, #f4f4f5);
   font-size: 14px;
-  width: auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .form-group input:focus { border-color: var(--fit-accent, #a3e635); }
@@ -140,3 +148,13 @@
 }
 
 .cancel-btn:hover, .save-btn:hover { opacity: 0.85; }
+
+.save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 380px) {
+  .form-row { gap: 6px; }
+  .form-group input { padding: 8px 6px; }
+}
