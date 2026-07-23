@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api, { setSessionToken } from '../services/api';
+import { normalizeInviteToken } from '../utils/inviteToken';
 
 export interface AuthUser {
   id: number;
@@ -28,11 +29,6 @@ const AuthContext = createContext<AuthContextType>({
  * Читает start_param из Telegram WebApp.
  * Формат: "invite_<случайный токен>" → возвращает токен.
  */
-function getInviteToken(startParam: string): string | null {
-  const match = startParam.match(/^invite_(.+)$/);
-  return match?.[1] || null;
-}
-
 export const AuthProvider: React.FC<{
   initData: string;
   startParam: string;
@@ -54,7 +50,7 @@ export const AuthProvider: React.FC<{
         setSessionToken(null);
         const { data } = await api.post('/auth/telegram', {
           initData,
-          inviteToken: getInviteToken(startParam),
+          inviteToken: normalizeInviteToken(startParam),
         });
         const user = data.data.user as AuthUser;
         setSessionToken(data.data.token);
