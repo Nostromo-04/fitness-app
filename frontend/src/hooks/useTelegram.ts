@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { resolveTelegramStartParam } from '../utils/inviteToken';
 
 export interface TelegramUser {
   id: number;
@@ -34,10 +35,15 @@ export function useTelegram(): UseTelegramReturn {
       // Даём Telegram время заполнить initDataUnsafe (обычно <100ms)
       const timer = setTimeout(() => {
         const u: TelegramUser | null = tg.initDataUnsafe?.user ?? null;
+        const currentInitData = tg.initData || '';
         setUser(u);
         setTelegramId(u?.id ? String(u.id) : null);
-        setInitData(tg.initData || '');
-        setStartParam(tg.initDataUnsafe?.start_param || '');
+        setInitData(currentInitData);
+        setStartParam(resolveTelegramStartParam({
+          unsafeStartParam: tg.initDataUnsafe?.start_param || '',
+          initData: currentInitData,
+          locationHref: window.location.href,
+        }));
         setIsReady(true);
       }, 300);
 
