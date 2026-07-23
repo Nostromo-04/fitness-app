@@ -30,8 +30,10 @@ const inviteRoutes = require('./routes/inviteRoutes');
 const athleteRoutes = require('./routes/athleteRoutes');
 const coachRoutes = require('./routes/coachRoutes');
 const telegramAuthRoutes = require('./routes/telegramAuthRoutes');
+const telegramBotRoutes = require('./routes/telegramBotRoutes');
 
 app.use('/api/auth', telegramAuthRoutes);
+app.use('/api/telegram', telegramBotRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/users', authenticate, userRoutes);
 app.use('/api/exercises', authenticate, exerciseRoutes);
@@ -81,6 +83,18 @@ async function startServer() {
     )
   `);
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+
+  const backendUrl = process.env.BACKEND_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
+  const { configureTelegramWebhook } = require('./lib/telegramBot');
+  configureTelegramWebhook({
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
+    sessionSecret: process.env.SESSION_SECRET,
+    backendUrl,
+  })
+    .then(configured => console.log(configured
+      ? '✅ Telegram webhook настроен'
+      : '⚠️ Telegram webhook не настроен: отсутствует публичный backend URL'))
+    .catch(error => console.error('❌ Не удалось настроить Telegram webhook:', error.message));
 }
 
 startServer().catch(error => {

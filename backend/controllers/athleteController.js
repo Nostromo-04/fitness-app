@@ -47,8 +47,9 @@ const athleteController = {
       );
       await client.query('COMMIT');
 
-      // Ссылка содержит одноразовый случайный токен, а не предсказуемый ID.
-      const botLink = `https://t.me/${BOT_USERNAME}?startapp=invite_${inviteToken}`;
+      // Сначала открываем чат бота. Telegram передаст токен как
+      // `/start invite_<token>` только после явного нажатия Start.
+      const botLink = `https://t.me/${BOT_USERNAME}?start=invite_${inviteToken}`;
 
       res.status(201).json({
         status: 'success',

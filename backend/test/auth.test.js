@@ -5,6 +5,7 @@ const { verifyTelegramInitData } = require('../lib/telegramAuth');
 const { signSession, verifySession } = require('../lib/sessionToken');
 const { normalizeInviteToken } = require('../lib/inviteToken');
 const { consumeInvite, tokenHash } = require('../lib/athleteInvite');
+const { buildWebAppUrl, parseStartPayload, webhookSecret } = require('../lib/telegramBot');
 
 function makeInitData(botToken, user, now, extraParams = {}) {
   const params = new URLSearchParams({
@@ -59,6 +60,32 @@ test('normalizes an invite token from a complete Telegram link', () => {
     normalizeInviteToken('https://t.me/kablaev_team_bot?startapp=invite_secure-token-1234567890'),
     'secure-token-1234567890'
   );
+});
+
+test('normalizes an invite token from a bot /start link', () => {
+  assert.equal(
+    normalizeInviteToken('https://t.me/kablaev_team_bot?start=invite_secure-token-1234567890'),
+    'secure-token-1234567890'
+  );
+});
+
+test('parses Telegram /start invitation payloads', () => {
+  assert.equal(parseStartPayload('/start invite_secure-token-1234567890'), 'invite_secure-token-1234567890');
+  assert.equal(parseStartPayload('/start@kablaev_team_bot invite_secure-token-1234567890'), 'invite_secure-token-1234567890');
+  assert.equal(parseStartPayload('/other'), null);
+});
+
+test('builds a Web App URL that carries the invitation', () => {
+  assert.equal(
+    buildWebAppUrl('https://fitness.example/app', 'secure-token-1234567890'),
+    'https://fitness.example/app?invite=invite_secure-token-1234567890'
+  );
+});
+
+test('derives a stable Telegram webhook secret without exposing the session secret', () => {
+  const secret = webhookSecret('private-session-secret');
+  assert.match(secret, /^[a-f0-9]{64}$/);
+  assert.equal(secret.includes('private-session-secret'), false);
 });
 
 test('rejects an empty or numeric athlete ID as an invite token', () => {

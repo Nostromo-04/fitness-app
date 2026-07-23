@@ -4,7 +4,7 @@ export function normalizeInviteToken(value: string): string | null {
   let candidate = value.trim();
   if (!candidate) return null;
 
-  const startAppMatch = candidate.match(/[?&]startapp=([^&#\s]+)/i);
+  const startAppMatch = candidate.match(/[?&](?:startapp|start|invite)=([^&#\s]+)/i);
   if (startAppMatch) {
     try {
       candidate = decodeURIComponent(startAppMatch[1]);
@@ -38,13 +38,15 @@ export function resolveTelegramStartParam({
     const url = new URL(locationHref);
     const queryValue = url.searchParams.get('tgWebAppStartParam')
       || url.searchParams.get('startapp')
-      || url.searchParams.get('start_param');
+      || url.searchParams.get('start_param')
+      || url.searchParams.get('invite');
     if (queryValue) return queryValue;
 
     const hashParams = new URLSearchParams(url.hash.replace(/^#\/?/, ''));
     return hashParams.get('tgWebAppStartParam')
       || hashParams.get('startapp')
       || hashParams.get('start_param')
+      || hashParams.get('invite')
       || '';
   } catch {
     return '';
@@ -54,6 +56,6 @@ export function resolveTelegramStartParam({
 export function inviteLinkFromStartParam(startParam: string): string {
   const token = normalizeInviteToken(startParam);
   return token
-    ? `https://t.me/kablaev_team_bot?startapp=invite_${token}`
+    ? `https://t.me/kablaev_team_bot?start=invite_${token}`
     : '';
 }
