@@ -9,6 +9,11 @@ function tokenHash(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+function inviteTokenFromStartParam(startParam) {
+  const match = String(startParam || '').match(/^invite_([A-Za-z0-9_-]{20,})$/);
+  return match?.[1] || null;
+}
+
 async function consumeInvite(client, rawToken, telegramId) {
   const result = await client.query(
     `SELECT i.id, i.athlete_id
@@ -39,14 +44,18 @@ const telegramAuthController = {
       const { initData, inviteToken } = req.body || {};
       const telegram = verifyTelegramInitData(initData, process.env.TELEGRAM_BOT_TOKEN);
       const telegramId = String(telegram.user.id);
+      // start_param входит в подписанные Telegram initData. Читаем приглашение
+      // прямо из проверенных данных, а параметр frontend оставляем fallback.
+      const resolvedInviteToken = inviteTokenFromStartParam(telegram.startParam)
+        || (String(inviteToken || '').match(/^[A-Za-z0-9_-]{20,}$/)?.[0] ?? null);
 
       let result = await db.query(`SELECT ${USER_FIELDS} FROM users WHERE telegram_id = $1 LIMIT 1`, [telegramId]);
       let user = result.rows[0];
 
-      if (!user && inviteToken) {
+      if (!user && resolvedInviteToken) {
         client = await db.pool.connect();
         await client.query('BEGIN');
-        user = await consumeInvite(client, String(inviteToken), telegramId);
+        user = await consumeInvite(client, resolvedInviteToken, telegramId);
         if (user) await client.query('COMMIT');
         else await client.query('ROLLBACK');
       }

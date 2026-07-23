@@ -33,10 +33,9 @@ export const CoachDashboard: React.FC = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [createdName, setCreatedName] = useState('');
-  const [athleteBotLink, setAthleteBotLink] = useState(''); // уникальная ссылка с ID спортсмена
+  const [athleteBotLink, setAthleteBotLink] = useState(''); // одноразовая защищённая ссылка
   const [copied, setCopied] = useState(false);
   const [formError, setFormError] = useState('');
-  const [createdAthleteId, setCreatedAthleteId] = useState<number | null>(null);
 
   useEffect(() => {
     const coachId = localStorage.getItem('selectedCoachId');
@@ -107,7 +106,6 @@ export const CoachDashboard: React.FC = () => {
 
       const botLink: string = data.data.botLink || BOT_LINK;
       setAthleteBotLink(botLink);
-      setCreatedAthleteId(data.data.athlete?.id ?? null);
 
       const fullName = [trimmed, lastName.trim()].filter(Boolean).join(' ');
       setCreatedName(fullName);
@@ -333,10 +331,10 @@ export const CoachDashboard: React.FC = () => {
                   Теперь отправьте спортсмену ссылку на бота. Он нажмёт <strong>Старт</strong> — и приложение откроется.
                 </p>
 
-                {/* Код приглашения — только ID спортсмена */}
+                {/* Числовой ID не является секретом и не используется для входа. */}
                 <div className="invite-code-block">
-                  <p className="invite-code-label">Сообщи этот код спортсмену</p>
-                  <div className="invite-code-value">{createdAthleteId ?? '—'}</div>
+                  <p className="invite-code-label">Одноразовая ссылка-приглашение готова</p>
+                  <div className="invite-code-value">Отправьте её спортсмену</div>
                 </div>
 
                 <div className="done-actions">

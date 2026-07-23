@@ -39,7 +39,12 @@ function verifyTelegramInitData(initData, botToken, now = Date.now()) {
   }
   if (!user?.id) throw new Error('Telegram user is missing');
 
-  return { user, queryId: params.get('query_id'), authDate };
+  return {
+    user,
+    queryId: params.get('query_id'),
+    startParam: params.get('start_param') || '',
+    authDate,
+  };
 }
 
 module.exports = { verifyTelegramInitData };
