@@ -697,7 +697,7 @@ export const AthleteWorkoutPage: React.FC = () => {
           <span>Подход</span>
           <span>Повторы</span>
           <span>Вес (кг)</span>
-          <span>Выполнено</span>
+          <span>Готово</span>
         </div>
 
         {currentSets.map((set) => (
