@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Volume2, VolumeX, Repeat } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Minus, Volume2, VolumeX, Repeat } from 'lucide-react';
 import athleteService from '../services/athleteService';
 import exerciseService, { type Exercise as LibraryExercise } from '../services/exerciseService';
 import './AthleteWorkoutPage.css';
@@ -20,7 +20,7 @@ interface Exercise {
 
 interface Set {
   set_number: number;
-  reps: number;
+  reps: number | null;
   weight: number | null;
   completed: boolean;
 }
@@ -337,21 +337,26 @@ export const AthleteWorkoutPage: React.FC = () => {
       const setIndex = updatedSets[exerciseId]?.findIndex((s) => s.set_number === setNumber);
 
       if (setIndex !== -1 && setIndex !== undefined) {
-        updatedSets[exerciseId][setIndex].completed = completed;
+        const targetSet = updatedSets[exerciseId][setIndex];
+        if (targetSet.reps === null || targetSet.reps < 1) {
+          return prevSets;
+        }
+
+        targetSet.completed = completed;
 
         // Сохраняем на сервер
         athleteService
           .logSet(sessionId, {
             exercise_id: exercise.exercise_id,
             set_number: setNumber,
-            reps_done: updatedSets[exerciseId][setIndex].reps,
-            weight_done: updatedSets[exerciseId][setIndex].weight,
+            reps_done: targetSet.reps,
+            weight_done: targetSet.weight,
             is_completed: completed,
           })
           .catch((error) => {
             console.error('Ошибка сохранения подхода:', error);
             // Откат при ошибке
-            updatedSets[exerciseId][setIndex].completed = !completed;
+            targetSet.completed = !completed;
           });
       }
       return updatedSets;
@@ -410,6 +415,22 @@ export const AthleteWorkoutPage: React.FC = () => {
       return {
         ...prevSets,
         [exerciseId]: [...currentExerciseSets, newSet],
+      };
+    });
+  };
+
+  const handleRemoveSet = (exerciseId: number) => {
+    setSets((prevSets) => {
+      const currentExerciseSets = prevSets[exerciseId] || [];
+      const lastSet = currentExerciseSets[currentExerciseSets.length - 1];
+
+      if (currentExerciseSets.length <= 1 || !lastSet || lastSet.completed) {
+        return prevSets;
+      }
+
+      return {
+        ...prevSets,
+        [exerciseId]: currentExerciseSets.slice(0, -1),
       };
     });
   };
@@ -609,7 +630,7 @@ export const AthleteWorkoutPage: React.FC = () => {
       {currentExercise && (
         <div className="current-exercise">
           <h2>{currentExercise.exercise_name}</h2>
-          <p className="muscle-group">{currentExercise.muscle_group}</p>
+          <p className="muscle-group">Группа мышц: {currentExercise.muscle_group}</p>
 
           <button
             className="replace-exercise-btn"
@@ -707,10 +728,11 @@ export const AthleteWorkoutPage: React.FC = () => {
             <input
               type="number"
               min="1"
-              value={set.reps}
-              onChange={(e) =>
-                handleSetChange(currentExercise.id, set.set_number, 'reps', parseInt(e.target.value) || 1)
-              }
+              value={set.reps === null ? '' : set.reps}
+              onChange={(e) => {
+                const value = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                handleSetChange(currentExercise.id, set.set_number, 'reps', value);
+              }}
               disabled={set.completed}
               className="set-input"
             />
@@ -732,18 +754,37 @@ export const AthleteWorkoutPage: React.FC = () => {
             <button
               className={`set-checkbox ${set.completed ? 'completed' : ''}`}
               onClick={() => handleSetComplete(currentExercise.id, set.set_number, !set.completed)}
+              disabled={set.reps === null || set.reps < 1}
+              title={set.reps === null || set.reps < 1 ? 'Введите количество повторов' : 'Готово'}
             >
               {set.completed ? <CheckCircle size={24} /> : <Circle size={24} />}
             </button>
           </div>
         ))}
 
-        {currentSets.length < 10 && (
-          <button className="add-set-btn" onClick={() => handleAddSet(currentExercise.id)}>
+        <div className="set-count-actions">
+          <button
+            className="set-count-btn add-set-btn"
+            onClick={() => handleAddSet(currentExercise.id)}
+            disabled={currentSets.length >= 10}
+          >
             <Plus size={20} />
             Добавить подход
           </button>
-        )}
+          <button
+            className="set-count-btn remove-set-btn"
+            onClick={() => handleRemoveSet(currentExercise.id)}
+            disabled={currentSets.length <= 1 || currentSets[currentSets.length - 1]?.completed}
+            title={
+              currentSets[currentSets.length - 1]?.completed
+                ? 'Сначала снимите отметку «Готово» с последнего подхода'
+                : 'Убрать последний подход'
+            }
+          >
+            <Minus size={20} />
+            Убрать подход
+          </button>
+        </div>
       </div>
 
       <div className="timer-section">
