@@ -11,18 +11,20 @@ export interface AuthUser {
   telegram_id: string;
 }
 
-export type AuthStatus = 'loading' | 'found' | 'not_found' | 'error';
+export type AuthStatus = 'loading' | 'found' | 'selection_required' | 'not_found' | 'error';
 
 interface AuthContextType {
   authUser: AuthUser | null;
+  profiles: AuthUser[];
   authStatus: AuthStatus;
-  setAuthUser: (user: AuthUser) => void;
+  selectProfile: (profileId: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   authUser: null,
+  profiles: [],
   authStatus: 'loading',
-  setAuthUser: () => {},
+  selectProfile: async () => {},
 });
 
 /**
@@ -35,7 +37,24 @@ export const AuthProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ initData, startParam, children }) => {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [profiles, setProfiles] = useState<AuthUser[]>([]);
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
+
+  const activateUser = (user: AuthUser, token: string) => {
+    setSessionToken(token);
+    setAuthUser(user);
+    setAuthStatus('found');
+
+    // Обратная совместимость — старые страницы читают выбранный профиль
+    // из localStorage.
+    if (user.role === 'coach') {
+      localStorage.setItem('selectedCoachId', String(user.id));
+    } else if (user.role === 'athlete') {
+      localStorage.setItem('selectedAthleteId', String(user.id));
+    } else if (user.role === 'admin' && user.coach_id) {
+      localStorage.setItem('selectedAthleteId', String(user.id));
+    }
+  };
 
   useEffect(() => {
     if (!initData) {
@@ -52,29 +71,24 @@ export const AuthProvider: React.FC<{
           initData,
           inviteToken: normalizeInviteToken(startParam),
         });
-        const user = data.data.user as AuthUser;
-        setSessionToken(data.data.token);
 
         if (cancelled) return;
 
+        const availableProfiles = (data.data?.profiles || []) as AuthUser[];
+        setProfiles(availableProfiles);
+        if (data.data?.requiresSelection) {
+          setAuthUser(null);
+          setAuthStatus('selection_required');
+          return;
+        }
+
+        const user = data.data?.user as AuthUser;
         if (!user) {
           setAuthStatus('not_found');
           return;
         }
 
-        setAuthUser(user);
-        setAuthStatus('found');
-
-        // Обратная совместимость — старые страницы читают из localStorage
-        if (user.role === 'coach') {
-          localStorage.setItem('selectedCoachId', String(user.id));
-        } else if (user.role === 'athlete') {
-          localStorage.setItem('selectedAthleteId', String(user.id));
-        } else if (user.role === 'admin' && user.coach_id) {
-          // Админ, тренирующийся у тренера — может также просматривать
-          // свой дашборд спортсмена
-          localStorage.setItem('selectedAthleteId', String(user.id));
-        }
+        activateUser(user, data.data.token);
       } catch (error: any) {
         if (!cancelled) setAuthStatus(error.response?.status === 404 ? 'not_found' : 'error');
       }
@@ -84,8 +98,21 @@ export const AuthProvider: React.FC<{
     return () => { cancelled = true; };
   }, [initData, startParam]);
 
+  const selectProfile = async (profileId: number) => {
+    setAuthStatus('loading');
+    try {
+      const { data } = await api.post('/auth/telegram', { initData, profileId });
+      const user = data.data?.user as AuthUser;
+      if (!user || !data.data?.token) throw new Error('Профиль не найден');
+      activateUser(user, data.data.token);
+    } catch (error) {
+      setAuthStatus('selection_required');
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ authUser, authStatus, setAuthUser }}>
+    <AuthContext.Provider value={{ authUser, profiles, authStatus, selectProfile }}>
       {children}
     </AuthContext.Provider>
   );

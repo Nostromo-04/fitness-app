@@ -52,6 +52,57 @@ const LoadingScreen: React.FC<{ message?: string }> = ({ message = 'Загруз
   </div>
 );
 
+const ProfileSelectionScreen: React.FC = () => {
+  const { profiles, selectProfile } = useAuth();
+  const [error, setError] = useState('');
+  const [selectingId, setSelectingId] = useState<number | null>(null);
+  const roleLabels = {
+    admin: { title: 'Администратор', emoji: '🛡️' },
+    coach: { title: 'Тренер', emoji: '👨‍🏫' },
+    athlete: { title: 'Спортсмен', emoji: '🏋️' },
+  };
+
+  const handleSelect = async (profileId: number) => {
+    setError('');
+    setSelectingId(profileId);
+    try {
+      await selectProfile(profileId);
+    } catch {
+      setError('Не удалось выбрать профиль. Закройте приложение и откройте его снова.');
+      setSelectingId(null);
+    }
+  };
+
+  return (
+    <div className="profile-selection-screen">
+      <div className="profile-selection-card">
+        <h1>Кто вы?</h1>
+        <p>Выберите, как хотите войти в приложение</p>
+        <div className="profile-selection-options">
+          {profiles.map(profile => {
+            const role = roleLabels[profile.role];
+            return (
+              <button
+                key={profile.id}
+                className={`profile-selection-button ${profile.role}`}
+                disabled={selectingId !== null}
+                onClick={() => handleSelect(profile.id)}
+              >
+                <span className="profile-selection-emoji">{role.emoji}</span>
+                <span className="profile-selection-title">{role.title}</span>
+                <span className="profile-selection-name">
+                  {[profile.first_name, profile.last_name].filter(Boolean).join(' ')}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {error && <p className="profile-selection-error">{error}</p>}
+      </div>
+    </div>
+  );
+};
+
 // ──────────────────────────────────────────────────────────────────────
 // Экран «не зарегистрирован» с вводом кода приглашения
 // ──────────────────────────────────────────────────────────────────────
@@ -188,6 +239,7 @@ const RootRedirect: React.FC = () => {
   const { telegramId, startParam } = useTelegram();
 
   if (authStatus === 'loading') return <LoadingScreen message="Авторизация…" />;
+  if (authStatus === 'selection_required') return <ProfileSelectionScreen />;
 
   if (authStatus === 'not_found') {
     return <NotRegisteredScreen telegramId={telegramId} startParam={startParam} />;

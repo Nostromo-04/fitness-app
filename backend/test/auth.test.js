@@ -116,8 +116,37 @@ test('consumes an invite and links Telegram without requiring users.updated_at',
   assert.deepEqual(await consumeInvite(client, 'secure-token-1234567890', '555'), athlete);
   assert.equal(calls[0].values[0], tokenHash('secure-token-1234567890'));
   assert.equal(calls[1].sql.includes('updated_at'), false);
-  assert.deepEqual(calls[1].values, ['555', 42]);
+  assert.deepEqual(calls[1].values, ['555', 42, 'athlete']);
   assert.deepEqual(calls[2].values, [9]);
+});
+
+test('consumes a coach invite without changing an existing athlete profile', async () => {
+  const calls = [];
+  const coach = {
+    id: 77,
+    role: 'coach',
+    first_name: 'Dual',
+    last_name: 'Role',
+    coach_id: null,
+    telegram_id: '555',
+  };
+  const client = {
+    async query(sql, values) {
+      calls.push({ sql, values });
+      if (sql.includes('FROM athlete_invites')) return { rows: [] };
+      if (sql.includes('FROM coach_invites')) return { rows: [{ id: 12, coach_id: 77 }] };
+      if (sql.startsWith('UPDATE users')) return { rows: [coach] };
+      if (sql.startsWith('UPDATE coach_invites')) return { rows: [] };
+      throw new Error(`Unexpected query: ${sql}`);
+    },
+  };
+
+  assert.deepEqual(await consumeInvite(client, 'secure-coach-token-1234567890', '555'), coach);
+  assert.equal(calls[0].values[0], tokenHash('secure-coach-token-1234567890'));
+  assert.equal(calls[1].values[0], tokenHash('secure-coach-token-1234567890'));
+  assert.deepEqual(calls[2].values, ['555', 77, 'coach']);
+  assert.match(calls[3].sql, /^UPDATE coach_invites/);
+  assert.deepEqual(calls[3].values, [12]);
 });
 
 test('rejects tampered Telegram initData', () => {

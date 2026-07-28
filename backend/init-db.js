@@ -9,8 +9,8 @@ async function initializeDatabase() {
       -- Таблица пользователей
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        telegram_id BIGINT UNIQUE,
-        role VARCHAR(20) NOT NULL CHECK (role IN ('coach', 'athlete')),
+        telegram_id BIGINT,
+        role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'coach', 'athlete')),
         coach_id INTEGER REFERENCES users(id),
         first_name VARCHAR(100),
         last_name VARCHAR(100),
@@ -101,6 +101,17 @@ async function initializeDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Одноразовые приглашения новых тренеров от администратора.
+      CREATE TABLE IF NOT EXISTS coach_invites (
+        id SERIAL PRIMARY KEY,
+        token_hash CHAR(64) UNIQUE NOT NULL,
+        coach_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_by_admin_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TIMESTAMP NOT NULL,
+        used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Создаем индексы для ускорения запросов
       CREATE INDEX IF NOT EXISTS idx_users_telegram ON users(telegram_id);
       CREATE INDEX IF NOT EXISTS idx_users_coach ON users(coach_id);
@@ -109,6 +120,8 @@ async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_workout_sessions_athlete ON workout_sessions(athlete_id, workout_date);
       CREATE INDEX IF NOT EXISTS idx_set_logs_session ON set_logs(session_id);
       CREATE INDEX IF NOT EXISTS idx_athlete_invites_hash ON athlete_invites(token_hash);
+      CREATE INDEX IF NOT EXISTS idx_coach_invites_hash ON coach_invites(token_hash);
+      CREATE INDEX IF NOT EXISTS idx_users_telegram_role ON users(telegram_id, role);
     `;
 
     // Выполняем SQL команды

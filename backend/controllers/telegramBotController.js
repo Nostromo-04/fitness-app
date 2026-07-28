@@ -22,13 +22,17 @@ async function sendStartMessage(chatId, payload) {
   } else if (inviteToken) {
     const invite = await db.query(
       `SELECT 1 FROM athlete_invites
-       WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()`,
+        WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+       UNION ALL
+       SELECT 1 FROM coach_invites
+        WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+       LIMIT 1`,
       [tokenHash(inviteToken)]
     );
     if (!invite.rows[0]) {
       text = 'Приглашение недействительно или уже использовано. Попросите тренера создать новое.';
     } else {
-      text = 'Приглашение получено. Нажмите кнопку ниже — ссылка уже будет заполнена.';
+      text = 'Приглашение получено. Нажмите кнопку ниже — вход выполнится автоматически.';
       webAppUrl = buildWebAppUrl(process.env.FRONTEND_URL, inviteToken);
     }
   }
