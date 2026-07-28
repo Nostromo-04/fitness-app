@@ -72,6 +72,8 @@ async function startServer() {
     throw new Error('TELEGRAM_BOT_TOKEN and SESSION_SECRET must be configured');
   }
   await require('./config/database').query(`
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_telegram_id_key;
+
     CREATE TABLE IF NOT EXISTS athlete_invites (
       id SERIAL PRIMARY KEY,
       token_hash CHAR(64) UNIQUE NOT NULL,
@@ -80,7 +82,20 @@ async function startServer() {
       expires_at TIMESTAMP NOT NULL,
       used_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS coach_invites (
+      id SERIAL PRIMARY KEY,
+      token_hash CHAR(64) UNIQUE NOT NULL,
+      coach_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_by_admin_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TIMESTAMP NOT NULL,
+      used_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_users_telegram_role ON users(telegram_id, role);
+    CREATE INDEX IF NOT EXISTS idx_coach_invites_hash ON coach_invites(token_hash);
   `);
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 

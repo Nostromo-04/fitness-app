@@ -5,8 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './AdminDashboard.css';
 
-const BOT_USERNAME = 'kablaev_team_bot';
-
 type ModalStep = 'form' | 'saving' | 'done';
 
 export const AdminDashboard: React.FC = () => {
@@ -19,7 +17,6 @@ export const AdminDashboard: React.FC = () => {
   const [lastName, setLastName]           = useState('');
   const [formError, setFormError]         = useState('');
   const [createdName, setCreatedName]     = useState('');
-  const [createdCoachId, setCreatedCoachId] = useState<number | null>(null);
   const [coachBotLink, setCoachBotLink]   = useState('');
   const [copied, setCopied]               = useState(false);
 
@@ -49,10 +46,8 @@ export const AdminDashboard: React.FC = () => {
         last_name: lastName.trim() || undefined,
       });
 
-      const coach = data.data.coach;
-      const botLink = `https://t.me/${BOT_USERNAME}?startapp=user_${coach.id}`;
+      const botLink = data.data.botLink;
       setCoachBotLink(botLink);
-      setCreatedCoachId(coach.id);
       setCreatedName([trimmed, lastName.trim()].filter(Boolean).join(' '));
       setModalStep('done');
 
@@ -132,7 +127,7 @@ export const AdminDashboard: React.FC = () => {
 
       <button className="admin-add-coach-btn" onClick={openModal}>
         <UserPlus size={20} />
-        Добавить тренера
+        Пригласить тренера
       </button>
 
       <button className="admin-start-btn" onClick={() => navigate('/select-user')}>
@@ -152,7 +147,7 @@ export const AdminDashboard: React.FC = () => {
             {modalStep === 'form' && (
               <div className="modal-body">
                 <p className="modal-hint">
-                  Введите имя и фамилию. После добавления тренер получит код для входа в приложение.
+                  Введите имя и фамилию. После добавления отправьте тренеру одноразовую ссылку-приглашение.
                 </p>
                 <div className="form-group">
                   <label className="form-label">Имя *</label>
@@ -193,12 +188,13 @@ export const AdminDashboard: React.FC = () => {
               <div className="modal-body">
                 <div className="done-name">{createdName}</div>
                 <p className="modal-hint">
-                  Теперь отправьте тренеру ссылку на бота. Он нажмёт <strong>Старт</strong> — и приложение откроется.
+                  Отправьте тренеру ссылку на бота. В Telegram он нажмёт <strong>Старт</strong>,
+                  затем откроет приложение.
                 </p>
 
                 <div className="invite-code-block">
-                  <p className="invite-code-label">Сообщи этот код тренеру</p>
-                  <div className="invite-code-value">{createdCoachId ?? '—'}</div>
+                  <p className="invite-code-label">Одноразовая ссылка-приглашение готова</p>
+                  <div className="invite-code-value">Отправьте её тренеру</div>
                 </div>
 
                 <div className="done-actions">
