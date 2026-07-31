@@ -15,7 +15,11 @@ type FeedbackEmoji = '👍' | '👎';
 export function AthleteCompletePage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { sessionId } = (location.state as { sessionId: number; planName?: string }) || {};
+  const { sessionId, returnTo = '/athlete/dashboard' } = (location.state as {
+    sessionId: number;
+    planName?: string;
+    returnTo?: string;
+  }) || {};
 
   const [feedback, setFeedback] = useState<FeedbackEmoji | null>(null);
   const [stats, setStats] = useState<SessionStats>({ exerciseCount: 0, setCount: 0, totalWeightKg: 0 });
@@ -49,7 +53,7 @@ export function AthleteCompletePage() {
     setSubmitting(true);
     try {
       await athleteService.completeWorkout(sessionId, feedback);
-      navigate('/athlete/dashboard', { replace: true });
+      navigate(returnTo, { replace: true });
     } catch {
       setSubmitting(false);
     }

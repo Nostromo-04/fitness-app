@@ -89,6 +89,49 @@ function requireSessionAccess(param = 'sessionId') {
   };
 }
 
+function requireActiveWorkoutOwner(param = 'sessionId') {
+  return async (req, res, next) => {
+    const result = await db.query(
+      `SELECT started_by_user_id, started_by_role
+         FROM active_workouts
+        WHERE session_id = $1`,
+      [Number(req.params[param])]
+    );
+    const active = result.rows[0];
+    if (!active) {
+      return res.status(409).json({ status: 'error', message: 'Тренировка уже завершена или отменена' });
+    }
+    if (Number(active.started_by_user_id) !== Number(req.user.id)) {
+      const starter = active.started_by_role === 'athlete' ? 'спортсмен' : 'тренер';
+      return res.status(409).json({
+        status: 'error',
+        message: `Подходы записывает ${starter}, начавший тренировку`,
+      });
+    }
+    next();
+  };
+}
+
+function requireActiveSetOwner(param = 'setId') {
+  return async (req, res, next) => {
+    const result = await db.query(
+      `SELECT aw.started_by_user_id, aw.started_by_role
+         FROM set_logs sl
+         JOIN active_workouts aw ON aw.session_id = sl.session_id
+        WHERE sl.id = $1`,
+      [Number(req.params[param])]
+    );
+    const active = result.rows[0];
+    if (!active) {
+      return res.status(409).json({ status: 'error', message: 'Активный подход не найден' });
+    }
+    if (Number(active.started_by_user_id) !== Number(req.user.id)) {
+      return res.status(409).json({ status: 'error', message: 'Эту тренировку проводит другой пользователь' });
+    }
+    next();
+  };
+}
+
 function requireOwnedResource(kind, param) {
   const queries = {
     day: `SELECT wp.coach_id,
@@ -125,5 +168,7 @@ module.exports = {
   requireAthleteAccess,
   requirePlanAccess,
   requireSessionAccess,
+  requireActiveWorkoutOwner,
+  requireActiveSetOwner,
   requireOwnedResource,
 };

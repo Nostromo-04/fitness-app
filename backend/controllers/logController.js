@@ -1,44 +1,49 @@
 const WorkoutSession = require('../models/WorkoutSession');
 const SetLog = require('../models/SetLog');
 const db = require('../config/database');
+const {
+  cancelActiveWorkout,
+  findActiveWorkout,
+  finishActiveWorkout,
+  startActiveWorkout,
+} = require('../lib/activeWorkouts');
 
 const logController = {
   // === УПРАВЛЕНИЕ ТРЕНИРОВОЧНЫМИ СЕССИЯМИ ===
   
-  // Начало тренировки (спортсмен)
+  // Начало тренировки спортсменом или его тренером.
   async startWorkout(req, res) {
     try {
       const { athlete_id, plan_id, day_id } = req.body;
-      
-      console.log('Получен запрос на старт тренировки:', { athlete_id, plan_id, day_id });
-      
-      // Проверяем, есть ли активная тренировка
-      const activeSession = await WorkoutSession.getActiveSession(athlete_id);
-      
-      if (activeSession) {
-        console.log('Найдена активная тренировка:', activeSession);
-        
-        // Если это тот же день - возвращаем существующую сессию
-        if (activeSession.plan_id === plan_id && activeSession.day_id === day_id) {
-          console.log('Возвращаем существующую сессию');
-          return res.status(200).json({
-            status: 'success',
-            data: activeSession,
-            message: 'Продолжаем существующую тренировку'
-          });
-        }
-        
-        // Если другой день — удаляем старую незавершённую (не оставляем строку без эмодзи)
-        console.log('Удаляем старую незавершённую тренировку и создаём новую');
-        await WorkoutSession.deleteIncomplete(activeSession.id);
+      if (![athlete_id, plan_id, day_id].every(value => Number.isInteger(Number(value)))) {
+        return res.status(400).json({ status: 'error', message: 'Некорректные данные тренировки' });
       }
 
-      const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });
-      console.log('Создана новая сессия:', session);
-      
-      res.status(201).json({
+      const result = await startActiveWorkout(db.pool, {
+        athleteId: Number(athlete_id),
+        planId: Number(plan_id),
+        dayId: Number(day_id),
+        user: req.user,
+      });
+      if (result.kind === 'not_assigned') {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Этот тренировочный план не назначен спортсмену',
+        });
+      }
+      if (result.kind === 'conflict') {
+        const starter = result.session.started_by_role === 'athlete' ? 'Спортсмен' : 'Тренер';
+        return res.status(409).json({
+          status: 'conflict',
+          message: `Нельзя запустить тренировку. ${starter} уже начал тренировку.`,
+          data: result.session,
+        });
+      }
+
+      res.status(result.kind === 'created' ? 201 : 200).json({
         status: 'success',
-        data: session
+        data: result.session,
+        message: result.kind === 'resumed' ? 'Продолжаем существующую тренировку' : undefined,
       });
     } catch (error) {
       console.error('Ошибка при начале тренировки:', error);
@@ -63,11 +68,21 @@ const logController = {
         });
       }
 
-      const session = await WorkoutSession.complete(sessionId, feedback_emoji);
+      const result = await finishActiveWorkout(db.pool, {
+        sessionId: Number(sessionId),
+        userId: req.user.id,
+        feedbackEmoji: feedback_emoji,
+      });
+      if (result.kind === 'forbidden') {
+        return res.status(409).json({ status: 'error', message: 'Эту тренировку начал другой пользователь' });
+      }
+      if (result.kind === 'not_active') {
+        return res.status(404).json({ status: 'error', message: 'Активная тренировка не найдена' });
+      }
       
       res.json({
         status: 'success',
-        data: session
+        data: result.session,
       });
     } catch (error) {
       console.error('Ошибка при завершении тренировки:', error);
@@ -82,7 +97,7 @@ const logController = {
   async getActiveWorkout(req, res) {
     try {
       const { athleteId } = req.params;
-      const session = await WorkoutSession.getActiveSession(athleteId);
+      const session = await findActiveWorkout(db, athleteId);
       
       res.json({
         status: 'success',
@@ -94,6 +109,25 @@ const logController = {
         status: 'error',
         message: 'Ошибка сервера'
       });
+    }
+  },
+
+  async cancelWorkout(req, res) {
+    try {
+      const result = await cancelActiveWorkout(db.pool, {
+        sessionId: Number(req.params.sessionId),
+        userId: req.user.id,
+      });
+      if (result.kind === 'forbidden') {
+        return res.status(409).json({ status: 'error', message: 'Эту тренировку начал другой пользователь' });
+      }
+      if (result.kind === 'not_active') {
+        return res.status(404).json({ status: 'error', message: 'Активная тренировка не найдена' });
+      }
+      res.json({ status: 'success', message: 'Тренировка отменена' });
+    } catch (error) {
+      console.error('Ошибка при отмене тренировки:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
     }
   },
 

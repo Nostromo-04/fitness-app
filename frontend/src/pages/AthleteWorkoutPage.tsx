@@ -126,7 +126,12 @@ const ProgressLineChart: React.FC<{
 
 export const AthleteWorkoutPage: React.FC = () => {
   const navigate = useNavigate();
-  const { planId, dayId } = useParams<{ planId: string; dayId: string }>();
+  const { planId, dayId, athleteId: routeAthleteId } = useParams<{
+    planId: string;
+    dayId: string;
+    athleteId?: string;
+  }>();
+  const coachMode = Boolean(routeAthleteId);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [sets, setSets] = useState<{ [key: number]: Set[] }>({});
@@ -151,12 +156,21 @@ export const AthleteWorkoutPage: React.FC = () => {
   const [showReplaceModal, setShowReplaceModal] = useState(false);
   const [replaceOptions, setReplaceOptions] = useState<LibraryExercise[]>([]);
   const [replaceLoading, setReplaceLoading] = useState(false);
+  const [startConflict, setStartConflict] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   const currentExercise = exercises[currentExerciseIndex];
   const currentSets = sets[currentExercise?.id] || [];
 
   useEffect(() => {
+    setLoading(true);
+    setSessionId(null);
+    setStartConflict('');
+    setCurrentExerciseIndex(0);
     loadWorkoutData();
+  }, [planId, dayId, routeAthleteId]);
+
+  useEffect(() => {
     initAudio();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -171,7 +185,7 @@ export const AthleteWorkoutPage: React.FC = () => {
 
   // Держим ref в актуальном состоянии: тренировка начата и ещё не завершена
   useEffect(() => {
-    isDirtyRef.current = !loading && !!sessionId && !allExercisesCompleted();
+    isDirtyRef.current = !loading && !!sessionId;
   });
 
   // Перехват системной/жестовой кнопки "назад" и закрытия вкладки
@@ -210,7 +224,7 @@ export const AthleteWorkoutPage: React.FC = () => {
 
   // Загрузка предыдущей тренировки + сбор истории показателей по упражнению
   const loadPreviousWorkout = async (exerciseId: number) => {
-    const athleteId = localStorage.getItem('selectedAthleteId');
+    const athleteId = routeAthleteId || localStorage.getItem('selectedAthleteId');
     if (!athleteId) return;
 
     setProgressLoading(true);
@@ -306,9 +320,10 @@ export const AthleteWorkoutPage: React.FC = () => {
         });
         setSets(initialSets);
 
-        const athleteId = localStorage.getItem('selectedAthleteId');
+        const athleteId = routeAthleteId || localStorage.getItem('selectedAthleteId');
         if (!athleteId) {
           console.error('Не выбран спортсмен');
+          setStartConflict('Не удалось определить спортсмена. Вернитесь к списку планов.');
           return;
         }
 
@@ -317,10 +332,55 @@ export const AthleteWorkoutPage: React.FC = () => {
           Number(planId),
           Number(dayId)
         );
-        setSessionId(sessionResponse.data.id);
+        const session = sessionResponse.data;
+        if (Number(session.plan_id) !== Number(planId) || Number(session.day_id) !== Number(dayId)) {
+          const resumePath = coachMode
+            ? `/coach/athlete/${athleteId}/workout/${session.plan_id}/day/${session.day_id}`
+            : `/athlete/workout/${session.plan_id}/day/${session.day_id}`;
+          navigate(resumePath, { replace: true });
+          return;
+        }
+
+        setSessionId(session.id);
+        if (session.resumed) {
+          const savedResponse = await athleteService.getSessionSets(session.id);
+          const savedSets: any[] = savedResponse?.data || [];
+          setSets(current => {
+            const restored = { ...current };
+            day.exercises.forEach((exercise: Exercise) => {
+              const logs = savedSets.filter(log => Number(log.exercise_id) === Number(exercise.exercise_id));
+              if (logs.length === 0) return;
+              const initial = restored[exercise.id] || [];
+              const maxSetNumber = Math.max(initial.length, ...logs.map(log => Number(log.set_number)));
+              restored[exercise.id] = Array.from({ length: maxSetNumber }, (_, index) => {
+                const setNumber = index + 1;
+                const set = initial[index] || {
+                  set_number: setNumber,
+                  reps: exercise.default_reps,
+                  weight: exercise.default_weight === 0 ? null : exercise.default_weight,
+                  completed: false,
+                };
+                const log = logs.find(item => Number(item.set_number) === setNumber);
+                return log ? {
+                  ...set,
+                  reps: Number(log.reps_done),
+                  weight: log.weight_done === null ? null : Number(log.weight_done),
+                  completed: Boolean(log.is_completed),
+                } : set;
+              });
+            });
+            return restored;
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка загрузки тренировки:', error);
+      if (error?.response?.status === 409) {
+        const message = error.response.data?.message || 'Тренировка уже начата другим пользователем.';
+        setStartConflict(message.replace(/^Нельзя запустить тренировку\.\s*/i, ''));
+      } else {
+        setStartConflict('Не удалось запустить тренировку. Попробуйте ещё раз.');
+      }
     } finally {
       setLoading(false);
     }
@@ -499,12 +559,31 @@ export const AthleteWorkoutPage: React.FC = () => {
   const handleCompleteWorkout = async () => {
     if (!sessionId) return;
 
-    navigate('/athlete/complete', {
+    isDirtyRef.current = false;
+    navigate(coachMode ? `/coach/athlete/${routeAthleteId}/complete` : '/athlete/complete', {
       state: {
         sessionId,
         planName: exercises[0]?.exercise_name,
+        returnTo: coachMode
+          ? `/coach/athlete/${routeAthleteId}/plans`
+          : '/athlete/dashboard',
       },
     });
+  };
+
+  const handleCancelWorkout = async () => {
+    if (!sessionId || cancelling) return;
+    setCancelling(true);
+    try {
+      await athleteService.cancelWorkout(sessionId);
+      isDirtyRef.current = false;
+      navigate(coachMode
+        ? `/coach/athlete/${routeAthleteId}/plans`
+        : '/athlete/dashboard', { replace: true });
+    } catch (error) {
+      console.error('Ошибка отмены тренировки:', error);
+      setCancelling(false);
+    }
   };
 
   // Клик по кнопке "назад" в шапке
@@ -862,6 +941,27 @@ export const AthleteWorkoutPage: React.FC = () => {
               </button>
               <button className="exit-modal-cancel" onClick={handleCancelExit}>
                 Продолжить тренировку
+              </button>
+              <button
+                className="exit-modal-abort"
+                onClick={handleCancelWorkout}
+                disabled={cancelling}
+              >
+                {cancelling ? 'Отмена…' : 'Отменить тренировку'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {startConflict && (
+        <div className="exit-modal-overlay">
+          <div className="exit-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="exit-modal-title">Нельзя запустить тренировку</h3>
+            <p className="exit-modal-text">{startConflict}</p>
+            <div className="exit-modal-actions">
+              <button className="exit-modal-confirm" onClick={() => navigate(-1)}>
+                Понятно
               </button>
             </div>
           </div>

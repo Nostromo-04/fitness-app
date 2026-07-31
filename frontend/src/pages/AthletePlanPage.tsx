@@ -12,7 +12,8 @@ interface WorkoutDay {
 
 export const AthletePlanPage: React.FC = () => {
   const navigate = useNavigate();
-  const { planId } = useParams<{ planId: string }>();
+  const { planId, athleteId: routeAthleteId } = useParams<{ planId: string; athleteId?: string }>();
+  const coachMode = Boolean(routeAthleteId);
   const [plan, setPlan] = useState<any>(null);
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [nextDayNumber, setNextDayNumber] = useState<number | null>(null);
@@ -44,7 +45,7 @@ export const AthletePlanPage: React.FC = () => {
 
   const loadLastCompletedDay = async () => {
     try {
-      const athleteId = localStorage.getItem('selectedAthleteId');
+      const athleteId = routeAthleteId || localStorage.getItem('selectedAthleteId');
       if (!athleteId) {
         console.error('Не выбран спортсмен');
         return;
@@ -121,7 +122,9 @@ export const AthletePlanPage: React.FC = () => {
   };
 
   const handleStartDay = (day: WorkoutDay) => {
-    navigate(`/athlete/workout/${planId}/day/${day.id}`);
+    navigate(coachMode
+      ? `/coach/athlete/${routeAthleteId}/workout/${planId}/day/${day.id}`
+      : `/athlete/workout/${planId}/day/${day.id}`);
   };
 
   const getExerciseImage = (exercise: any) => {
@@ -140,7 +143,9 @@ export const AthletePlanPage: React.FC = () => {
   return (
     <div className="athlete-plan-page">
       <div className="page-header">
-        <button className="back-btn" onClick={() => navigate('/athlete/dashboard')}>
+        <button className="back-btn" onClick={() => navigate(
+          coachMode ? `/coach/athlete/${routeAthleteId}/plans` : '/athlete/dashboard'
+        )}>
           <ArrowLeft size={20} />
         </button>
         <h1>{plan?.name}</h1>

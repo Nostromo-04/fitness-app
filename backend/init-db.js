@@ -78,6 +78,16 @@ async function initializeDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- Блокировка: у спортсмена может быть только одна активная тренировка.
+      CREATE TABLE IF NOT EXISTS active_workouts (
+        athlete_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        session_id INTEGER UNIQUE NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
+        started_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        started_by_role VARCHAR(20) NOT NULL CHECK (started_by_role IN ('coach', 'athlete')),
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Таблица выполненных подходов
       CREATE TABLE IF NOT EXISTS set_logs (
         id SERIAL PRIMARY KEY,
@@ -118,6 +128,7 @@ async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON exercises(muscle_group);
       CREATE INDEX IF NOT EXISTS idx_plan_assignments_athlete ON plan_assignments(athlete_id);
       CREATE INDEX IF NOT EXISTS idx_workout_sessions_athlete ON workout_sessions(athlete_id, workout_date);
+      CREATE INDEX IF NOT EXISTS idx_active_workouts_starter ON active_workouts(started_by_user_id);
       CREATE INDEX IF NOT EXISTS idx_set_logs_session ON set_logs(session_id);
       CREATE INDEX IF NOT EXISTS idx_athlete_invites_hash ON athlete_invites(token_hash);
       CREATE INDEX IF NOT EXISTS idx_coach_invites_hash ON coach_invites(token_hash);

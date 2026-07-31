@@ -287,6 +287,15 @@ function AppRoutes() {
         <Route path="/coach/athlete/:athleteId/plans" element={
           <RequireRole role="coach"><CoachAthletePlansPage /></RequireRole>
         } />
+        <Route path="/coach/athlete/:athleteId/plan/:planId" element={
+          <RequireRole role="coach"><AthletePlanPage /></RequireRole>
+        } />
+        <Route path="/coach/athlete/:athleteId/workout/:planId/day/:dayId" element={
+          <RequireRole role="coach"><AthleteWorkoutPage /></RequireRole>
+        } />
+        <Route path="/coach/athlete/:athleteId/complete" element={
+          <RequireRole role="coach"><AthleteCompletePage /></RequireRole>
+        } />
         <Route path="/coach/edit-plan/:planId" element={
           <RequireRole role="coach"><CoachEditPlanPage /></RequireRole>
         } />

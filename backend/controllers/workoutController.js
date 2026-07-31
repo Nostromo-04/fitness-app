@@ -2,7 +2,6 @@ const db = require('../config/database');
 const WorkoutSession = require('../models/WorkoutSession');
 const {
   assignPlanToAthlete,
-  canStartAssignedWorkout,
   listAssignedAthletes,
   listAssignedPlans,
   unassignPlanFromAthlete,
@@ -202,60 +201,6 @@ const workoutController = {
       res.json({ status: 'success', data: result.rows[0] });
     } catch (error) {
       console.error('unassignPlan error:', error);
-      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
-    }
-  },
-
-  // ──────────────────────────────────────────────
-  // POST /api/workouts/start
-  // Спортсмен начинает тренировку.
-  // AthleteWorkoutPage: sessionResponse.data.id
-  //   → тело = { id, athlete_id, plan_id, day_id, ... } напрямую
-  // ──────────────────────────────────────────────
-  async startWorkout(req, res) {
-    try {
-      const { athlete_id, plan_id, day_id } = req.body;
-      if (!athlete_id || !plan_id || !day_id) {
-        return res.status(400).json({ status: 'error', message: 'athlete_id, plan_id, day_id обязательны' });
-      }
-      if (!await canStartAssignedWorkout(db, athlete_id, plan_id, day_id)) {
-        return res.status(403).json({
-          status: 'error',
-          message: 'Этот тренировочный план не назначен спортсмену',
-        });
-      }
-
-      // Удаляем незавершённые сессии с тем же day_id
-      const existing = await db.query(
-        `SELECT id FROM workout_sessions
-          WHERE athlete_id = $1 AND day_id = $2 AND completed_at IS NULL`,
-        [athlete_id, day_id]
-      );
-      for (const row of existing.rows) {
-        await WorkoutSession.deleteIncomplete(row.id);
-      }
-
-      const session = await WorkoutSession.create({ athlete_id, plan_id, day_id });
-      // БЕЗ обёртки — фронтенд читает sessionResponse.data.id
-      res.status(201).json(session);
-    } catch (error) {
-      console.error('startWorkout error:', error);
-      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
-    }
-  },
-
-  // ──────────────────────────────────────────────
-  // POST /api/workouts/complete/:sessionId
-  // Завершить тренировку — тело = сессия напрямую
-  // ──────────────────────────────────────────────
-  async completeWorkout(req, res) {
-    try {
-      const { sessionId } = req.params;
-      const { feedback_emoji } = req.body;
-      const session = await WorkoutSession.complete(sessionId, feedback_emoji);
-      res.json(session);
-    } catch (error) {
-      console.error('completeWorkout error:', error);
       res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
     }
   },
