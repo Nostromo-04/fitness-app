@@ -193,8 +193,12 @@ export const AdminDashboard: React.FC = () => {
                 </p>
 
                 <div className="invite-code-block">
-                  <p className="invite-code-label">Одноразовая ссылка-приглашение готова</p>
-                  <div className="invite-code-value">Отправьте её тренеру</div>
+                  <p className="invite-code-label">Одноразовое приглашение</p>
+                  <div className="invite-code-value">
+                    <Check size={22} />
+                    <span>Ссылка готова</span>
+                  </div>
+                  <p className="invite-code-note">Действует 72 часа</p>
                 </div>
 
                 <div className="done-actions">

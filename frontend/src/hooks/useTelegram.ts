@@ -32,6 +32,21 @@ export function useTelegram(): UseTelegramReturn {
       tg.ready();
       tg.expand();
 
+      // Интерфейс приложения рассчитан на вертикальный экран. Telegram Bot API
+      // 8.0+ умеет фиксировать текущую ориентацию нативно. Для старых клиентов
+      // безопасно пробуем стандартный Screen Orientation API.
+      try {
+        if (typeof tg.lockOrientation === 'function'
+          && (typeof tg.isVersionAtLeast !== 'function' || tg.isVersionAtLeast('8.0'))) {
+          tg.lockOrientation();
+        } else {
+          const lockResult = (window.screen.orientation as any)?.lock?.('portrait-primary');
+          lockResult?.catch?.(() => {});
+        }
+      } catch {
+        // На неподдерживаемых устройствах сохраняем стандартное поведение.
+      }
+
       // Даём Telegram время заполнить initDataUnsafe (обычно <100ms)
       const timer = setTimeout(() => {
         const u: TelegramUser | null = tg.initDataUnsafe?.user ?? null;
