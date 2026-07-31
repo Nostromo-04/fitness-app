@@ -328,13 +328,17 @@ export const CoachDashboard: React.FC = () => {
               <div className="modal-body">
                 <div className="done-athlete-name">{createdName}</div>
                 <p className="modal-hint">
-                  Теперь отправьте спортсмену ссылку на бота. Он нажмёт <strong>Старт</strong> — и приложение откроется.
+                  Отправьте спортсмену ссылку на бота. В Telegram он нажмёт <strong>Старт</strong>,
+                  затем откроет приложение.
                 </p>
 
-                {/* Числовой ID не является секретом и не используется для входа. */}
                 <div className="invite-code-block">
-                  <p className="invite-code-label">Одноразовая ссылка-приглашение готова</p>
-                  <div className="invite-code-value">Отправьте её спортсмену</div>
+                  <p className="invite-code-label">Одноразовое приглашение</p>
+                  <div className="invite-code-value">
+                    <Check size={22} />
+                    <span>Ссылка готова</span>
+                  </div>
+                  <p className="invite-code-note">Действует 72 часа</p>
                 </div>
 
                 <div className="done-actions">
