@@ -1,19 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const logController = require('../controllers/logController');
-const { requireRole, requireAthleteAccess, requireSessionAccess, requireOwnedResource } = require('../middleware/auth');
+const { requireRole, requireAthleteAccess, requireSessionAccess, requireActiveWorkoutOwner, requireActiveSetOwner, requireOwnedResource } = require('../middleware/auth');
 
 // === Управление тренировочными сессиями ===
-router.post('/sessions/start', requireRole('athlete'), requireAthleteAccess(), logController.startWorkout);
+router.post('/sessions/start', requireRole('athlete', 'coach'), requireAthleteAccess(), logController.startWorkout);
 router.put('/sessions/:sessionId/complete', requireSessionAccess(), logController.completeWorkout);
+router.delete('/sessions/:sessionId/active', requireSessionAccess(), logController.cancelWorkout);
 router.get('/sessions/active/:athleteId', requireAthleteAccess(), logController.getActiveWorkout);
 router.get('/sessions/:sessionId', requireSessionAccess(), logController.getWorkoutDetails);
 
 // === Логирование подходов ===
-router.post('/sessions/:sessionId/sets', requireSessionAccess(), logController.logSet);
+router.post('/sessions/:sessionId/sets', requireSessionAccess(), requireActiveWorkoutOwner(), logController.logSet);
 router.get('/sessions/:sessionId/sets', requireSessionAccess(), logController.getSessionSets);
 router.get('/sessions/:sessionId/exercises/:exerciseId/sets', requireSessionAccess(), logController.getExerciseSets);
-router.delete('/sets/:setId', requireOwnedResource('set', 'setId'), logController.deleteSet);
+router.delete('/sets/:setId', requireOwnedResource('set', 'setId'), requireActiveSetOwner(), logController.deleteSet);
 
 // === Календарь и статистика ===
 router.get('/calendar/:athleteId', requireAthleteAccess(), logController.getWorkoutCalendar);

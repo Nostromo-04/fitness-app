@@ -96,6 +96,18 @@ async function startServer() {
 
     CREATE INDEX IF NOT EXISTS idx_users_telegram_role ON users(telegram_id, role);
     CREATE INDEX IF NOT EXISTS idx_coach_invites_hash ON coach_invites(token_hash);
+
+    CREATE TABLE IF NOT EXISTS active_workouts (
+      athlete_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      session_id INTEGER UNIQUE NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE,
+      started_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      started_by_role VARCHAR(20) NOT NULL CHECK (started_by_role IN ('coach', 'athlete')),
+      started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_active_workouts_starter
+      ON active_workouts(started_by_user_id);
   `);
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 

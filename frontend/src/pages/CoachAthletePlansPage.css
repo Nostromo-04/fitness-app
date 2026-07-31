@@ -62,7 +62,8 @@
 
 .plan-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 14px;
   padding: 16px;
   background: var(--fit-card, #18181b);
@@ -146,8 +147,25 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  width: 100%;
 }
+
+.start-plan-btn {
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid rgba(163, 230, 53, 0.55);
+  border-radius: 11px;
+  background: rgba(163, 230, 53, 0.14);
+  color: var(--fit-accent, #a3e635);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.start-plan-btn:active { transform: scale(0.99); }
 
 .edit-plan-btn {
   background: var(--fit-card-2, #1c1c1f);
@@ -160,6 +178,8 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  min-width: 42px;
+  min-height: 42px;
 }
 
 .edit-plan-btn:hover {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Dumbbell, Edit } from 'lucide-react';
+import { ArrowLeft, Dumbbell, Edit, Play } from 'lucide-react';
 import workoutService from '../services/workoutService';
 import api from '../services/api';
 import './CoachAthletePlansPage.css';
@@ -52,6 +52,10 @@ export const CoachAthletePlansPage: React.FC = () => {
     navigate(`/coach/edit-plan/${planId}`);
   };
 
+  const handleStartPlan = (planId: number) => {
+    navigate(`/coach/athlete/${athleteId}/plan/${planId}`);
+  };
+
   return (
     <div className="coach-plans-page">
       <div className="plans-header">
@@ -84,6 +88,13 @@ export const CoachAthletePlansPage: React.FC = () => {
                 </p>
               </div>
               <div className="plan-actions">
+                <button
+                  className="start-plan-btn"
+                  onClick={() => handleStartPlan(plan.id)}
+                >
+                  <Play size={17} />
+                  Начать тренировку
+                </button>
                 <button 
                   className="edit-plan-btn"
                   onClick={() => handleEditPlan(plan.id)}

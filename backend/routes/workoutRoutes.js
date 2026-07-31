@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const workoutController = require('../controllers/workoutController');
+const logController = require('../controllers/logController');
 const { requireRole, requireCoachParam, requireAthleteAccess, requirePlanAccess, requireSessionAccess, requireOwnedResource } = require('../middleware/auth');
 
 // ══════════════════════════════════════════════════════════════
@@ -82,7 +83,7 @@ router.put('/day-exercises/:id', requireRole('coach'), requireOwnedResource('day
 router.delete('/day-exercises/:id', requireRole('coach'), requireOwnedResource('dayExercise', 'id'), workoutController.deleteDayExercise);
 
 // ── Тренировочные сессии ──────────────────────────────────────
-router.post('/start', requireRole('athlete'), requireAthleteAccess(), workoutController.startWorkout);
-router.post('/complete/:sessionId', requireSessionAccess(), workoutController.completeWorkout);
+router.post('/start', requireRole('athlete', 'coach'), requireAthleteAccess(), logController.startWorkout);
+router.post('/complete/:sessionId', requireSessionAccess(), logController.completeWorkout);
 
 module.exports = router;

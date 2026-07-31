@@ -87,6 +87,11 @@ class AthleteService {
     return response.data;
   }
 
+  async cancelWorkout(sessionId: number) {
+    const response = await api.delete(`/logs/sessions/${sessionId}/active`);
+    return response.data;
+  }
+
   // Получение календаря тренировок
   async getWorkoutCalendar(athleteId: number, year: number, month: number) {
     const response = await api.get(`/logs/calendar/${athleteId}?year=${year}&month=${month}`);
