@@ -51,48 +51,11 @@ export const AthletePlanPage: React.FC = () => {
         return;
       }
 
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth() + 1;
-
-      let allSessions: any[] = [];
-
-      try {
-        const calendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), currentYear, currentMonth);
-        const calendar = calendarResponse.data.calendar || {};
-        for (const dayKey in calendar) {
-          const sessions = calendar[dayKey]?.sessions || [];
-          allSessions = [...allSessions, ...sessions];
-        }
-      } catch (error) {
-        console.log(`Ошибка загрузки данных за ${currentMonth}.${currentYear}:`, error);
-      }
-
-      let marchMonth = 3;
-      let marchYear = currentYear;
-      try {
-        const marchCalendarResponse = await athleteService.getWorkoutCalendar(parseInt(athleteId), marchYear, marchMonth);
-        const marchCalendar = marchCalendarResponse.data.calendar || {};
-        for (const dayKey in marchCalendar) {
-          const sessions = marchCalendar[dayKey]?.sessions || [];
-          allSessions = [...allSessions, ...sessions];
-        }
-      } catch (error) {
-        console.log(`Ошибка загрузки данных за ${marchMonth}.${marchYear}:`, error);
-      }
-
-      const planSessions = allSessions
-        .filter((session: any) => session.plan_id === plan.id)
-        .sort((a: any, b: any) => {
-          const dateA = new Date(a.workout_date);
-          const dateB = new Date(b.workout_date);
-          return dateB.getTime() - dateA.getTime();
-        });
-
-      let lastCompletedDay = null;
-      if (planSessions.length > 0) {
-        lastCompletedDay = planSessions[0].day_number;
-      }
+      const lastCompletedResponse = await athleteService.getLastCompletedPlanDay(
+        parseInt(athleteId),
+        Number(plan.id)
+      );
+      const lastCompletedDay = lastCompletedResponse.data?.day_number ?? null;
 
       const allDayNumbers = days.map(d => d.day_number).sort((a, b) => a - b);
       let nextDay = null;
