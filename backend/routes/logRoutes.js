@@ -17,6 +17,7 @@ router.get('/sessions/:sessionId/exercises/:exerciseId/sets', requireSessionAcce
 router.delete('/sets/:setId', requireOwnedResource('set', 'setId'), requireActiveSetOwner(), logController.deleteSet);
 
 // === Календарь и статистика ===
+router.get('/last-completed/:athleteId/plan/:planId', requireAthleteAccess(), logController.getLastCompletedPlanDay);
 router.get('/calendar/:athleteId', requireAthleteAccess(), logController.getWorkoutCalendar);
 router.get('/calendar/:athleteId/date/:date', requireAthleteAccess(), logController.getWorkoutByDate);
 router.get('/progress/:athleteId/exercise/:exerciseId', requireAthleteAccess(), logController.getExerciseProgress);

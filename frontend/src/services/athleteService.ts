@@ -98,6 +98,12 @@ class AthleteService {
     return response.data;
   }
 
+  // Последний завершённый день плана за всё время, независимо от месяца.
+  async getLastCompletedPlanDay(athleteId: number, planId: number) {
+    const response = await api.get(`/logs/last-completed/${athleteId}/plan/${planId}`);
+    return response.data;
+  }
+
   // Получение деталей тренировки по дате
   async getWorkoutByDate(athleteId: number, date: string) {
     const response = await api.get(`/logs/calendar/${athleteId}/date/${date}`);

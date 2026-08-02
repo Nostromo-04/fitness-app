@@ -7,6 +7,7 @@ const {
   finishActiveWorkout,
   startActiveWorkout,
 } = require('../lib/activeWorkouts');
+const { findLastCompletedPlanDay } = require('../lib/nextWorkout');
 
 const logController = {
   // === УПРАВЛЕНИЕ ТРЕНИРОВОЧНЫМИ СЕССИЯМИ ===
@@ -226,6 +227,23 @@ const logController = {
 
   // === КАЛЕНДАРЬ И СТАТИСТИКА ===
   
+  // Последний завершённый день конкретного плана без ограничения по месяцу.
+  async getLastCompletedPlanDay(req, res) {
+    try {
+      const athleteId = Number(req.params.athleteId);
+      const planId = Number(req.params.planId);
+      if (!Number.isInteger(planId)) {
+        return res.status(400).json({ status: 'error', message: 'Некорректный план' });
+      }
+
+      const session = await findLastCompletedPlanDay(db, athleteId, planId);
+      res.json({ status: 'success', data: session });
+    } catch (error) {
+      console.error('Ошибка при получении последнего дня плана:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
+
   // Получение календаря тренировок спортсмена (ИСПРАВЛЕН)
   async getWorkoutCalendar(req, res) {
     try {
