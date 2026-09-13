@@ -113,6 +113,10 @@ async function startServer() {
     CREATE INDEX IF NOT EXISTS idx_active_workouts_starter
       ON active_workouts(started_by_user_id);
   `);
+  const { seedSelectedChestExercises } = require('./lib/seedSelectedChestExercises');
+  const seedResult = await seedSelectedChestExercises(require('./config/database'));
+  console.log(`✅ Упражнения груди: добавлено ${seedResult.inserted}, уже существовало ${seedResult.skipped}`);
+
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 
   const backendUrl = process.env.BACKEND_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
