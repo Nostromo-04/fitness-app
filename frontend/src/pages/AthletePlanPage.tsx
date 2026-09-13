@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Dumbbell, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Dumbbell, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import athleteService from '../services/athleteService';
 import './AthletePlanPage.css';
 
@@ -18,6 +18,7 @@ export const AthletePlanPage: React.FC = () => {
   const [days, setDays] = useState<WorkoutDay[]>([]);
   const [nextDayNumber, setNextDayNumber] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedDayIds, setExpandedDayIds] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     if (planId) {
@@ -90,6 +91,14 @@ export const AthletePlanPage: React.FC = () => {
       : `/athlete/workout/${planId}/day/${day.id}`);
   };
 
+  const toggleDayExercises = (dayId: number) => {
+    setExpandedDayIds(current => {
+      const next = new Set(current);
+      if (next.has(dayId)) next.delete(dayId);
+      else next.add(dayId);
+      return next;
+    });
+  };
   const getExerciseImage = (exercise: any) => {
     // Если есть image_url, используем его
     if (exercise.image_url) {
@@ -132,13 +141,26 @@ export const AthletePlanPage: React.FC = () => {
               </button>
             </div>
             
-            <div className="exercises-count">
-              <Dumbbell size={16} />
-              <span>{day.exercises?.length || 0} упражнений</span>
-            </div>
+            <button
+              type="button"
+              className="exercises-toggle"
+              onClick={() => toggleDayExercises(day.id)}
+              aria-expanded={expandedDayIds.has(day.id)}
+              aria-controls={`day-exercises-${day.id}`}
+              disabled={!day.exercises?.length}
+            >
+              <span className="exercises-count">
+                <Dumbbell size={16} />
+                <span>{day.exercises?.length || 0} упражнений</span>
+              </span>
+              <span className="exercises-toggle-label">
+                {expandedDayIds.has(day.id) ? 'Свернуть' : 'Показать'}
+                {expandedDayIds.has(day.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </span>
+            </button>
 
-            {day.exercises && day.exercises.length > 0 && (
-              <div className="exercises-full-list">
+            {expandedDayIds.has(day.id) && day.exercises && day.exercises.length > 0 && (
+              <div id={`day-exercises-${day.id}`} className="exercises-full-list">
                 {day.exercises.map((exercise: any, idx: number) => (
                   <div key={idx} className="exercise-item">
                     <div className="exercise-image">

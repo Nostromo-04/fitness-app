@@ -98,7 +98,7 @@
   border: 1px solid var(--fit-border, #27272a);
   border-radius: 16px;
   padding: 16px;
-  cursor: pointer;
+  cursor: default;
   transition: border-color 0.2s, transform 0.15s;
 }
 
@@ -153,6 +153,41 @@
 }
 
 .exercises-count svg { color: var(--fit-accent, #a3e635); }
+.exercises-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.exercises-toggle:disabled { cursor: default; }
+
+.exercises-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.exercises-toggle:hover:not(:disabled) .exercises-toggle-label,
+.exercises-toggle:focus-visible .exercises-toggle-label {
+  color: var(--fit-accent, #a3e635);
+}
+
+.exercises-toggle:focus-visible {
+  outline: 2px solid var(--fit-accent, #a3e635);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
 
 .completed-badge {
   display: flex;
