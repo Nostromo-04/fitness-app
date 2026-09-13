@@ -39,6 +39,12 @@ export const AuthProvider: React.FC<{
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [profiles, setProfiles] = useState<AuthUser[]>([]);
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
+  const [browserAccessToken] = useState(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const token = hash.get('browser_access') || '';
+    if (token) window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    return token;
+  });
 
   const activateUser = (user: AuthUser, token: string) => {
     setSessionToken(token);
@@ -58,7 +64,7 @@ export const AuthProvider: React.FC<{
 
   useEffect(() => {
     const devAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEV_AUTH === 'true';
-    if (!initData && !devAuthEnabled) {
+    if (!initData && !devAuthEnabled && !browserAccessToken) {
       setAuthStatus('not_found');
       return;
     }
@@ -68,12 +74,14 @@ export const AuthProvider: React.FC<{
     const run = async () => {
       try {
         setSessionToken(null);
-        const { data } = devAuthEnabled
-          ? await api.post('/auth/dev')
-          : await api.post('/auth/telegram', {
-              initData,
-              inviteToken: normalizeInviteToken(startParam),
-            });
+        const { data } = browserAccessToken
+          ? await api.post('/auth/browser-access', { token: browserAccessToken })
+          : devAuthEnabled
+            ? await api.post('/auth/dev')
+            : await api.post('/auth/telegram', {
+                initData,
+                inviteToken: normalizeInviteToken(startParam),
+              });
 
         if (cancelled) return;
 
@@ -99,7 +107,7 @@ export const AuthProvider: React.FC<{
 
     run();
     return () => { cancelled = true; };
-  }, [initData, startParam]);
+  }, [initData, startParam, browserAccessToken]);
 
   const selectProfile = async (profileId: number) => {
     setAuthStatus('loading');

@@ -21,3 +21,6 @@ reference-data/
 # Disposable local preview database
 .local-preview-db/
 .local-preview-db.log
+
+# Local private key for signed browser access
+.browser-access/

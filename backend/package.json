@@ -7,7 +7,8 @@
     "dev": "nodemon server.js",
     "test": "node --test test/*.test.js",
     "import:chest-exercises": "node scripts/import-selected-chest-exercises.js",
-    "rollback:chest-exercises": "node scripts/rollback-selected-chest-exercises.js"
+    "rollback:chest-exercises": "node scripts/rollback-selected-chest-exercises.js",
+    "browser-access-link": "node scripts/create-browser-access-link.js"
   },
   "keywords": [],
   "author": "",
