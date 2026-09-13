@@ -133,7 +133,7 @@ export const AthletePlanPage: React.FC = () => {
               <div className="day-number">
                 День {day.day_number}
                 {isNextDay(day.day_number) && (
-                  <span className="next-badge">Следующая</span>
+                  <span className="next-badge">Следующий</span>
                 )}
               </div>
               <button className="start-day-btn" onClick={() => handleStartDay(day)}>
