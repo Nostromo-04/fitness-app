@@ -17,13 +17,21 @@ async function authenticateBrowser(req, res) {
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock($1)', [904202609]);
     let result = await client.query(
-      `SELECT ${USER_FIELDS} FROM users WHERE telegram_id = $1 AND role = 'coach' ORDER BY id LIMIT 1`,
+      `SELECT ${USER_FIELDS} FROM users WHERE telegram_id = $1 ORDER BY id LIMIT 1`,
       [BROWSER_TELEGRAM_ID]
     );
-    if (!result.rows[0]) {
+    if (result.rows[0]) {
+      result = await client.query(
+        `UPDATE users
+            SET role = 'admin', coach_id = NULL, first_name = 'Codex', last_name = 'Browser'
+          WHERE id = $1
+          RETURNING ${USER_FIELDS}`,
+        [result.rows[0].id]
+      );
+    } else {
       result = await client.query(
         `INSERT INTO users (telegram_id, role, first_name, last_name)
-         VALUES ($1, 'coach', 'Codex', 'Browser')
+         VALUES ($1, 'admin', 'Codex', 'Browser')
          RETURNING ${USER_FIELDS}`,
         [BROWSER_TELEGRAM_ID]
       );
