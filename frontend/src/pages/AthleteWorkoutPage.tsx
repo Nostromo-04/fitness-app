@@ -16,6 +16,7 @@ interface Exercise {
   order_index: number;
   image_url?: string;
   video_url?: string;
+  instruction?: string;
 }
 
 interface Set {
@@ -646,6 +647,7 @@ export const AthleteWorkoutPage: React.FC = () => {
               muscle_group: newExercise.muscle_group,
               image_url: newExercise.image_url,
               video_url: newExercise.video_url,
+              instruction: newExercise.instruction,
             }
           : ex
       )
@@ -775,19 +777,29 @@ export const AthleteWorkoutPage: React.FC = () => {
             )}
           </div>
 
-          {(currentExercise.image_url || currentExercise.video_url) && (
-            <div className="exercise-media">
-              {currentExercise.image_url && (
-                <a href={currentExercise.image_url} target="_blank" rel="noopener noreferrer">
-                  📷 Смотреть фото
-                </a>
-              )}
-              {currentExercise.video_url && (
-                <a href={currentExercise.video_url} target="_blank" rel="noopener noreferrer">
-                  🎥 Смотреть видео
-                </a>
-              )}
+          {(currentExercise.video_url || currentExercise.image_url) && (
+            <div className="workout-exercise-media">
+              <img
+                src={currentExercise.video_url || currentExercise.image_url}
+                alt={currentExercise.exercise_name}
+                className="workout-exercise-animation"
+                onError={(event) => {
+                  const image = event.currentTarget;
+                  if (currentExercise.image_url && image.src !== new URL(currentExercise.image_url, window.location.origin).href) {
+                    image.src = currentExercise.image_url;
+                  } else {
+                    image.style.display = 'none';
+                  }
+                }}
+              />
             </div>
+          )}
+
+          {currentExercise.instruction && (
+            <section className="workout-instruction">
+              <h3>Техника выполнения</h3>
+              <p>{currentExercise.instruction}</p>
+            </section>
           )}
         </div>
       )}

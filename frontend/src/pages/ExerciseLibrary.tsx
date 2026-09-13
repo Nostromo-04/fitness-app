@@ -59,10 +59,7 @@ export const ExerciseLibrary: React.FC = () => {
 
   const handleCreateExercise = async (exerciseData: any) => {
     try {
-      await exerciseService.create({
-        ...exerciseData,
-        created_by_coach_id: 1 // Временно используем ID тренера = 1
-      });
+      await exerciseService.create(exerciseData);
       await loadData();
       setModalOpen(false);
     } catch (error) {

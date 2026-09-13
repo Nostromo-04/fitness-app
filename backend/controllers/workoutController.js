@@ -90,7 +90,8 @@ const workoutController = {
                       'default_weight', de.default_weight,
                       'order_index',    de.order_index,
                       'image_url',      e.image_url,
-                      'video_url',      e.video_url
+                      'video_url',      e.video_url,
+                      'instruction',    e.instruction
                     ) ORDER BY de.order_index
                   ) FILTER (WHERE de.id IS NOT NULL),
                   '[]'
@@ -410,7 +411,8 @@ const workoutController = {
                       'default_weight', de.default_weight,
                       'order_index',    de.order_index,
                       'image_url',      e.image_url,
-                      'video_url',      e.video_url
+                      'video_url',      e.video_url,
+                      'instruction',    e.instruction
                     ) ORDER BY de.order_index
                   ) FILTER (WHERE de.id IS NOT NULL),
                   '[]'
@@ -486,7 +488,7 @@ const workoutController = {
       const { dayId } = req.params;
       const result = await db.query(
         `SELECT de.id, de.day_id, de.exercise_id,
-                e.name AS exercise_name, e.muscle_group, e.image_url, e.video_url,
+                e.name AS exercise_name, e.muscle_group, e.image_url, e.video_url, e.instruction,
                 de.sets_count, de.default_reps, de.default_weight, de.order_index
            FROM day_exercises de
            JOIN exercises e ON e.id = de.exercise_id

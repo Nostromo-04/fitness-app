@@ -105,7 +105,8 @@ class WorkoutSession {
             'weight_done', sl.weight_done,
             'is_completed', sl.is_completed,
             'image_url', e.image_url,
-            'video_url', e.video_url
+            'video_url', e.video_url,
+                    'instruction', e.instruction
           ) ORDER BY e.name, sl.set_number
         ) as sets
       FROM workout_sessions ws

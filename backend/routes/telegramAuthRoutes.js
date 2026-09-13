@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/auth');
 
 // Единственная точка входа: сервер проверяет подпись Telegram initData.
 router.post('/telegram', telegramAuthController.authenticate);
+router.post('/dev', telegramAuthController.authenticateDev);
 router.get('/me', authenticate, telegramAuthController.me);
 
 // Старые маршруты закрыты намеренно: они позволяли подставить чужой Telegram/User ID.

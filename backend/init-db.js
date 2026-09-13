@@ -26,6 +26,7 @@ async function initializeDatabase() {
         muscle_group VARCHAR(50) NOT NULL,
         image_url TEXT,
         video_url TEXT,
+        instruction TEXT,
         created_by_coach_id INTEGER REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

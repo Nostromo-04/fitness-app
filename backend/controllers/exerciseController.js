@@ -4,13 +4,13 @@ const exerciseController = {
   // Создание нового упражнения
   async create(req, res) {
     try {
-      const exerciseData = req.body;
+      const exerciseData = { ...req.body, created_by_coach_id: req.user.id };
       
       // Проверка обязательных полей
-      if (!exerciseData.name || !exerciseData.muscle_group || !exerciseData.created_by_coach_id) {
+      if (!exerciseData.name || !exerciseData.muscle_group) {
         return res.status(400).json({
           status: 'error',
-          message: 'Необходимо указать название, группу мышц и ID тренера'
+          message: 'Необходимо указать название и группу мышц'
         });
       }
 
@@ -114,6 +114,10 @@ const exerciseController = {
         });
       }
 
+      if (req.user.role !== 'admin' && (existingExercise.created_by_coach_id === null || Number(existingExercise.created_by_coach_id) !== Number(req.user.id))) {
+        return res.status(403).json({ status: 'error', message: 'Нельзя изменять общее или чужое упражнение' });
+      }
+
       const exercise = await Exercise.update(id, req.body);
       res.json({
         status: 'success',
@@ -140,6 +144,10 @@ const exerciseController = {
           status: 'error',
           message: 'Упражнение не найдено'
         });
+      }
+
+      if (req.user.role !== 'admin' && (existingExercise.created_by_coach_id === null || Number(existingExercise.created_by_coach_id) !== Number(req.user.id))) {
+        return res.status(403).json({ status: 'error', message: 'Нельзя удалить общее или чужое упражнение' });
       }
 
       const result = await Exercise.delete(id);

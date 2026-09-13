@@ -22,7 +22,8 @@ export const ExerciseModal: React.FC<ExerciseModalProps> = ({
     name: '',
     muscle_group: '',
     image_url: '',
-    video_url: ''
+    video_url: '',
+    instruction: ''
   });
 
   useEffect(() => {
@@ -31,14 +32,16 @@ export const ExerciseModal: React.FC<ExerciseModalProps> = ({
         name: exercise.name,
         muscle_group: exercise.muscle_group,
         image_url: exercise.image_url || '',
-        video_url: exercise.video_url || ''
+        video_url: exercise.video_url || '',
+        instruction: exercise.instruction || ''
       });
     } else {
       setFormData({
         name: '',
         muscle_group: '',
         image_url: '',
-        video_url: ''
+        video_url: '',
+    instruction: ''
       });
     }
   }, [exercise]);
@@ -97,12 +100,22 @@ export const ExerciseModal: React.FC<ExerciseModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label>Ссылка на видео</label>
+            <label>Ссылка на GIF</label>
             <input
               type="url"
               value={formData.video_url}
               onChange={e => setFormData({...formData, video_url: e.target.value})}
-              placeholder="https://youtube.com/watch?v=..."
+              placeholder="/exercises/chest/gifs/example.gif"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Инструкция</label>
+            <textarea
+              value={formData.instruction}
+              onChange={e => setFormData({...formData, instruction: e.target.value})}
+              placeholder="Опишите технику выполнения упражнения"
+              rows={6}
             />
           </div>
 

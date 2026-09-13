@@ -591,3 +591,43 @@
   border-color: var(--fit-accent, #a3e635);
   color: var(--fit-accent, #a3e635);
 }
+
+.workout-exercise-media {
+  width: 100%;
+  max-width: 480px;
+  margin: 16px auto;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+}
+
+.workout-exercise-animation {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
+.workout-instruction {
+  max-width: 480px;
+  margin: 16px auto;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--fit-card, #18181b);
+  border: 1px solid var(--fit-border, #27272a);
+}
+
+.workout-instruction h3 {
+  margin: 0 0 10px;
+  color: var(--fit-accent, #a3e635);
+  font-size: 15px;
+}
+
+.workout-instruction p {
+  margin: 0;
+  color: var(--fit-text, #f4f4f5);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+}

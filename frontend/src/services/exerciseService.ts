@@ -6,7 +6,8 @@ export interface Exercise {
   muscle_group: string;
   image_url?: string;
   video_url?: string;
-  created_by_coach_id: number;
+  instruction?: string;
+  created_by_coach_id?: number | null;
   created_at: string;
 }
 
@@ -15,7 +16,7 @@ export interface CreateExerciseData {
   muscle_group: string;
   image_url?: string;
   video_url?: string;
-  created_by_coach_id: number;
+  instruction?: string;
 }
 
 class ExerciseService {

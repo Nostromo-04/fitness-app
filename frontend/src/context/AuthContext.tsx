@@ -57,7 +57,8 @@ export const AuthProvider: React.FC<{
   };
 
   useEffect(() => {
-    if (!initData) {
+    const devAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEV_AUTH === 'true';
+    if (!initData && !devAuthEnabled) {
       setAuthStatus('not_found');
       return;
     }
@@ -67,10 +68,12 @@ export const AuthProvider: React.FC<{
     const run = async () => {
       try {
         setSessionToken(null);
-        const { data } = await api.post('/auth/telegram', {
-          initData,
-          inviteToken: normalizeInviteToken(startParam),
-        });
+        const { data } = devAuthEnabled
+          ? await api.post('/auth/dev')
+          : await api.post('/auth/telegram', {
+              initData,
+              inviteToken: normalizeInviteToken(startParam),
+            });
 
         if (cancelled) return;
 

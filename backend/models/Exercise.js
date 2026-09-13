@@ -3,15 +3,15 @@ const db = require('../config/database');
 class Exercise {
   // Создание нового упражнения
   static async create(exerciseData) {
-    const { name, muscle_group, image_url, video_url, created_by_coach_id } = exerciseData;
+    const { name, muscle_group, image_url, video_url, instruction, created_by_coach_id } = exerciseData;
     
     const query = `
-      INSERT INTO exercises (name, muscle_group, image_url, video_url, created_by_coach_id)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, name, muscle_group, image_url, video_url, created_by_coach_id, created_at
+      INSERT INTO exercises (name, muscle_group, image_url, video_url, instruction, created_by_coach_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, name, muscle_group, image_url, video_url, instruction, created_by_coach_id, created_at
     `;
     
-    const values = [name, muscle_group, image_url || null, video_url || null, created_by_coach_id];
+    const values = [name, muscle_group, image_url || null, video_url || null, instruction || null, created_by_coach_id];
     
     try {
       const result = await db.query(query, values);
@@ -77,19 +77,20 @@ class Exercise {
 
   // Обновление упражнения
   static async update(id, updateData) {
-    const { name, muscle_group, image_url, video_url } = updateData;
+    const { name, muscle_group, image_url, video_url, instruction } = updateData;
     
     const query = `
       UPDATE exercises 
       SET name = COALESCE($1, name),
           muscle_group = COALESCE($2, muscle_group),
           image_url = COALESCE($3, image_url),
-          video_url = COALESCE($4, video_url)
-      WHERE id = $5
-      RETURNING id, name, muscle_group, image_url, video_url, created_by_coach_id, created_at
+          video_url = COALESCE($4, video_url),
+          instruction = COALESCE($5, instruction)
+      WHERE id = $6
+      RETURNING id, name, muscle_group, image_url, video_url, instruction, created_by_coach_id, created_at
     `;
     
-    const values = [name, muscle_group, image_url, video_url, id];
+    const values = [name, muscle_group, image_url, video_url, instruction, id];
     const result = await db.query(query, values);
     return result.rows[0];
   }

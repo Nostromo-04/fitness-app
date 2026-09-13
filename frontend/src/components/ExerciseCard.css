@@ -70,3 +70,42 @@
 
 .delete-btn { color: var(--fit-danger, #f87171); }
 .delete-btn:hover { border-color: var(--fit-danger, #f87171); background: rgba(248,113,113,0.08); }
+
+.exercise-preview {
+  width: 100%;
+  height: 180px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--fit-card-2, #1c1c1f);
+}
+
+.exercise-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.exercise-instruction {
+  margin-bottom: 12px;
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 13px;
+}
+
+.exercise-instruction summary {
+  color: var(--fit-accent, #a3e635);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.exercise-instruction p {
+  margin: 8px 0 0;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.shared-exercise-label {
+  color: var(--fit-muted, #a1a1aa);
+  font-size: 12px;
+  text-align: right;
+}

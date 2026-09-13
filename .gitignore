@@ -14,3 +14,10 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local reference datasets and media (not part of the application)
+reference-data/
+
+# Disposable local preview database
+.local-preview-db/
+.local-preview-db.log

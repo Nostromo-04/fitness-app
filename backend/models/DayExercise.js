@@ -24,7 +24,7 @@ class DayExercise {
   // Получение всех упражнений дня
   static async findByDayId(dayId) {
     const query = `
-      SELECT de.*, e.name as exercise_name, e.muscle_group, e.image_url, e.video_url
+      SELECT de.*, e.name as exercise_name, e.muscle_group, e.image_url, e.video_url, e.instruction
       FROM day_exercises de
       JOIN exercises e ON de.exercise_id = e.id
       WHERE de.day_id = $1

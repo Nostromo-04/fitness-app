@@ -3,10 +3,25 @@ const { verifyTelegramInitData } = require('../lib/telegramAuth');
 const { signSession, TOKEN_TTL_SECONDS } = require('../lib/sessionToken');
 const { normalizeInviteToken } = require('../lib/inviteToken');
 const { consumeInvite } = require('../lib/athleteInvite');
+const { devAuthAllowed } = require('../lib/devAuth');
 
 const USER_FIELDS = 'id, role, first_name, last_name, coach_id, telegram_id';
 
 const telegramAuthController = {
+  async authenticateDev(req, res) {
+    if (!devAuthAllowed({ nodeEnv: process.env.NODE_ENV, enabled: process.env.ENABLE_DEV_AUTH, hostname: req.hostname })) {
+      return res.status(404).json({ status: 'error', message: 'Маршрут не найден' });
+    }
+    const requestedId = Number(process.env.DEV_AUTH_USER_ID);
+    const hasRequestedId = Number.isInteger(requestedId) && requestedId > 0;
+    const where = hasRequestedId ? "id = $1 AND role = 'coach'" : "role = 'coach'";
+    const result = await db.query('SELECT ' + USER_FIELDS + ' FROM users WHERE ' + where + ' ORDER BY id LIMIT 1', hasRequestedId ? [requestedId] : []);
+    const user = result.rows[0];
+    if (!user) return res.status(404).json({ status: 'not_found', message: 'Локальный профиль тренера не найден' });
+    const token = signSession(user, process.env.SESSION_SECRET);
+    return res.json({ status: 'success', data: { user, profiles: [user], token, expiresIn: TOKEN_TTL_SECONDS } });
+  },
+
   async authenticate(req, res) {
     let client;
     try {

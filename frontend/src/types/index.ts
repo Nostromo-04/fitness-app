@@ -15,6 +15,7 @@ export interface User {
     muscle_group: string;
     image_url?: string;
     video_url?: string;
+    instruction?: string;
     created_by_coach_id: number;
     created_at: string;
   }
@@ -47,6 +48,7 @@ export interface User {
     order_index: number;
     image_url?: string;
     video_url?: string;
+    instruction?: string;
   }
   
   export interface Set {

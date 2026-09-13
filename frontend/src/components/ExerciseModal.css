@@ -107,3 +107,21 @@
 }
 
 .modal-actions button:hover { opacity: 0.88; }
+
+.form-group textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--fit-border, #27272a);
+  border-radius: 10px;
+  background: var(--fit-card-2, #1c1c1f);
+  color: var(--fit-text, #f4f4f5);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.form-group textarea:focus {
+  border-color: var(--fit-accent, #a3e635);
+  outline: none;
+}

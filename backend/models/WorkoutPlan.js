@@ -62,7 +62,8 @@ static async findByIdWithDetails(id) {
                     'default_weight', de.default_weight,
                     'order_index', de.order_index,
                     'image_url', e.image_url,
-                    'video_url', e.video_url
+                    'video_url', e.video_url,
+                    'instruction', e.instruction
                   ) ORDER BY de.order_index
                 )
                 FROM day_exercises de

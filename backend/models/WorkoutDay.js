@@ -29,7 +29,8 @@ class WorkoutDay {
                'default_weight', de.default_weight,
                'order_index', de.order_index,
                'image_url', e.image_url,
-               'video_url', e.video_url
+               'video_url', e.video_url,
+                    'instruction', e.instruction
              ) ORDER BY de.order_index) as exercises
       FROM workout_days wd
       LEFT JOIN day_exercises de ON wd.id = de.day_id

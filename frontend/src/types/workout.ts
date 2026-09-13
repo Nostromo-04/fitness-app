@@ -26,6 +26,7 @@ export interface DayExercise {
   order_index: number;
   image_url?: string;
   video_url?: string;
+  instruction?: string;
 }
 
 export interface CreatePlanData {

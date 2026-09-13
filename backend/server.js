@@ -68,11 +68,15 @@ app.get('/health', async (req, res) => {
 });
 
 async function startServer() {
-  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.SESSION_SECRET) {
-    throw new Error('TELEGRAM_BOT_TOKEN and SESSION_SECRET must be configured');
+  if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET must be configured');
+  }
+  if (process.env.NODE_ENV === 'production' && !process.env.TELEGRAM_BOT_TOKEN) {
+    throw new Error('TELEGRAM_BOT_TOKEN must be configured in production');
   }
   await require('./config/database').query(`
     ALTER TABLE users DROP CONSTRAINT IF EXISTS users_telegram_id_key;
+    ALTER TABLE exercises ADD COLUMN IF NOT EXISTS instruction TEXT;
 
     CREATE TABLE IF NOT EXISTS athlete_invites (
       id SERIAL PRIMARY KEY,
@@ -113,6 +117,11 @@ async function startServer() {
 
   const backendUrl = process.env.BACKEND_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
   const { configureTelegramWebhook } = require('./lib/telegramBot');
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    console.log('⚠️ Telegram webhook пропущен: локальный режим без токена бота');
+    return;
+  }
+
   configureTelegramWebhook({
     botToken: process.env.TELEGRAM_BOT_TOKEN,
     sessionSecret: process.env.SESSION_SECRET,
