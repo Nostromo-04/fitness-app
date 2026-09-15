@@ -18,16 +18,18 @@ async function authenticateBrowser(req, res) {
     await client.query('SELECT pg_advisory_xact_lock($1)', [904202609]);
     let result;
     if (access.athleteFirstName && access.athleteLastName) {
+      if (access.athleteFirstName !== 'Алексей' || access.athleteLastName !== 'Федюков') {
+        throw new Error('This athlete profile is not allowed for browser access');
+      }
       result = await client.query(
         `SELECT ${USER_FIELDS} FROM users
-          WHERE role = 'athlete'
-            AND LOWER(TRIM(first_name)) = LOWER(TRIM($1))
+          WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1))
             AND LOWER(TRIM(last_name)) = LOWER(TRIM($2))`,
         [access.athleteFirstName, access.athleteLastName]
       );
       if (result.rows.length !== 1) throw new Error('Athlete browser profile was not found or is ambiguous');
       await client.query('COMMIT');
-      const user = result.rows[0];
+      const user = { ...result.rows[0], role: 'athlete' };
       const token = signSession(user, process.env.SESSION_SECRET);
       return res.json({ status: 'success', data: { user, profiles: [user], token, expiresIn: TOKEN_TTL_SECONDS } });
     }
@@ -65,4 +67,5 @@ async function authenticateBrowser(req, res) {
 }
 
 module.exports = { authenticateBrowser };
+
 
