@@ -5,6 +5,7 @@ import {
   Share2, Target, TrendingUp, Zap,
 } from 'lucide-react';
 import athleteService from '../services/athleteService';
+import api from '../services/api';
 import './AthleteProgressPage.css';
 
 interface Exercise {
@@ -53,6 +54,11 @@ interface AthleteSummary {
     personal_records: number;
     active_week_streak: number;
   };
+}
+
+interface AthleteInfo {
+  first_name: string;
+  last_name: string;
 }
 
 type ChartMetric = 'weight' | 'reps' | 'volume';
@@ -116,6 +122,7 @@ export const AthleteProgressPage: React.FC = () => {
   const [workouts, setWorkouts] = useState<WorkoutPoint[]>([]);
   const [insights, setInsights] = useState<ProgressInsights>({ first: null, latest: null, weight_gain: 0, weight_gain_percent: 0 });
   const [summary, setSummary] = useState<AthleteSummary | null>(null);
+  const [athlete, setAthlete] = useState<AthleteInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressLoading, setProgressLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
@@ -136,11 +143,13 @@ export const AthleteProgressPage: React.FC = () => {
     Promise.all([
       athleteService.getCompletedWorkoutExercises(athleteId),
       athleteService.getAthleteSummary(athleteId),
-    ]).then(([exerciseResponse, summaryResponse]) => {
+      api.get(`/users/${athleteId}`),
+    ]).then(([exerciseResponse, summaryResponse, athleteResponse]) => {
       const completedExercises = exerciseResponse.data?.exercises || [];
       setExercises(completedExercises);
       setSelectedExerciseId(completedExercises[0]?.id ?? null);
       setSummary(summaryResponse.data);
+      setAthlete(athleteResponse.data.data);
     }).catch(error => console.error('Ошибка загрузки прогресса:', error))
       .finally(() => setLoading(false));
   }, []);
@@ -186,10 +195,13 @@ export const AthleteProgressPage: React.FC = () => {
       context.fillStyle = gradient;
       context.fillRect(0, 0, 1080, 1080);
       context.fillStyle = '#a3e635';
-      context.fillRect(0, 0, 28, 1080);
+      context.fillRect(0, 0, 56, 1080);
       context.fillStyle = '#a3e635';
       context.font = '700 38px Arial';
-      context.fillText('МОЙ ПРОГРЕСС', 82, 105);
+      context.fillText('МОЙ ПРОГРЕСС', 110, 90);
+      context.fillStyle = '#ffffff';
+      context.font = '700 30px Arial';
+      context.fillText([athlete?.first_name, athlete?.last_name].filter(Boolean).join(' ') || 'Спортсмен', 110, 142);
       if (selectedExercise.image_url || selectedExercise.video_url) {
         try {
           const exerciseImage = await loadCanvasImage(new URL(selectedExercise.image_url || selectedExercise.video_url!, window.location.origin).href);
@@ -207,28 +219,29 @@ export const AthleteProgressPage: React.FC = () => {
       }
       context.fillStyle = '#ffffff';
       context.font = '700 54px Arial';
-      wrapCanvasText(context, selectedExercise.name, 82, 210, 650, 66);
+      wrapCanvasText(context, selectedExercise.name, 110, 225, 620, 66);
       context.fillStyle = '#a1a1aa';
       context.font = '32px Arial';
-      context.fillText(selectedExercise.muscle_group, 82, 350);
+      context.fillText(selectedExercise.muscle_group, 110, 365);
       context.fillStyle = '#ffffff';
       context.font = '700 46px Arial';
-      context.fillText('Личный рекорд', 82, 480);
+      context.fillText('Личный рекорд', 110, 475);
       context.fillStyle = '#a3e635';
       context.font = '800 104px Arial';
-      context.fillText(`${formatNumber(personalBest.weight_done)} кг`, 82, 610);
+      context.fillText(`${formatNumber(personalBest.weight_done)} кг`, 110, 605);
       context.fillStyle = '#ffffff';
       context.font = '700 58px Arial';
-      context.fillText(`× ${personalBest.reps_done} раз`, 82, 690);
+      context.fillText(`× ${personalBest.reps_done} раз`, 110, 680);
       context.fillStyle = '#a1a1aa';
       context.font = '34px Arial';
-      context.fillText(`Было: ${resultText(insights.first)}`, 82, 810);
+      context.fillText(`Первый результат: ${resultText(insights.first)}`, 110, 785);
+      context.fillText(`Последний результат: ${resultText(insights.latest)}`, 110, 840);
       context.fillStyle = insights.weight_gain >= 0 ? '#a3e635' : '#f87171';
       context.font = '700 42px Arial';
-      context.fillText(`Прогресс: ${insights.weight_gain >= 0 ? '+' : ''}${formatNumber(insights.weight_gain)} кг · ${insights.weight_gain_percent >= 0 ? '+' : ''}${insights.weight_gain_percent}%`, 82, 885);
+      context.fillText(`Прогресс: ${insights.weight_gain >= 0 ? '+' : ''}${formatNumber(insights.weight_gain)} кг · ${insights.weight_gain_percent >= 0 ? '+' : ''}${insights.weight_gain_percent}%`, 110, 915);
       context.fillStyle = '#71717a';
       context.font = '30px Arial';
-      context.fillText('Fitness App · Сильнее с каждой тренировкой', 82, 1000);
+      context.fillText('Kablaev Team · Сильнее с каждой тренировкой', 110, 1010);
 
       const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
       if (!blob) return;
@@ -345,3 +358,4 @@ function wrapCanvasText(context: CanvasRenderingContext2D, text: string, x: numb
   });
   context.fillText(line.trim(), x, y + lineNumber * lineHeight);
 }
+
