@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Award, Calendar, ChevronDown, Image as ImageIcon,
   Share2, Target, TrendingUp, Zap,
@@ -116,6 +116,7 @@ const ProgressLine: React.FC<{ workouts: WorkoutPoint[]; metric: ChartMetric }> 
 
 export const AthleteProgressPage: React.FC = () => {
   const navigate = useNavigate();
+  const { athleteId: routeAthleteId } = useParams<{ athleteId: string }>();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
   const [personalBest, setPersonalBest] = useState<PersonalBest | null>(null);
@@ -131,11 +132,10 @@ export const AthleteProgressPage: React.FC = () => {
   const [sharing, setSharing] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
 
-  const getAthleteId = () => Number(localStorage.getItem('selectedAthleteId'));
+  const athleteId = Number(routeAthleteId || localStorage.getItem('selectedAthleteId'));
   const selectedExercise = exercises.find(exercise => exercise.id === selectedExerciseId) || null;
 
   useEffect(() => {
-    const athleteId = getAthleteId();
     if (!athleteId) {
       navigate('/select-user');
       return;
@@ -152,13 +152,13 @@ export const AthleteProgressPage: React.FC = () => {
       setAthlete(athleteResponse.data.data);
     }).catch(error => console.error('Ошибка загрузки прогресса:', error))
       .finally(() => setLoading(false));
-  }, []);
+  }, [athleteId, navigate]);
 
   useEffect(() => {
     if (!selectedExerciseId) return;
     setProgressLoading(true);
     setHistoryExpanded(false);
-    athleteService.getExerciseProgress(getAthleteId(), selectedExerciseId, 20)
+    athleteService.getExerciseProgress(athleteId, selectedExerciseId, 20)
       .then(response => {
         setPersonalBest(response.data.personalBest || null);
         setWorkouts(response.data.workouts || []);
@@ -166,7 +166,7 @@ export const AthleteProgressPage: React.FC = () => {
       })
       .catch(error => console.error('Ошибка загрузки упражнения:', error))
       .finally(() => setProgressLoading(false));
-  }, [selectedExerciseId]);
+  }, [athleteId, selectedExerciseId]);
 
   useEffect(() => {
     if (!selectorOpen) return;
@@ -268,7 +268,7 @@ export const AthleteProgressPage: React.FC = () => {
   return (
     <div className="athlete-progress-page achievement-page">
       <div className="progress-header achievement-header">
-        <button className="back-btn" onClick={() => navigate('/athlete/dashboard')}><ArrowLeft size={20} /></button>
+        <button className="back-btn" onClick={() => navigate(routeAthleteId ? '/coach/dashboard' : '/athlete/dashboard')}><ArrowLeft size={20} /></button>
         <h1>Мой прогресс</h1>
         <button className="header-share-btn" onClick={createShareCard} disabled={!personalBest || sharing} aria-label="Поделиться результатом">
           <Share2 size={19} />
@@ -373,5 +373,6 @@ function wrapCanvasText(context: CanvasRenderingContext2D, text: string, x: numb
   });
   context.fillText(line.trim(), x, y + lineNumber * lineHeight);
 }
+
 
 

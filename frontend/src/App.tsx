@@ -282,7 +282,7 @@ function AppRoutes() {
           <RequireRole role="coach"><CoachAthleteCalendarPage /></RequireRole>
         } />
         <Route path="/coach/athlete/:athleteId/progress" element={
-          <RequireRole role="coach"><CoachAthleteProgressPage /></RequireRole>
+          <RequireRole role="coach"><AthleteProgressPage /></RequireRole>
         } />
         <Route path="/coach/athlete/:athleteId/plans" element={
           <RequireRole role="coach"><CoachAthletePlansPage /></RequireRole>
@@ -354,3 +354,4 @@ function App() {
 }
 
 export default App;
+

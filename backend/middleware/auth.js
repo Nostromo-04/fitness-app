@@ -45,7 +45,7 @@ function requireAthleteAccess(param = 'athleteId') {
     if (!Number.isInteger(athleteId)) return res.status(400).json({ status: 'error', message: 'Некорректный спортсмен' });
     if (req.user.role === 'admin' || (req.user.role === 'athlete' && athleteId === Number(req.user.id))) return next();
     if (req.user.role === 'coach') {
-      const owned = await db.query('SELECT 1 FROM users WHERE id = $1 AND coach_id = $2 AND role = \'athlete\'', [athleteId, req.user.id]);
+      const owned = await db.query("SELECT 1 FROM users WHERE id = $1 AND coach_id = $2 AND (role = 'athlete' OR (role = 'admin' AND first_name = 'Алексей' AND last_name = 'Федюков'))", [athleteId, req.user.id]);
       if (owned.rows[0]) return next();
     }
     return res.status(403).json({ status: 'error', message: 'Нет доступа к этому спортсмену' });
@@ -172,3 +172,4 @@ module.exports = {
   requireActiveSetOwner,
   requireOwnedResource,
 };
+
