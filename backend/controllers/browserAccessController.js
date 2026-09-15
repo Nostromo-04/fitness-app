@@ -23,7 +23,8 @@ async function authenticateBrowser(req, res) {
       }
       result = await client.query(
         `SELECT ${USER_FIELDS} FROM users
-          WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1))
+          WHERE role = 'admin'
+            AND LOWER(TRIM(first_name)) = LOWER(TRIM($1))
             AND LOWER(TRIM(last_name)) = LOWER(TRIM($2))`,
         [access.athleteFirstName, access.athleteLastName]
       );
@@ -67,5 +68,6 @@ async function authenticateBrowser(req, res) {
 }
 
 module.exports = { authenticateBrowser };
+
 
 
