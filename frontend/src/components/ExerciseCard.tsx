@@ -13,16 +13,22 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onEdit, on
   return (
     <div className="exercise-card">
       <div className="exercise-header">
-        <h3>{exercise.name}</h3>
+        <h3>ID {exercise.id} — {exercise.name}</h3>
         <span className="muscle-badge">{exercise.muscle_group}</span>
       </div>
       
       {(exercise.image_url || exercise.video_url) && (
         <div className="exercise-preview">
           <img
-            src={exercise.image_url || exercise.video_url}
+            src={exercise.video_url || exercise.image_url}
             alt={exercise.name}
             loading="lazy"
+            onError={(event) => {
+              const image = event.currentTarget;
+              if (exercise.image_url && image.src !== new URL(exercise.image_url, window.location.origin).href) {
+                image.src = exercise.image_url;
+              }
+            }}
           />
         </div>
       )}
