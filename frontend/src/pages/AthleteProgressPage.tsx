@@ -335,10 +335,25 @@ const ExerciseImage: React.FC<{ exercise: Exercise }> = ({ exercise }) => (
   </span>
 );
 
-function loadCanvasImage(source: string) {
+async function loadCanvasImage(source: string) {
+  try {
+    const response = await fetch(source, { cache: 'force-cache' });
+    if (!response.ok) throw new Error(`Не удалось загрузить изображение: ${response.status}`);
+    const objectUrl = URL.createObjectURL(await response.blob());
+    try {
+      return await loadImageElement(objectUrl);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch {
+    return loadImageElement(source, true);
+  }
+}
+
+function loadImageElement(source: string, anonymous = false) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
-    image.crossOrigin = 'anonymous';
+    if (anonymous) image.crossOrigin = 'anonymous';
     image.onload = () => resolve(image);
     image.onerror = reject;
     image.src = source;
@@ -358,4 +373,5 @@ function wrapCanvasText(context: CanvasRenderingContext2D, text: string, x: numb
   });
   context.fillText(line.trim(), x, y + lineNumber * lineHeight);
 }
+
 
