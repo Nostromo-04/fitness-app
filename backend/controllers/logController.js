@@ -3,6 +3,10 @@ const SetLog = require('../models/SetLog');
 const db = require('../config/database');
 const { getCompletedWorkoutExercises } = require('../lib/athleteExercises');
 const {
+  getAthleteAchievementMetrics,
+  getExerciseWorkoutProgress,
+} = require('../lib/athleteAchievements');
+const {
   cancelActiveWorkout,
   findActiveWorkout,
   finishActiveWorkout,
@@ -460,17 +464,18 @@ const logController = {
         limit ? parseInt(limit) : 10
       );
       
-      // Получаем личный рекорд
-      const personalBest = await SetLog.getPersonalBest(
-        parseInt(athleteId), 
-        parseInt(exerciseId)
-      );
+      const [personalBest, workoutProgress] = await Promise.all([
+        SetLog.getPersonalBest(parseInt(athleteId), parseInt(exerciseId)),
+        getExerciseWorkoutProgress(db, parseInt(athleteId), parseInt(exerciseId)),
+      ]);
 
       res.json({
         status: 'success',
         data: {
           progress,
-          personalBest: personalBest || null
+          personalBest: personalBest || null,
+          workouts: workoutProgress.workouts,
+          insights: workoutProgress.insights,
         }
       });
     } catch (error) {
@@ -527,6 +532,8 @@ const logController = {
         hard_workouts: 0,
         last_workout: null
       };
+      const achievements = await getAthleteAchievementMetrics(db, parseInt(athleteId));
+      Object.assign(summaryData, achievements);
 
       res.json({
         status: 'success',
