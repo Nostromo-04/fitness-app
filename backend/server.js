@@ -116,6 +116,9 @@ async function startServer() {
   const { seedSelectedChestExercises } = require('./lib/seedSelectedChestExercises');
   const seedResult = await seedSelectedChestExercises(require('./config/database'));
   console.log(`✅ Выбранные упражнения: добавлено ${seedResult.inserted}, уже существовало ${seedResult.skipped}`);
+  const { mergeLegExtensionDuplicate } = require('./lib/mergeDuplicateExercises');
+  const mergeResult = await mergeLegExtensionDuplicate(require('./config/database'));
+  if (mergeResult.merged) console.log('✅ Дубликаты упражнений объединены: ID 99 → ID 20');
 
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 
@@ -141,4 +144,5 @@ startServer().catch(error => {
   console.error('❌ Server startup failed:', error.message);
   process.exit(1);
 });
+
 
