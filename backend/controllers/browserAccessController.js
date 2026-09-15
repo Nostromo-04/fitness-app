@@ -21,6 +21,22 @@ async function authenticateBrowser(req, res) {
       if (access.athleteFirstName !== 'Алексей' || access.athleteLastName !== 'Федюков') {
         throw new Error('This athlete profile is not allowed for browser access');
       }
+      if (access.browserRole === 'coach') {
+        result = await client.query(
+          `SELECT c.id, c.role, c.first_name, c.last_name, c.coach_id, c.telegram_id
+             FROM users a
+             JOIN users c ON c.id = a.coach_id AND c.role = 'coach'
+            WHERE a.role = 'admin'
+              AND LOWER(TRIM(a.first_name)) = LOWER(TRIM($1))
+              AND LOWER(TRIM(a.last_name)) = LOWER(TRIM($2))`,
+          [access.athleteFirstName, access.athleteLastName]
+        );
+        if (result.rows.length !== 1) throw new Error('Coach browser profile was not found or is ambiguous');
+        await client.query('COMMIT');
+        const user = result.rows[0];
+        const token = signSession(user, process.env.SESSION_SECRET);
+        return res.json({ status: 'success', data: { user, profiles: [user], token, expiresIn: TOKEN_TTL_SECONDS } });
+      }
       result = await client.query(
         `SELECT ${USER_FIELDS} FROM users
           WHERE role = 'admin'
@@ -68,6 +84,7 @@ async function authenticateBrowser(req, res) {
 }
 
 module.exports = { authenticateBrowser };
+
 
 
 
