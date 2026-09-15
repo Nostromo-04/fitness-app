@@ -17,3 +17,13 @@ test('rejects tampered and expired browser access tokens', () => {
   assert.throws(() => verifyBrowserAccessToken(`${token}x`, publicKey, new Set(), 1_001_000), /signature/);
   assert.throws(() => verifyBrowserAccessToken(token, publicKey, new Set(), 1_400_000), /expired/);
 });
+test('preserves a signed athlete identity claim', () => {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+  const token = createBrowserAccessToken(privateKey, 1_000_000, {
+    athleteFirstName: 'Алексей',
+    athleteLastName: 'Федюков',
+  });
+  const payload = verifyBrowserAccessToken(token, publicKey, new Set(), 1_001_000);
+  assert.equal(payload.athleteFirstName, 'Алексей');
+  assert.equal(payload.athleteLastName, 'Федюков');
+});

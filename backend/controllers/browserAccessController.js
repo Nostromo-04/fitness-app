@@ -12,11 +12,26 @@ const USER_FIELDS = 'id, role, first_name, last_name, coach_id, telegram_id';
 async function authenticateBrowser(req, res) {
   let client;
   try {
-    verifyBrowserAccessToken(req.body?.token, publicKey, usedNonces);
+    const access = verifyBrowserAccessToken(req.body?.token, publicKey, usedNonces);
     client = await db.pool.connect();
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock($1)', [904202609]);
-    let result = await client.query(
+    let result;
+    if (access.athleteFirstName && access.athleteLastName) {
+      result = await client.query(
+        `SELECT ${USER_FIELDS} FROM users
+          WHERE role = 'athlete'
+            AND LOWER(TRIM(first_name)) = LOWER(TRIM($1))
+            AND LOWER(TRIM(last_name)) = LOWER(TRIM($2))`,
+        [access.athleteFirstName, access.athleteLastName]
+      );
+      if (result.rows.length !== 1) throw new Error('Athlete browser profile was not found or is ambiguous');
+      await client.query('COMMIT');
+      const user = result.rows[0];
+      const token = signSession(user, process.env.SESSION_SECRET);
+      return res.json({ status: 'success', data: { user, profiles: [user], token, expiresIn: TOKEN_TTL_SECONDS } });
+    }
+    result = await client.query(
       `SELECT ${USER_FIELDS} FROM users WHERE telegram_id = $1 ORDER BY id LIMIT 1`,
       [BROWSER_TELEGRAM_ID]
     );
@@ -50,3 +65,4 @@ async function authenticateBrowser(req, res) {
 }
 
 module.exports = { authenticateBrowser };
+

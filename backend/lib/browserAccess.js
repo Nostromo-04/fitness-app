@@ -7,13 +7,14 @@ function encode(value) {
   return Buffer.from(value).toString('base64url');
 }
 
-function createBrowserAccessToken(privateKey, now = Date.now()) {
+function createBrowserAccessToken(privateKey, now = Date.now(), claims = {}) {
   const issuedAt = Math.floor(now / 1000);
   const payload = encode(JSON.stringify({
     aud: AUDIENCE,
     iat: issuedAt,
     exp: issuedAt + ACCESS_TTL_SECONDS,
     nonce: crypto.randomBytes(18).toString('base64url'),
+    ...claims,
   }));
   const signature = crypto.sign(null, Buffer.from(payload), privateKey).toString('base64url');
   return `${payload}.${signature}`;
@@ -36,3 +37,4 @@ function verifyBrowserAccessToken(token, publicKey, usedNonces, now = Date.now()
 }
 
 module.exports = { createBrowserAccessToken, verifyBrowserAccessToken, ACCESS_TTL_SECONDS };
+
