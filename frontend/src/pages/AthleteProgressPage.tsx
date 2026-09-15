@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Dumbbell, Calendar, Award, BarChart2 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Calendar, Award, ChevronDown, Image as ImageIcon } from 'lucide-react';
 import athleteService from '../services/athleteService';
-import exerciseService from '../services/exerciseService';
 import './AthleteProgressPage.css';
 
 interface Exercise {
   id: number;
   name: string;
   muscle_group: string;
+  image_url?: string;
+  video_url?: string;
 }
 
 interface ProgressPoint {
@@ -54,6 +55,8 @@ export const AthleteProgressPage: React.FC = () => {
   const [summary, setSummary] = useState<AthleteSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadData();
@@ -64,6 +67,16 @@ export const AthleteProgressPage: React.FC = () => {
       loadProgress();
     }
   }, [selectedExerciseId]);
+  useEffect(() => {
+    if (!selectorOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+        setSelectorOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [selectorOpen]);
 
   const getAthleteId = (): number => {
     const athleteId = localStorage.getItem('selectedAthleteId');
@@ -81,18 +94,14 @@ export const AthleteProgressPage: React.FC = () => {
       const athleteId = getAthleteId();
       if (!athleteId) return;
       
-      // Загружаем упражнения
-      const exercisesRes = await exerciseService.getAll();
-      setExercises(exercisesRes.data.exercises || []);
-      
-      // Загружаем сводку
-      const summaryRes = await athleteService.getAthleteSummary(athleteId);
+      const [exercisesRes, summaryRes] = await Promise.all([
+        athleteService.getCompletedWorkoutExercises(athleteId),
+        athleteService.getAthleteSummary(athleteId),
+      ]);
+      const completedExercises = exercisesRes.data?.exercises || [];
+      setExercises(completedExercises);
       setSummary(summaryRes.data);
-      
-      // Выбираем первое упражнение по умолчанию
-      if (exercisesRes.data.exercises?.length > 0) {
-        setSelectedExerciseId(exercisesRes.data.exercises[0].id);
-      }
+      setSelectedExerciseId(completedExercises[0]?.id ?? null);
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
     } finally {
@@ -131,6 +140,7 @@ export const AthleteProgressPage: React.FC = () => {
   }));
 
   const maxWeight = Math.max(...chartData.map(d => d.weight), 0);
+  const selectedExercise = exercises.find(ex => ex.id === selectedExerciseId) || null;
 
   return (
     <div className="athlete-progress-page">
@@ -169,18 +179,60 @@ export const AthleteProgressPage: React.FC = () => {
       {/* Выбор упражнения */}
       <div className="exercise-selector-section">
         <label>Выберите упражнение:</label>
-        <select
-          value={selectedExerciseId || ''}
-          onChange={(e) => setSelectedExerciseId(Number(e.target.value))}
-          className="exercise-select"
-          disabled={loading}
-        >
-          {exercises.map(ex => (
-            <option key={ex.id} value={ex.id}>
-              {ex.name} ({ex.muscle_group})
-            </option>
-          ))}
-        </select>
+        <div className="exercise-picker" ref={selectorRef}>
+          <button
+            type="button"
+            className="exercise-select-button"
+            onClick={() => setSelectorOpen(open => !open)}
+            disabled={loading || exercises.length === 0}
+            aria-expanded={selectorOpen}
+          >
+            {selectedExercise ? (
+              <>
+                <span className="exercise-picker-media">
+                  {(selectedExercise.image_url || selectedExercise.video_url) && (
+                    <img src={selectedExercise.image_url || selectedExercise.video_url} alt="" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                  )}
+                  <ImageIcon className="exercise-picker-placeholder" size={22} />
+                </span>
+                <span className="exercise-picker-text">
+                  <strong>{selectedExercise.name}</strong>
+                  <small>{selectedExercise.muscle_group}</small>
+                </span>
+              </>
+            ) : (
+              <span className="exercise-picker-empty">Нет выполненных упражнений</span>
+            )}
+            <ChevronDown className={selectorOpen ? 'open' : ''} size={20} />
+          </button>
+
+          {selectorOpen && (
+            <div className="exercise-picker-menu" role="listbox">
+              {exercises.map(ex => (
+                <button
+                  type="button"
+                  key={ex.id}
+                  className={`exercise-picker-option ${ex.id === selectedExerciseId ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedExerciseId(ex.id);
+                    setSelectorOpen(false);
+                  }}
+                  role="option"
+                  aria-selected={ex.id === selectedExerciseId}
+                >
+                  <span className="exercise-picker-media">
+                    {(ex.image_url || ex.video_url) && <img src={ex.image_url || ex.video_url} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />}
+                    <ImageIcon className="exercise-picker-placeholder" size={22} />
+                  </span>
+                  <span className="exercise-picker-text">
+                    <strong>{ex.name}</strong>
+                    <small>{ex.muscle_group}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Личный рекорд */}

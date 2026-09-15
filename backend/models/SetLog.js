@@ -83,6 +83,7 @@ class SetLog {
       WHERE ws.athlete_id = $1 
         AND sl.exercise_id = $2
         AND sl.is_completed = true
+        AND ws.completed_at IS NOT NULL
       GROUP BY sl.weight_done, sl.reps_done, sl.created_at, ws.workout_date
       ORDER BY sl.weight_done DESC, sl.reps_done DESC
       LIMIT 1

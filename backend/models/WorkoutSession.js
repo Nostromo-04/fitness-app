@@ -174,6 +174,7 @@ class WorkoutSession {
       WHERE ws.athlete_id = $1 
         AND sl.exercise_id = $2
         AND sl.is_completed = true
+        AND ws.completed_at IS NOT NULL
       ORDER BY ws.workout_date DESC, sl.created_at DESC
       LIMIT $3
     `;

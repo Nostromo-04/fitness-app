@@ -20,6 +20,7 @@ router.delete('/sets/:setId', requireOwnedResource('set', 'setId'), requireActiv
 router.get('/last-completed/:athleteId/plan/:planId', requireAthleteAccess(), logController.getLastCompletedPlanDay);
 router.get('/calendar/:athleteId', requireAthleteAccess(), logController.getWorkoutCalendar);
 router.get('/calendar/:athleteId/date/:date', requireAthleteAccess(), logController.getWorkoutByDate);
+router.get('/progress/:athleteId/exercises', requireAthleteAccess(), logController.getCompletedWorkoutExercises);
 router.get('/progress/:athleteId/exercise/:exerciseId', requireAthleteAccess(), logController.getExerciseProgress);
 router.get('/summary/:athleteId', requireAthleteAccess(), logController.getAthleteSummary);
 

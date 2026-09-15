@@ -110,6 +110,11 @@ class AthleteService {
     return response.data;
   }
 
+  // Упражнения из завершённых тренировок спортсмена
+  async getCompletedWorkoutExercises(athleteId: number) {
+    const response = await api.get(`/logs/progress/${athleteId}/exercises`);
+    return response.data;
+  }
   // Получение прогресса по упражнению
   async getExerciseProgress(athleteId: number, exerciseId: number, limit: number = 10) {
     const response = await api.get(`/logs/progress/${athleteId}/exercise/${exerciseId}?limit=${limit}`);

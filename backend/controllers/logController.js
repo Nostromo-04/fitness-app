@@ -1,6 +1,7 @@
 const WorkoutSession = require('../models/WorkoutSession');
 const SetLog = require('../models/SetLog');
 const db = require('../config/database');
+const { getCompletedWorkoutExercises } = require('../lib/athleteExercises');
 const {
   cancelActiveWorkout,
   findActiveWorkout,
@@ -437,6 +438,16 @@ const logController = {
     }
   },
 
+  // Упражнения, реально выполненные спортсменом в завершённых тренировках
+  async getCompletedWorkoutExercises(req, res) {
+    try {
+      const exercises = await getCompletedWorkoutExercises(db, Number(req.params.athleteId));
+      res.json({ status: 'success', data: { exercises } });
+    } catch (error) {
+      console.error('Ошибка получения упражнений спортсмена:', error);
+      res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
+    }
+  },
   // Получение прогресса по упражнению
   async getExerciseProgress(req, res) {
     try {
