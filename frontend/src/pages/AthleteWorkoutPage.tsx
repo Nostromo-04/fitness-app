@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Minus, Volume2, VolumeX, Repeat } from 'lucide-react';
+import { ArrowLeft, Play, Pause, RotateCcw, CheckCircle, Circle, Plus, Minus, Volume2, VolumeX, Repeat, Image as ImageIcon } from 'lucide-react';
 import athleteService from '../services/athleteService';
 import exerciseService, { type Exercise as LibraryExercise } from '../services/exerciseService';
 import './AthleteWorkoutPage.css';
@@ -998,8 +998,35 @@ export const AthleteWorkoutPage: React.FC = () => {
                     className="replace-option"
                     onClick={() => handleSelectReplacement(ex)}
                   >
-                    <span className="replace-option-name">{ex.name}</span>
-                    <span className="replace-option-group">{ex.muscle_group}</span>
+                    <span className="replace-option-media">
+                      {(ex.video_url || ex.image_url) && (
+                        <img
+                          src={ex.video_url || ex.image_url}
+                          alt={ex.name}
+                          loading="lazy"
+                          onError={(event) => {
+                            const image = event.currentTarget;
+                            const fallbackUrl = ex.image_url
+                              ? new URL(ex.image_url, window.location.origin).href
+                              : '';
+                            if (fallbackUrl && image.src !== fallbackUrl) {
+                              image.src = fallbackUrl;
+                              return;
+                            }
+                            image.style.display = 'none';
+                            image.nextElementSibling?.classList.add('visible');
+                          }}
+                        />
+                      )}
+                      <ImageIcon
+                        size={24}
+                        className={`replace-option-placeholder ${ex.video_url || ex.image_url ? '' : 'visible'}`}
+                      />
+                    </span>
+                    <span className="replace-option-info">
+                      <span className="replace-option-name">{ex.name}</span>
+                      <span className="replace-option-group">{ex.muscle_group}</span>
+                    </span>
                   </button>
                 ))}
               </div>
