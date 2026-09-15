@@ -115,7 +115,7 @@ async function startServer() {
   `);
   const { seedSelectedChestExercises } = require('./lib/seedSelectedChestExercises');
   const seedResult = await seedSelectedChestExercises(require('./config/database'));
-  console.log(`✅ Упражнения груди: добавлено ${seedResult.inserted}, уже существовало ${seedResult.skipped}`);
+  console.log(`✅ Выбранные упражнения: добавлено ${seedResult.inserted}, уже существовало ${seedResult.skipped}`);
 
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 
@@ -141,3 +141,4 @@ startServer().catch(error => {
   console.error('❌ Server startup failed:', error.message);
   process.exit(1);
 });
+
