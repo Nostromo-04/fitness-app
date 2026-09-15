@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, Calendar, TrendingUp, ClipboardList } from 'lucide-react';
+import { Dumbbell, Calendar, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './AthleteDashboard.css';
@@ -13,7 +13,8 @@ interface Plan {
 
 interface Summary {
   total_workouts: number;
-  total_sets: number;
+  light_workouts: number;
+  heavy_workouts: number;
   last_workout_date: string | null;
 }
 
@@ -22,7 +23,7 @@ export const AthleteDashboard: React.FC = () => {
   const { authUser } = useAuth();
 
   const [plans, setPlans]       = useState<Plan[]>([]);
-  const [summary, setSummary]   = useState<Summary>({ total_workouts: 0, total_sets: 0, last_workout_date: null });
+  const [summary, setSummary]   = useState<Summary>({ total_workouts: 0, light_workouts: 0, heavy_workouts: 0, last_workout_date: null });
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export const AthleteDashboard: React.FC = () => {
       }
 
       if (summaryRes.status === 'fulfilled') {
-        const s = summaryRes.value.data?.data?.summary;
+        const s = summaryRes.value.data?.summary;
         if (s) setSummary(s);
       }
     } catch (error) {
@@ -72,7 +73,7 @@ export const AthleteDashboard: React.FC = () => {
       {/* Статистика */}
       <div className="stats-grid">
         <div className="stat-card">
-          <Dumbbell size={22} />
+          <Calendar size={22} />
           <div className="stat-info">
             <span className="stat-value">{loading ? '–' : summary.total_workouts}</span>
             <span className="stat-label">Тренировок</span>
@@ -81,15 +82,15 @@ export const AthleteDashboard: React.FC = () => {
         <div className="stat-card">
           <TrendingUp size={22} />
           <div className="stat-info">
-            <span className="stat-value">{loading ? '–' : summary.total_sets}</span>
-            <span className="stat-label">Подходов</span>
+            <span className="stat-value">{loading ? '–' : summary.light_workouts}</span>
+            <span className="stat-label">Легкие</span>
           </div>
         </div>
         <div className="stat-card">
-          <ClipboardList size={22} />
+          <Dumbbell size={22} />
           <div className="stat-info">
-            <span className="stat-value">{loading ? '–' : plans.length}</span>
-            <span className="stat-label">Планов</span>
+            <span className="stat-value">{loading ? '–' : summary.heavy_workouts}</span>
+            <span className="stat-label">Тяжелые</span>
           </div>
         </div>
       </div>

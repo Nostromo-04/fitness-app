@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { getCurrentYearWorkoutSummary } = require('../lib/athleteSummary');
 const WorkoutSession = require('../models/WorkoutSession');
 const {
   assignPlanToAthlete,
@@ -214,19 +215,8 @@ const workoutController = {
   async getAthleteSummary(req, res) {
     try {
       const { athleteId } = req.params;
-      const result = await db.query(
-        `SELECT
-           COUNT(*)::int  AS total_workouts,
-           COALESCE(SUM(
-             (SELECT COUNT(*) FROM set_logs sl
-              WHERE sl.session_id = ws.id AND sl.is_completed = true)
-           ), 0)::int     AS total_sets,
-           MAX(ws.workout_date) AS last_workout_date
-         FROM workout_sessions ws
-         WHERE ws.athlete_id = $1 AND ws.completed_at IS NOT NULL`,
-        [athleteId]
-      );
-      res.json({ summary: result.rows[0] });
+      const summary = await getCurrentYearWorkoutSummary(db, Number(athleteId));
+      res.json({ summary });
     } catch (error) {
       console.error('getAthleteSummary error:', error);
       res.status(500).json({ status: 'error', message: 'Ошибка сервера' });
