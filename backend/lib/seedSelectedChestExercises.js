@@ -1,5 +1,6 @@
 const chestExercises = require('../data/selected-chest-exercises.json');
 const legExercises = require('../data/selected-leg-exercises.json');
+const armExercises = require('../data/selected-arm-exercises.json');
 
 async function seedSelectedChestExercises(db) {
   if (!Array.isArray(chestExercises) || chestExercises.length !== 28) {
@@ -8,7 +9,10 @@ async function seedSelectedChestExercises(db) {
   if (!Array.isArray(legExercises) || legExercises.length !== 50) {
     throw new Error('Expected exactly 50 selected leg exercises');
   }
-  const exercises = [...chestExercises, ...legExercises];
+  if (!Array.isArray(armExercises) || armExercises.length !== 47) {
+    throw new Error('Expected exactly 47 selected arm exercises');
+  }
+  const exercises = [...chestExercises, ...legExercises, ...armExercises];
 
   const client = await db.pool.connect();
   let inserted = 0;
