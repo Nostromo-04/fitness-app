@@ -3,9 +3,14 @@ async function mergeExerciseDuplicates(db, groups = DUPLICATE_GROUPS) {
   const client = await db.pool.connect(); const merged = [];
   try { await client.query('BEGIN');
     for (const group of groups) { const survivorId = Math.min(...group);
-      const result = await client.query('SELECT id FROM exercises WHERE id = ANY($1::int[]) ORDER BY id FOR UPDATE', [group]);
-      const present = new Set(result.rows.map(row => Number(row.id))); if (!present.has(survivorId)) continue;
-      for (const duplicateId of group.filter(id => id !== survivorId)) { if (!present.has(duplicateId)) continue;
+      const result = await client.query('SELECT id, image_url, video_url, instruction FROM exercises WHERE id = ANY($1::int[]) ORDER BY id FOR UPDATE', [group]);
+      const rowsById = new Map(result.rows.map(row => [Number(row.id), row]));
+      if (!rowsById.has(survivorId)) continue;
+      for (const duplicateId of group.filter(id => id !== survivorId)) { if (!rowsById.has(duplicateId)) continue;
+        const duplicate = rowsById.get(duplicateId);
+        if (survivorId === 10 && duplicateId === 132) {
+          await client.query('UPDATE exercises SET image_url = $2, video_url = $3, instruction = $4 WHERE id = $1', [10, duplicate.image_url, duplicate.video_url, duplicate.instruction]);
+        }
         const removedPlanDuplicates = await client.query('DELETE FROM day_exercises duplicate USING day_exercises survivor WHERE duplicate.exercise_id = $2 AND survivor.exercise_id = $1 AND duplicate.day_id = survivor.day_id', [survivorId, duplicateId]);
         const movedPlanLinks = await client.query('UPDATE day_exercises SET exercise_id = $1 WHERE exercise_id = $2', [survivorId, duplicateId]);
         const movedSetLogs = await client.query('UPDATE set_logs SET exercise_id = $1 WHERE exercise_id = $2', [survivorId, duplicateId]);
