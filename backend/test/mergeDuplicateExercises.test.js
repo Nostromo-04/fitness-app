@@ -51,3 +51,45 @@ test('does nothing after the duplicate has already been merged', async () => {
   assert.ok(calls.some(call => call.sql === 'COMMIT'));
   assert.ok(!calls.some(call => call.sql.startsWith('UPDATE set_logs')));
 });
+
+const { mergeRomanianDeadliftDuplicate } = require('../lib/mergeRomanianDeadliftDuplicate');
+const romanianRows = [
+  { id: 40, name: 'Румынская тяга', muscle_group: 'Ноги' },
+  { id: 78, name: 'Румынская тяга со штангой', muscle_group: 'Ноги', image_url: '/image.jpg', video_url: '/animation.gif', instruction: 'Technique' },
+];
+test('Romanian merge backs up data before moving every plan and log reference', async () => {
+  const { db, calls } = createDb(romanianRows);
+  const result = await mergeRomanianDeadliftDuplicate(db);
+  assert.equal(result.merged, true);
+  const backup = calls.findIndex(c => c.sql.startsWith('INSERT INTO exercise_merge_backups'));
+  const move = calls.findIndex(c => c.sql.startsWith('UPDATE day_exercises'));
+  assert.ok(backup >= 0 && backup < move);
+  assert.deepEqual(calls[move].params, [40, 78]);
+  assert.deepEqual(calls.find(c => c.sql.startsWith('UPDATE set_logs')).params, [40, 78]);
+  assert.ok(!calls.some(c => c.sql.startsWith('DELETE FROM day_exercises')));
+  assert.deepEqual(calls.find(c => c.sql.startsWith('UPDATE exercises')).params, [40, romanianRows[1].name, '/image.jpg', '/animation.gif', 'Technique']);
+  assert.deepEqual(calls.find(c => c.sql.startsWith('DELETE FROM exercises')).params, [78]);
+});
+test('Romanian merge is safe to run again', async () => {
+  const { db, calls } = createDb([romanianRows[0]]);
+  assert.equal((await mergeRomanianDeadliftDuplicate(db)).merged, false);
+  assert.ok(!calls.some(c => /^(UPDATE|DELETE)/.test(c.sql)));
+});
+test('Romanian merge rejects unexpected identity without deleting data', async () => {
+  const { db, calls } = createDb([romanianRows[0], { ...romanianRows[1], name: 'Different exercise' }]);
+  await assert.rejects(mergeRomanianDeadliftDuplicate(db), /do not match/);
+  assert.ok(calls.some(c => c.sql === 'ROLLBACK'));
+  assert.ok(!calls.some(c => /^(UPDATE|DELETE)/.test(c.sql)));
+});
+test('Romanian merge rolls back if history cannot be moved', async () => {
+  const { db, calls } = createDb(romanianRows);
+  const client = await db.pool.connect();
+  const query = client.query.bind(client);
+  client.query = async (sql, params) => {
+    if (sql.startsWith('UPDATE set_logs')) throw new Error('history failure');
+    return query(sql, params);
+  };
+  await assert.rejects(mergeRomanianDeadliftDuplicate(db), /history failure/);
+  assert.ok(calls.some(c => c.sql === 'ROLLBACK'));
+  assert.ok(!calls.some(c => c.sql.startsWith('DELETE FROM exercises')));
+});
