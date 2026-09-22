@@ -1,4 +1,4 @@
-const DUPLICATE_GROUPS = [[1, 45], [29, 68], [4, 49], [12, 167], [16, 31, 139]];
+const DUPLICATE_GROUPS = [[1, 45], [29, 68], [4, 49], [12, 167], [16, 31, 133, 139], [10, 132]];
 async function mergeExerciseDuplicates(db, groups = DUPLICATE_GROUPS) {
   const client = await db.pool.connect(); const merged = [];
   try { await client.query('BEGIN');
