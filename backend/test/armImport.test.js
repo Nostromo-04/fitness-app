@@ -30,5 +30,5 @@ test('selected seed skips existing exercises on repeat runs', async () => {
  const unique = new Set(all.map(e => [e.name, e.muscle_group].join('|').toLowerCase())).size;
  assert.equal((await seedSelectedChestExercises(db)).inserted, unique);
  for (const e of arms) assert.ok(existing.has([e.name, e.muscle_group].join('|').toLowerCase()));
- assert.deepEqual(await seedSelectedChestExercises(db), {inserted:0, skipped:125});
+ assert.deepEqual(await seedSelectedChestExercises(db), {inserted:0, skipped:all.length});
 });

@@ -7,7 +7,7 @@ const dataPath = path.join(__dirname, '..', 'data', 'selected-chest-exercises.js
 
 async function run() {
   const exercises = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-  if (!Array.isArray(exercises) || exercises.length !== 28) throw new Error('Expected exactly 28 selected exercises');
+  if (!Array.isArray(exercises) || exercises.length !== 30) throw new Error('Expected exactly 30 selected exercises');
   for (const exercise of exercises) {
     for (const field of ['name', 'muscle_group', 'image_url', 'video_url', 'instruction']) {
       if (!exercise[field]) throw new Error('Missing ' + field + ' for ' + (exercise.source_id || exercise.name));

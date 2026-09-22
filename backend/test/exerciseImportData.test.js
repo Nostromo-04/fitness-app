@@ -7,9 +7,9 @@ const root = path.join(__dirname, '..', '..');
 const data = JSON.parse(fs.readFileSync(path.join(root, 'backend', 'data', 'selected-chest-exercises.json'), 'utf8'));
 const legData = JSON.parse(fs.readFileSync(path.join(root, 'backend', 'data', 'selected-leg-exercises.json'), 'utf8'));
 
-test('selected chest import contains 28 complete Russian exercises and media files', () => {
-  assert.equal(data.length, 28);
-  assert.equal(new Set(data.map(item => item.source_id)).size, 28);
+test('selected chest import contains 30 complete Russian exercises and media files', () => {
+  assert.equal(data.length, 30);
+  assert.equal(new Set(data.map(item => item.source_id)).size, 30);
   for (const item of data) {
     assert.equal(item.muscle_group, 'Грудь');
     assert.ok(item.name.length > 3);

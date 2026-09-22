@@ -3,8 +3,8 @@ const legExercises = require('../data/selected-leg-exercises.json');
 const armExercises = require('../data/selected-arm-exercises.json');
 
 async function seedSelectedChestExercises(db) {
-  if (!Array.isArray(chestExercises) || chestExercises.length !== 28) {
-    throw new Error('Expected exactly 28 selected chest exercises');
+  if (!Array.isArray(chestExercises) || chestExercises.length !== 30) {
+    throw new Error('Expected exactly 30 selected chest exercises');
   }
   if (!Array.isArray(legExercises) || legExercises.length !== 50) {
     throw new Error('Expected exactly 50 selected leg exercises');
