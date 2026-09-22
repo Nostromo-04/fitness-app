@@ -120,6 +120,12 @@ async function startServer() {
   const mergeResult = await mergeLegExtensionDuplicate(require('./config/database'));
   if (mergeResult.merged) console.log('✅ Дубликаты упражнений объединены: ID 99 → ID 20');
 
+  const { mergeRomanianDeadliftDuplicate } = require('./lib/mergeRomanianDeadliftDuplicate');
+  const romanianMerge = await mergeRomanianDeadliftDuplicate(require('./config/database'));
+  if (romanianMerge.merged) console.log('✅ Дубликаты упражнений объединены: ID 78 → ID 40', romanianMerge);
+  const { mergeExerciseDuplicates } = require('./lib/mergeExerciseDuplicates');
+  const duplicateMerge = await mergeExerciseDuplicates(require('./config/database'));
+  if (duplicateMerge.merged.length) console.log('✅ Дубликаты упражнений объединены', duplicateMerge);
   app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
 
   const backendUrl = process.env.BACKEND_URL || process.env.RAILWAY_PUBLIC_DOMAIN;
