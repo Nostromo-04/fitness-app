@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const arms = require('../data/selected-arm-exercises.json');
+const back = require('../data/selected-back-exercises.json');
 const { seedSelectedChestExercises } = require('../lib/seedSelectedChestExercises');
 const expected = '0019 0986 0998 2407 0030 0031 1720 0070 1399 0139 0140 0868 0165 1722 1723 1636 0194 0201 0200 1724 0285 2403 1646 1647 1648 0294 1731 1657 0313 0315 0333 0351 0372 0389 1677 0402 1748 1627 0446 0450 1615 0592 1451 0607 0636 0751 0814'.split(' ');
 test('arm import matches 47 selected IDs with Russian text and valid media', () => {
@@ -26,7 +27,7 @@ test('selected seed skips existing exercises on repeat runs', async () => {
   return {rows: []};
  }, release() {} };
  const db = {pool: {connect: async () => client}};
- const all = [...require('../data/selected-chest-exercises.json'), ...require('../data/selected-leg-exercises.json'), ...arms];
+ const all = [...require('../data/selected-chest-exercises.json'), ...require('../data/selected-leg-exercises.json'), ...arms, ...back];
  const unique = new Set(all.map(e => [e.name, e.muscle_group].join('|').toLowerCase())).size;
  assert.equal((await seedSelectedChestExercises(db)).inserted, unique);
  for (const e of arms) assert.ok(existing.has([e.name, e.muscle_group].join('|').toLowerCase()));
