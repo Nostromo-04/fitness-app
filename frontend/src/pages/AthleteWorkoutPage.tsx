@@ -155,6 +155,19 @@ export const AthleteWorkoutPage: React.FC = () => {
   const isDirtyRef = useRef(false);
   // Замена упражнения (только на текущую тренировку)
   const [showReplaceModal, setShowReplaceModal] = useState(false);
+  const [previewExercise, setPreviewExercise] = useState<LibraryExercise | null>(null);
+  const previewDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (!previewExercise) return;
+    const dialog = previewDialog.current!;
+    const previousOverflow = document.body.style.overflow;
+    dialog.showModal();
+    document.body.style.overflow = 'hidden';
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [previewExercise]);
   const [replaceOptions, setReplaceOptions] = useState<LibraryExercise[]>([]);
   const [replaceLoading, setReplaceLoading] = useState(false);
   const [startConflict, setStartConflict] = useState('');
@@ -981,6 +994,26 @@ export const AthleteWorkoutPage: React.FC = () => {
       )}
 
       {showReplaceModal && (
+        <>
+        {previewExercise && (
+          <dialog ref={previewDialog} className="exercise-media-preview" aria-label={previewExercise.name}
+            onCancel={event => { event.preventDefault(); setPreviewExercise(null); }}
+            onClick={event => { if (event.target === event.currentTarget) setPreviewExercise(null); }}>
+            <div className="exercise-media-preview-content">
+              <h3>{previewExercise.name}</h3>
+              <img src={previewExercise.video_url || previewExercise.image_url} alt={previewExercise.name}
+                onError={event => {
+                  const img = event.currentTarget;
+                  const fallback = previewExercise.image_url ? new URL(previewExercise.image_url, window.location.origin).href : '';
+                  if (fallback && img.src !== fallback) { img.src = fallback; return; }
+                  img.style.display = 'none';
+                  img.nextElementSibling?.removeAttribute('hidden');
+                }} />
+              <p hidden role="status">Не удалось загрузить изображение</p>
+              <button type="button" autoFocus onClick={() => setPreviewExercise(null)}>Закрыть просмотр</button>
+            </div>
+          </dialog>
+        )}
         <div className="replace-modal-overlay" onClick={handleCloseReplace}>
           <div className="replace-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="replace-modal-title">Заменить упражнение</h3>
@@ -993,12 +1026,14 @@ export const AthleteWorkoutPage: React.FC = () => {
             ) : replaceOptions.length > 0 ? (
               <div className="replace-options-list">
                 {replaceOptions.map((ex) => (
-                  <button
+                  <div
                     key={ex.id}
                     className="replace-option"
-                    onClick={() => handleSelectReplacement(ex)}
                   >
-                    <span className="replace-option-media">
+                    <button type="button" className="replace-option-media"
+                      aria-label={`Увеличить изображение: ${ex.name}`}
+                      disabled={!ex.video_url && !ex.image_url}
+                      onClick={() => setPreviewExercise(ex)}>
                       {(ex.video_url || ex.image_url) && (
                         <img
                           src={ex.video_url || ex.image_url}
@@ -1022,12 +1057,12 @@ export const AthleteWorkoutPage: React.FC = () => {
                         size={24}
                         className={`replace-option-placeholder ${ex.video_url || ex.image_url ? '' : 'visible'}`}
                       />
-                    </span>
-                    <span className="replace-option-info">
+                    </button>
+                    <button type="button" className="replace-option-info" onClick={() => handleSelectReplacement(ex)}>
                       <span className="replace-option-name">{ex.name}</span>
                       <span className="replace-option-group">{ex.muscle_group}</span>
-                    </span>
-                  </button>
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -1039,6 +1074,7 @@ export const AthleteWorkoutPage: React.FC = () => {
             </button>
           </div>
         </div>
+        </>
       )}
     </div>
   );
